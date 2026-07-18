@@ -14,7 +14,11 @@
 </script>
 <style>
 .mini-cal{background:#1c1a16;padding:10px 14px;position:sticky;top:0;z-index:100;}
-.mini-cal .title{color:#fff;font-size:13px;font-weight:700;margin-bottom:8px;font-family:'Noto Sans JP',sans-serif;}
+.mini-cal .title{color:#fff;font-size:13px;font-weight:700;margin-bottom:8px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.mini-cal .title::after{content:'▲';font-size:10px;opacity:.7;}
+.mini-cal.collapsed .title::after{content:'▼';}
+.mini-cal.collapsed table{display:none;}
+.mini-cal.collapsed{padding-bottom:10px;}
 .mini-cal table{width:100%;border-collapse:collapse;}
 .mini-cal td{text-align:center;padding:4px 2px;font-size:13px;color:#ccc;font-family:'Noto Sans JP',sans-serif;}
 .mini-cal td.has-day{color:#fff;font-weight:700;cursor:pointer;border-radius:50%;width:28px;height:28px;line-height:28px;}
@@ -22,7 +26,21 @@
 .mini-cal td.today{background:#e07800;color:#fff;border-radius:50%;}
 .mini-cal td.sat{color:#90cdf4;}
 .mini-cal th{color:#aaa;font-size:11px;text-align:center;padding:2px;font-family:'Noto Sans JP',sans-serif;}
+.day-card{scroll-margin-top:50px;}
 </style>
+<script>
+function jumpToDay(d){
+  var cal=document.getElementById('mini-cal');
+  cal.classList.add('collapsed');
+  setTimeout(function(){
+    var el=document.getElementById('day-'+d);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  },200);
+}
+function toggleCal(){
+  document.getElementById('mini-cal').classList.toggle('collapsed');
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Noto Sans JP',sans-serif;background:#f4f6f9;color:#1a202c;padding:14px;max-width:520px;margin:0 auto}</style>
 </head><body>
@@ -31,11 +49,11 @@
   <div style="font-size:22px;font-weight:700">2026年6月<span style="font-size:15px;font-weight:400;opacity:.8;margin-left:8px">/ Jun 2026</span></div>
   <div style="font-size:11px;opacity:.6;margin-top:4px">スケジュール（予定） · Schedule (Planned) · 閲覧専用 / View only</div>
 </div>
-<div class="mini-cal">
-      <div class="title">2026年6月 / Jun 2026</div>
-      <table><tr><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th></tr><tr><td class="has-day" onclick="document.getElementById('day-1').scrollIntoView({behavior:'smooth',block:'start'})">1</td><td class="has-day" onclick="document.getElementById('day-2').scrollIntoView({behavior:'smooth',block:'start'})">2</td><td class="has-day" onclick="document.getElementById('day-3').scrollIntoView({behavior:'smooth',block:'start'})">3</td><td class="has-day" onclick="document.getElementById('day-4').scrollIntoView({behavior:'smooth',block:'start'})">4</td><td class="has-day" onclick="document.getElementById('day-5').scrollIntoView({behavior:'smooth',block:'start'})">5</td><td class="has-day sat" onclick="document.getElementById('day-6').scrollIntoView({behavior:'smooth',block:'start'})">6</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">7</td></tr><tr><td class="has-day" onclick="document.getElementById('day-8').scrollIntoView({behavior:'smooth',block:'start'})">8</td><td class="has-day" onclick="document.getElementById('day-9').scrollIntoView({behavior:'smooth',block:'start'})">9</td><td class="has-day" onclick="document.getElementById('day-10').scrollIntoView({behavior:'smooth',block:'start'})">10</td><td class="has-day" onclick="document.getElementById('day-11').scrollIntoView({behavior:'smooth',block:'start'})">11</td><td class="has-day" onclick="document.getElementById('day-12').scrollIntoView({behavior:'smooth',block:'start'})">12</td><td class="has-day sat" onclick="document.getElementById('day-13').scrollIntoView({behavior:'smooth',block:'start'})">13</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">14</td></tr><tr><td class="has-day" onclick="document.getElementById('day-15').scrollIntoView({behavior:'smooth',block:'start'})">15</td><td class="has-day" onclick="document.getElementById('day-16').scrollIntoView({behavior:'smooth',block:'start'})">16</td><td class="has-day" onclick="document.getElementById('day-17').scrollIntoView({behavior:'smooth',block:'start'})">17</td><td class="has-day" onclick="document.getElementById('day-18').scrollIntoView({behavior:'smooth',block:'start'})">18</td><td class="has-day" onclick="document.getElementById('day-19').scrollIntoView({behavior:'smooth',block:'start'})">19</td><td class="has-day sat" onclick="document.getElementById('day-20').scrollIntoView({behavior:'smooth',block:'start'})">20</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">21</td></tr><tr><td class="has-day" onclick="document.getElementById('day-22').scrollIntoView({behavior:'smooth',block:'start'})">22</td><td class="has-day" onclick="document.getElementById('day-23').scrollIntoView({behavior:'smooth',block:'start'})">23</td><td class="has-day" onclick="document.getElementById('day-24').scrollIntoView({behavior:'smooth',block:'start'})">24</td><td class="has-day" onclick="document.getElementById('day-25').scrollIntoView({behavior:'smooth',block:'start'})">25</td><td class="has-day" onclick="document.getElementById('day-26').scrollIntoView({behavior:'smooth',block:'start'})">26</td><td class="has-day sat" onclick="document.getElementById('day-27').scrollIntoView({behavior:'smooth',block:'start'})">27</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">28</td></tr><tr><td class="has-day" onclick="document.getElementById('day-29').scrollIntoView({behavior:'smooth',block:'start'})">29</td><td class="has-day" onclick="document.getElementById('day-30').scrollIntoView({behavior:'smooth',block:'start'})">30</td><td></td><td></td><td></td><td></td><td></td></tr></table></div>
+<div id="mini-cal" class="mini-cal">
+      <div class="title" onclick="toggleCal()">📅 2026年6月 / Jun 2026　（日付をタップでジャンプ）</div>
+      <table><tr><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th></tr><tr><td class="has-day" onclick="jumpToDay(1)">1</td><td class="has-day" onclick="jumpToDay(2)">2</td><td class="has-day" onclick="jumpToDay(3)">3</td><td class="has-day" onclick="jumpToDay(4)">4</td><td class="has-day" onclick="jumpToDay(5)">5</td><td class="has-day sat" onclick="jumpToDay(6)">6</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">7</td></tr><tr><td class="has-day" onclick="jumpToDay(8)">8</td><td class="has-day" onclick="jumpToDay(9)">9</td><td class="has-day" onclick="jumpToDay(10)">10</td><td class="has-day" onclick="jumpToDay(11)">11</td><td class="has-day" onclick="jumpToDay(12)">12</td><td class="has-day sat" onclick="jumpToDay(13)">13</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">14</td></tr><tr><td class="has-day" onclick="jumpToDay(15)">15</td><td class="has-day" onclick="jumpToDay(16)">16</td><td class="has-day" onclick="jumpToDay(17)">17</td><td class="has-day" onclick="jumpToDay(18)">18</td><td class="has-day" onclick="jumpToDay(19)">19</td><td class="has-day sat" onclick="jumpToDay(20)">20</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">21</td></tr><tr><td class="has-day" onclick="jumpToDay(22)">22</td><td class="has-day" onclick="jumpToDay(23)">23</td><td class="has-day" onclick="jumpToDay(24)">24</td><td class="has-day" onclick="jumpToDay(25)">25</td><td class="has-day" onclick="jumpToDay(26)">26</td><td class="has-day sat" onclick="jumpToDay(27)">27</td><td style="text-align:center;color:#fc8181;font-weight:700;font-size:13px;padding:4px 2px;">28</td></tr><tr><td class="has-day" onclick="jumpToDay(29)">29</td><td class="has-day" onclick="jumpToDay(30)">30</td><td></td><td></td><td></td><td></td><td></td></tr></table></div>
 <div style="padding:14px;">
-<div id="day-1" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+<div id="day-1" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">1</span>
           <div style="flex:1;">
@@ -53,7 +71,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-2" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-2" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">2</span>
           <div style="flex:1;">
@@ -81,7 +99,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-3" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-3" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">3</span>
           <div style="flex:1;">
@@ -99,7 +117,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div>
               </div>
-            </div></div></div><div id="day-4" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-4" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">4</span>
           <div style="flex:1;">
@@ -127,7 +145,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-5" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-5" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">5</span>
           <div style="flex:1;">
@@ -185,7 +203,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:00〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-6" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-6" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#2b6cb0;min-width:36px;text-align:center">6</span>
           <div style="flex:1;">
@@ -203,7 +221,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">09:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-7" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-7" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff0f0;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#c53030;min-width:36px;text-align:center">7</span>
           <div style="flex:1;">
@@ -211,7 +229,7 @@
             <div style="font-size:12px;color:#a0aec0">定休日 / Closed (Sun)</div>
           </div>
           
-        </div></div><div id="day-8" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+        </div></div><div id="day-8" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">8</span>
           <div style="flex:1;">
@@ -229,7 +247,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-9" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-9" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">9</span>
           <div style="flex:1;">
@@ -267,7 +285,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-10" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-10" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">10</span>
           <div style="flex:1;">
@@ -305,7 +323,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-11" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-11" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">11</span>
           <div style="flex:1;">
@@ -333,7 +351,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-12" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-12" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">12</span>
           <div style="flex:1;">
@@ -361,7 +379,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:00〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-13" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-13" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#2b6cb0;min-width:36px;text-align:center">13</span>
           <div style="flex:1;">
@@ -389,7 +407,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">09:00〜17:00</div>
                 
               </div>
-            </div></div></div><div id="day-14" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-14" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff0f0;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#c53030;min-width:36px;text-align:center">14</span>
           <div style="flex:1;">
@@ -397,7 +415,7 @@
             <div style="font-size:12px;color:#a0aec0">定休日 / Closed (Sun)</div>
           </div>
           
-        </div></div><div id="day-15" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+        </div></div><div id="day-15" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">15</span>
           <div style="flex:1;">
@@ -415,7 +433,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-16" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-16" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">16</span>
           <div style="flex:1;">
@@ -443,7 +461,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-17" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-17" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">17</span>
           <div style="flex:1;">
@@ -461,7 +479,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div>
               </div>
-            </div></div></div><div id="day-18" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-18" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">18</span>
           <div style="flex:1;">
@@ -479,7 +497,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Entrance</div></div>
               </div>
-            </div></div></div><div id="day-19" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-19" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">19</span>
           <div style="flex:1;">
@@ -537,7 +555,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div>
               </div>
-            </div></div></div><div id="day-20" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-20" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#2b6cb0;min-width:36px;text-align:center">20</span>
           <div style="flex:1;">
@@ -555,7 +573,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">09:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-21" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-21" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff0f0;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#c53030;min-width:36px;text-align:center">21</span>
           <div style="flex:1;">
@@ -563,7 +581,7 @@
             <div style="font-size:12px;color:#a0aec0">定休日 / Closed (Sun)</div>
           </div>
           
-        </div></div><div id="day-22" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+        </div></div><div id="day-22" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">22</span>
           <div style="flex:1;">
@@ -581,7 +599,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-23" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-23" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">23</span>
           <div style="flex:1;">
@@ -609,7 +627,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-24" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-24" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">24</span>
           <div style="flex:1;">
@@ -647,7 +665,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">13:55〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-25" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-25" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">25</span>
           <div style="flex:1;">
@@ -665,7 +683,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Entrance</div></div>
               </div>
-            </div></div></div><div id="day-26" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-26" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">26</span>
           <div style="flex:1;">
@@ -693,7 +711,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">13:35〜18:00</div>
                 <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
               </div>
-            </div></div></div><div id="day-27" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-27" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#2b6cb0;min-width:36px;text-align:center">27</span>
           <div style="flex:1;">
@@ -711,7 +729,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">09:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-28" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-28" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff0f0;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#c53030;min-width:36px;text-align:center">28</span>
           <div style="flex:1;">
@@ -719,7 +737,7 @@
             <div style="font-size:12px;color:#a0aec0">定休日 / Closed (Sun)</div>
           </div>
           
-        </div></div><div id="day-29" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+        </div></div><div id="day-29" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">29</span>
           <div style="flex:1;">
@@ -737,7 +755,7 @@
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
                 
               </div>
-            </div></div></div><div id="day-30" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
+            </div></div></div><div id="day-30" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
           <span style="font-size:26px;font-weight:700;color:#1a202c;min-width:36px;text-align:center">30</span>
           <div style="flex:1;">
