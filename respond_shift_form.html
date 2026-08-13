@@ -90,8 +90,13 @@ async function sendAnswer(){
   }
   rb.style.display='block';
   rb.innerHTML='送信中…';
+  const days=parseDays();
+  const answersPayload={};
+  days.forEach(({day,start,end})=>{
+    answersPayload[day]=answers[day]==='x'?{mark:'x'}:{mark:'o',start,end};
+  });
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({respondShift:true,staff,ym,answers})});
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({respondShift:true,staff,ym,answers:answersPayload})});
     const json=await res.json();
     if(!json.ok) throw new Error(json.error||'送信失敗');
     rb.innerHTML='✓ 回答を送りました。ありがとうございます。';
