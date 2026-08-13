@@ -195,13 +195,19 @@ function renderPatternBtns(){
   }).join('');
   document.getElementById('pattern-btns').innerHTML=html;
 }
+function laborMinutes(startStr,endStr){
+  const [sh,sm]=startStr.split(':').map(Number);
+  const [eh,em]=endStr.split(':').map(Number);
+  const stay=(eh*60+em)-(sh*60+sm);
+  if(stay<=0) return 0;
+  // 6時間以下は休憩義務なしでそのまま、6時間超は休憩1時間分を控除
+  return stay>360?stay-60:stay;
+}
 function calcTotalMinutes(){
   let total=0;
   Object.values(shiftData).forEach(s=>{
     if(!s.start||!s.end) return;
-    const [sh,sm]=s.start.split(':').map(Number);
-    const [eh,em]=s.end.split(':').map(Number);
-    total+=(eh*60+em)-(sh*60+sm);
+    total+=laborMinutes(s.start,s.end);
   });
   return total;
 }
@@ -331,14 +337,8 @@ function buildOutput(){
   if(!currentStaff||!currentYm){alert('スタッフ名と月を選択してください');return null;}
   const ymKey=currentYm;
 
-  // 月間総時間計算
-  let totalMinutes=0;
-  Object.values(shiftData).forEach(s=>{
-    if(!s.start||!s.end) return;
-    const [sh,sm]=s.start.split(':').map(Number);
-    const [eh,em]=s.end.split(':').map(Number);
-    totalMinutes+=(eh*60+em)-(sh*60+sm);
-  });
+  // 月間総労働時間計算(休憩控除後)
+  const totalMinutes=calcTotalMinutes();
   const totalH=Math.floor(totalMinutes/60);
   const totalM=totalMinutes%60;
 
