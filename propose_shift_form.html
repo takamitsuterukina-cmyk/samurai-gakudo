@@ -15,7 +15,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .card h2{font-size:15px;font-weight:600;margin-bottom:12px;color:#2b6cb0;}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500;}
-.field select,.field input[type=text]{width:100%;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;background:#fff;color:#1a202c;-webkit-appearance:none;}
+.field select,.field input[type=text],.field input[type=month]{width:100%;max-width:100%;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;background:#fff;color:#1a202c;-webkit-appearance:none;appearance:none;box-sizing:border-box;}
 .month-disp{text-align:center;font-size:20px;font-weight:700;color:#2b6cb0;padding:8px 0;}
 
 .pattern-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;}
@@ -63,11 +63,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
         <option value="中村">中村 / Nakamura</option>
         <option value="芝田">芝田 / Shibata</option>
         <option value="荻島">荻島 / Ogishima</option>
+        <option value="テスト">テスト(デモ用)</option>
       </select>
     </div>
     <div class="field">
       <label>対象月</label>
-      <input type="month" id="month-input" onchange="onMonthChange()" style="height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;width:100%;">
+      <input type="month" id="month-input" onchange="onMonthChange()">
     </div>
     <div id="staff-month-disp" style="display:none;">
       <div class="staff-name-disp" id="staff-disp"></div>
@@ -96,7 +97,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6Lovy7vdSnGox7dJfFegh1FpgZzWQNRAS8hk7fibFI5FoF1ajviLzVxxaHft4TJHt/exec';
 
-const STAFF_EN={'照喜名':'Terukina','オゲ':'Oge','新関':'Niizeki','森':'Mori','中村':'Nakamura','芝田':'Shibata','荻島':'Ogishima'};
+const STAFF_EN={'照喜名':'Terukina','オゲ':'Oge','新関':'Niizeki','森':'Mori','中村':'Nakamura','芝田':'Shibata','荻島':'Ogishima','テスト':'Test'};
 const PATTERNS={
   'A':'8:00-17:00','B':'8:00-19:00','C':'9:00-13:00',
   'D':'9:00-17:00','E':'9:00-19:00','F':'9:30-18:30',
