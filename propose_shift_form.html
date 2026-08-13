@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>さむらい学童 シフト相談</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f5f5;color:#1a202c;min-height:100vh;}
+.header{background:#1c1a16;color:#fff;padding:16px;text-align:center;}
+.header h1{font-size:18px;font-weight:700;}
+.header p{font-size:12px;opacity:.7;margin-top:4px;}
+.container{max-width:480px;margin:0 auto;padding:16px;}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.card h2{font-size:15px;font-weight:600;margin-bottom:12px;color:#2b6cb0;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500;}
+.field select,.field input[type=text]{width:100%;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;background:#fff;color:#1a202c;-webkit-appearance:none;}
+.month-disp{text-align:center;font-size:20px;font-weight:700;color:#2b6cb0;padding:8px 0;}
+
+.pattern-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;}
+.pattern-btn{padding:10px 4px;border:2px solid #ddd;border-radius:8px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;}
+.pattern-btn:active{transform:scale(.95);}
+.pattern-sub{font-size:10px;color:#888;margin-top:2px;}
+
+.day-card{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:12px;margin-bottom:10px;}
+.day-card.has-shift{background:#ebf8ff;border-color:#90cdf4;}
+.day-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.day-num{font-size:18px;font-weight:700;}
+.day-dow{font-size:13px;color:#666;margin-left:6px;}
+.day-dow.sat{color:#2b6cb0;}
+.day-dow.sun{color:#e53e3e;}
+.time-row{display:flex;gap:8px;align-items:center;}
+.time-row select{flex:1;height:40px;border:1px solid #ddd;border-radius:7px;padding:0 8px;font-size:14px;background:#fff;}
+.time-sep{font-size:14px;color:#888;flex-shrink:0;}
+.pattern-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.pat-chip{padding:5px 10px;border:1px solid #cbd5e0;border-radius:6px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.pat-chip.sel{background:#2b6cb0;color:#fff;border-color:#2b6cb0;}
+.clear-btn{padding:5px 10px;border:1px solid #fc8181;border-radius:6px;background:#fff;font-size:12px;color:#e53e3e;cursor:pointer;margin-left:auto;}
+
+.submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
+.submit-btn:active{opacity:.85;}
+.result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
+.staff-name-disp{font-size:18px;font-weight:700;color:#1c1a16;text-align:center;padding:4px 0;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>💬 さむらい学童 シフト相談</h1>
+  <p>複数日まとめて、この日程で入れないか打診します</p>
+</div>
+<div class="container">
+  <div class="card">
+    <h2>① 相手・対象月</h2>
+    <div class="field">
+      <label>スタッフ名</label>
+      <select id="staff-select" onchange="onStaffChange()">
+        <option value="">-- 選択してください --</option>
+        <option value="照喜名">照喜名 / Terukina</option>
+        <option value="オゲ">オゲ / Oge</option>
+        <option value="新関">新関 / Niizeki</option>
+        <option value="森">森 / Mori</option>
+        <option value="中村">中村 / Nakamura</option>
+        <option value="芝田">芝田 / Shibata</option>
+        <option value="荻島">荻島 / Ogishima</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>対象月</label>
+      <input type="month" id="month-input" onchange="onMonthChange()" style="height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;width:100%;">
+    </div>
+    <div id="staff-month-disp" style="display:none;">
+      <div class="staff-name-disp" id="staff-disp"></div>
+      <div class="month-disp" id="month-disp"></div>
+    </div>
+  </div>
+
+  <div id="patterns-card" class="card" style="display:none;">
+    <h2>② シフトパターン（全日一括設定）</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:10px;">ボタンを押すと未入力の日に一括適用できます</p>
+    <div class="pattern-btns" id="pattern-btns"></div>
+  </div>
+
+  <div id="calendar-card" class="card" style="display:none;">
+    <h2>③ 提案したい日を選ぶ</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">打診したい日だけ入力してください。複数日まとめて選べます。</p>
+    <div id="day-list"></div>
+  </div>
+
+  <div id="submit-card" style="display:none;">
+    <button class="submit-btn" onclick="sendProposal()">📤 提案を送る</button>
+    <div class="result-box" id="result-box"></div>
+  </div>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6Lovy7vdSnGox7dJfFegh1FpgZzWQNRAS8hk7fibFI5FoF1ajviLzVxxaHft4TJHt/exec';
+
+const STAFF_EN={'照喜名':'Terukina','オゲ':'Oge','新関':'Niizeki','森':'Mori','中村':'Nakamura','芝田':'Shibata','荻島':'Ogishima'};
+const PATTERNS={
+  'A':'8:00-17:00','B':'8:00-19:00','C':'9:00-13:00',
+  'D':'9:00-17:00','E':'9:00-19:00','F':'9:30-18:30',
+  'G':'13:00-19:00','H':'12:00-19:00','I':'14:30-18:30'
+};
+const TIMES=['6:00','6:30','7:00','7:30','8:00','8:30','9:00','9:30','10:00','10:30',
+  '11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30',
+  '16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+const DOW=['日','月','火','水','木','金','土'];
+
+let currentStaff='';
+let currentYm='';
+let shiftData={};
+
+(function(){
+  const d=new Date();
+  d.setMonth(d.getMonth()+1);
+  const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  document.getElementById('month-input').value=ym;
+})();
+
+function onStaffChange(){
+  currentStaff=document.getElementById('staff-select').value;
+  shiftData={};
+  updateDisplay();
+}
+function onMonthChange(){
+  currentYm=document.getElementById('month-input').value;
+  shiftData={};
+  updateDisplay();
+}
+function updateDisplay(){
+  const staff=document.getElementById('staff-select').value;
+  const ym=document.getElementById('month-input').value;
+  if(!staff||!ym) return;
+  currentStaff=staff;currentYm=ym;
+  const [y,m]=ym.split('-').map(Number);
+  document.getElementById('staff-disp').textContent=staff+' / '+STAFF_EN[staff];
+  document.getElementById('month-disp').textContent=y+'年'+m+'月';
+  document.getElementById('staff-month-disp').style.display='block';
+  document.getElementById('patterns-card').style.display='block';
+  document.getElementById('calendar-card').style.display='block';
+  document.getElementById('submit-card').style.display='block';
+  renderPatternBtns();
+  renderDayList(y,m);
+}
+function renderPatternBtns(){
+  const html=Object.entries(PATTERNS).map(([k,v])=>{
+    const [s,e]=v.split('-');
+    return`<div class="pattern-btn" data-pat="${k}" onclick="applyPatternAll('${k}')">
+      <div>${k}</div>
+      <div class="pattern-sub">${s}</div>
+      <div class="pattern-sub">${e}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('pattern-btns').innerHTML=html;
+}
+function applyPattern(d,pat){
+  const [s,e]=PATTERNS[pat].split('-');
+  shiftData[d]={start:s,end:e,pattern:pat};
+  const [y,m]=currentYm.split('-').map(Number);
+  renderDayList(y,m);
+}
+function clearDay(d){
+  delete shiftData[d];
+  const [y,m]=currentYm.split('-').map(Number);
+  renderDayList(y,m);
+}
+function applyPatternAll(pat){
+  const [y,m]=currentYm.split('-').map(Number);
+  const days=new Date(y,m,0).getDate();
+  for(let d=1;d<=days;d++){
+    const dow=new Date(y,m-1,d).getDay();
+    if(dow===0) continue;
+    if(!shiftData[d]){
+      const [s,e]=PATTERNS[pat].split('-');
+      shiftData[d]={start:s,end:e,pattern:pat};
+    }
+  }
+  renderDayList(y,m);
+}
+function timeOptions(selected){
+  return TIMES.map(t=>`<option value="${t}"${selected===t?' selected':''}>${t}</option>`).join('');
+}
+function renderDayList(y,m){
+  const days=new Date(y,m,0).getDate();
+  let html='';
+  for(let d=1;d<=days;d++){
+    const dow=new Date(y,m-1,d).getDay();
+    const isSun=dow===0,isSat=dow===6;
+    if(isSun){
+      html+=`<div class="day-card" style="opacity:.4;">
+        <div class="day-header">
+          <span><span class="day-num">${d}</span><span class="day-dow sun">日（休）</span></span>
+        </div>
+      </div>`;
+      continue;
+    }
+    const sd=shiftData[d];
+    const hasShift=!!sd;
+    html+=`<div class="day-card${hasShift?' has-shift':''}" id="dc-${d}">
+      <div class="day-header">
+        <span><span class="day-num">${d}</span><span class="day-dow${isSat?' sat':''}">${DOW[dow]}</span></span>
+        ${hasShift?`<button class="clear-btn" onclick="clearDay(${d})">クリア</button>`:''}
+      </div>
+      <div class="time-row">
+        <select id="s-${d}" onchange="onTimeChange(${d})">
+          <option value="">-- 開始 --</option>
+          ${timeOptions(sd?.start||'')}
+        </select>
+        <span class="time-sep">〜</span>
+        <select id="e-${d}" onchange="onTimeChange(${d})">
+          <option value="">-- 終了 --</option>
+          ${timeOptions(sd?.end||'')}
+        </select>
+      </div>
+      <div class="pattern-row">
+        ${Object.entries(PATTERNS).map(([k,v])=>`<div class="pat-chip${sd?.pattern===k?' sel':''}" onclick="applyPattern(${d},'${k}')"><b>${k}</b> <span style="font-size:10px;font-weight:400;">${v}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+  document.getElementById('day-list').innerHTML=html;
+}
+function onTimeChange(d){
+  const s=document.getElementById('s-'+d)?.value||'';
+  const e=document.getElementById('e-'+d)?.value||'';
+  if(s||e){
+    if(!shiftData[d]) shiftData[d]={start:'',end:'',pattern:''};
+    if(s) shiftData[d].start=s;
+    if(e) shiftData[d].end=e;
+  }
+  if(!s&&!e){
+    delete shiftData[d];
+  }
+  if(shiftData[d]?.start&&shiftData[d]?.end){
+    const [y,m]=currentYm.split('-').map(Number);
+    renderDayList(y,m);
+  }
+}
+
+async function sendProposal(){
+  if(!currentStaff||!currentYm){alert('スタッフ名と月を選択してください');return;}
+  if(Object.keys(shiftData).length===0){alert('提案したい日を1つ以上選んでください');return;}
+  const rb=document.getElementById('result-box');
+  rb.style.display='block';
+  rb.innerHTML='送信中…';
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({proposeShift:true,staff:currentStaff,ym:currentYm,days:shiftData})});
+    const json=await res.json();
+    if(!json.ok) throw new Error(json.error||'送信失敗');
+    const count=Object.keys(shiftData).length;
+    rb.innerHTML=`✓ ${currentStaff}さんに${count}日分の相談を送りました。返信があれば、teruさんのLINEに転送されます。`;
+  }catch(err){
+    rb.innerHTML=`⚠ 送信に失敗しました（${err.message}）`;
+  }
+}
+</script>
+</body>
+</html>

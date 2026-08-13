@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>さむらい学童 シフト回答</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f5f5;color:#1a202c;min-height:100vh;}
+.header{background:#1c1a16;color:#fff;padding:16px;text-align:center;}
+.header h1{font-size:18px;font-weight:700;}
+.header p{font-size:12px;opacity:.7;margin-top:4px;}
+.container{max-width:480px;margin:0 auto;padding:16px;}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.day-row{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #eee;}
+.day-row:last-child{border-bottom:none;}
+.day-label{font-size:15px;font-weight:600;}
+.day-time{font-size:12px;color:#888;margin-top:2px;}
+.toggle{display:flex;gap:6px;}
+.toggle-btn{width:44px;height:40px;border-radius:8px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+.toggle-btn.ok.sel{background:#ebf8ff;border-color:#2b6cb0;color:#2b6cb0;}
+.toggle-btn.ng.sel{background:#fff5f5;border-color:#e53e3e;color:#e53e3e;}
+.submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
+.submit-btn:active{opacity:.85;}
+.result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📅 さむらい学童 シフト回答</h1>
+  <p>日ごとに○×で回答してください</p>
+</div>
+<div class="container">
+  <div class="card" id="day-card"></div>
+  <button class="submit-btn" onclick="sendAnswer()">📤 回答を送る</button>
+  <div class="result-box" id="result-box"></div>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6Lovy7vdSnGox7dJfFegh1FpgZzWQNRAS8hk7fibFI5FoF1ajviLzVxxaHft4TJHt/exec';
+const DOW=['日','月','火','水','木','金','土'];
+
+const params=new URLSearchParams(location.search);
+const staff=params.get('staff')||'';
+const ym=params.get('ym')||'';
+const dParam=params.get('d')||'';
+const answers={};
+
+function parseDays(){
+  if(!dParam) return [];
+  return dParam.split(',').map(part=>{
+    const [d,range]=part.split(':');
+    const [start,end]=range.split('-');
+    return {day:Number(d),start,end};
+  });
+}
+
+function render(){
+  const [y,m]=ym.split('-').map(Number);
+  const days=parseDays();
+  const html=days.map(({day,start,end})=>{
+    answers[day]='o';
+    const dow=DOW[new Date(y,m-1,day).getDay()];
+    return `<div class="day-row">
+      <div>
+        <div class="day-label">${m}/${day}(${dow})</div>
+        <div class="day-time">${start}〜${end}</div>
+      </div>
+      <div class="toggle">
+        <button class="toggle-btn ok sel" id="ok-${day}" onclick="setAnswer(${day},'o')">○</button>
+        <button class="toggle-btn ng" id="ng-${day}" onclick="setAnswer(${day},'x')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('day-card').innerHTML=html||'<p style="font-size:13px;color:#888;">日程情報が読み取れませんでした。リンクを確認してください。</p>';
+}
+
+function setAnswer(day,val){
+  answers[day]=val;
+  document.getElementById('ok-'+day).classList.toggle('sel',val==='o');
+  document.getElementById('ng-'+day).classList.toggle('sel',val==='x');
+}
+
+async function sendAnswer(){
+  const rb=document.getElementById('result-box');
+  if(!staff||!ym||Object.keys(answers).length===0){
+    rb.style.display='block';
+    rb.innerHTML='⚠ リンクが正しくないようです。届いたメッセージからもう一度開いてください。';
+    return;
+  }
+  rb.style.display='block';
+  rb.innerHTML='送信中…';
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({respondShift:true,staff,ym,answers})});
+    const json=await res.json();
+    if(!json.ok) throw new Error(json.error||'送信失敗');
+    rb.innerHTML='✓ 回答を送りました。ありがとうございます。';
+  }catch(err){
+    rb.innerHTML=`⚠ 送信に失敗しました（${err.message}）`;
+  }
+}
+
+render();
+</script>
+</body>
+</html>
