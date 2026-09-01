@@ -6,9 +6,12 @@
 <title>さむらい学童 2026年6月 スケジュール</title>
 <script>
 (function(){
+  // キャッシュ回避用の目印(_cb=)が無ければ、必ず新しいURLに一度だけ飛び直して最新版を取得する。
+  // すでに他のクエリ(?v=2など)が付いたURLでも壊れないよう、区切り文字(?/&)を正しく判定する。
   var url=window.location.href;
-  if(url.indexOf('?t=')===-1){
-    window.location.replace(url+'?t='+Date.now());
+  if(url.indexOf('_cb=')===-1){
+    var sep=url.indexOf('?')===-1?'?':'&';
+    window.location.replace(url+sep+'_cb='+Date.now());
   }
 })();
 </script>
@@ -87,7 +90,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -97,7 +100,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-3" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -115,7 +118,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Entrance</div></div>
               </div>
             </div></div></div><div id="day-4" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -133,7 +136,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名　同乗:オゲ 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina　With:Oge Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -143,7 +146,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名　同乗:なし 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina　With:— Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-5" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -161,7 +164,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -171,7 +174,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -181,7 +184,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -191,7 +194,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -201,7 +204,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:00〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-6" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
@@ -263,7 +266,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -273,7 +276,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -283,7 +286,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-10" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -301,7 +304,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -311,7 +314,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -321,7 +324,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-11" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -339,7 +342,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:30〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名　同乗:オゲ 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina　With:Oge Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -349,7 +352,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:00〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名　同乗:なし 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina　With:— Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-12" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -367,7 +370,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -377,7 +380,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:00〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-13" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
@@ -449,7 +452,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -459,7 +462,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-17" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -477,7 +480,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Entrance</div></div>
               </div>
             </div></div></div><div id="day-18" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -495,7 +498,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名　同乗:オゲ 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina　With:Oge Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-19" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -523,7 +526,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -533,7 +536,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:10〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -543,7 +546,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -553,7 +556,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-20" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
@@ -615,7 +618,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -625,7 +628,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-24" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -643,7 +646,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -653,7 +656,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">13:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -663,7 +666,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">13:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:オゲ 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Oge Location:Twilight</div></div>
               </div>
             </div></div></div><div id="day-25" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -681,7 +684,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:55〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:照喜名　同乗:オゲ 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Terukina　With:Oge Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-26" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f4f6f9;border-bottom:1px solid #e2e8f0">
@@ -699,7 +702,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:45〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -709,7 +712,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">13:35〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div><div id="day-27" class="day-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#eff6ff;border-bottom:1px solid #e2e8f0">
@@ -771,7 +774,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">15:15〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -781,7 +784,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:00〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Twilight</div></div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:子ども教室</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Twilight</div></div>
               </div>
             </div><div style="display:table;width:100%;padding:10px 0;border-bottom:1px solid #f1f5f9;">
               <div style="display:table-cell;width:120px;vertical-align:top;padding-right:10px;">
@@ -791,7 +794,7 @@ function toggleCal(){
               <div style="display:table-cell;vertical-align:top;">
                 <div style="display:inline-block;background:#38a16922;color:#38a169;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">平日午後</div>
                 <div style="font-weight:700;font-size:17px;color:#1a202c;margin-top:2px;">14:30〜18:00</div>
-                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
+                <div style="margin-top:4px;"><div style="font-size:14px;font-weight:600;color:#c53030;">↑運転:荻島　同乗:照喜名 場所:玄関</div><div style="font-size:12px;color:#c53030;opacity:.85;">Driver:Ogishima　With:Terukina Location:Entrance</div></div><div style="display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;margin-top:4px;">🇬🇧 English</div>
               </div>
             </div></div></div>
 </div>
