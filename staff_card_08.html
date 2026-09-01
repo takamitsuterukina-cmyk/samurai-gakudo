@@ -6,9 +6,12 @@
 <title>さむらい学童 2026年8月 スケジュール</title>
 <script>
 (function(){
+  // キャッシュ回避用の目印(_cb=)が無ければ、必ず新しいURLに一度だけ飛び直して最新版を取得する。
+  // すでに他のクエリ(?v=2など)が付いたURLでも壊れないよう、区切り文字(?/&)を正しく判定する。
   var url=window.location.href;
-  if(url.indexOf('?t=')===-1){
-    window.location.replace(url+'?t='+Date.now());
+  if(url.indexOf('_cb=')===-1){
+    var sep=url.indexOf('?')===-1?'?':'&';
+    window.location.replace(url+sep+'_cb='+Date.now());
   }
 })();
 </script>
