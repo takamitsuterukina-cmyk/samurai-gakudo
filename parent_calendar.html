@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>利用予定の連絡</title>
+<title>利用予定の登録</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
   :root{
@@ -96,6 +96,8 @@
   .viewcard .viewdetail{font-size:13px;color:var(--ink-soft);margin-top:4px;}
   .loadingmsg{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
+  .card .existing-tag{font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
+
   footer{
     position:fixed;bottom:0;left:0;right:0;
     background:var(--surface);border-top:1px solid var(--line);
@@ -116,7 +118,7 @@
 <div id="app" style="display:none">
   <header>
     <div class="childname" id="childname"></div>
-    <h1 id="pageTitle">利用予定を連絡する</h1>
+    <h1 id="pageTitle">利用予定を登録する</h1>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -156,7 +158,8 @@ const PICKUP_LOCATIONS = { genkan: '玄関', classroom: '子ども教室' };
 let userId = null;
 let childInfo = null;
 let viewYear, viewMonth; // viewMonth: 0-11
-const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} }
+const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} } - 今日以降の「現在の予定」を常に表す
+let originalReports = {}; // 画面を開いた時点で既に登録されていた内容のスナップショット(変更/取り消しの判定用)
 
 function pad(n){ return String(n).padStart(2,'0'); }
 function dateKey(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
@@ -177,6 +180,17 @@ async function boot(){
     const now = new Date();
     viewYear = now.getFullYear();
     viewMonth = now.getMonth();
+    const todayKey = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const reportsRes = await fetch(GAS_DIRECT_URL + '?action=myReports&userId=' + encodeURIComponent(userId));
+    const reports = await reportsRes.json();
+    reports.forEach(r => {
+      if (r.date < todayKey) return; // 過去の記録は編集対象にしない
+      const item = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || '15:00' };
+      selected[r.date] = { ...item };
+      originalReports[r.date] = { ...item };
+    });
+
     document.getElementById('status').style.display='none';
     document.getElementById('app').style.display='block';
     renderMonth();
@@ -197,14 +211,14 @@ function switchTab(tab){
   const link = document.getElementById('switchLink');
 
   if(tab === 'input'){
-    title.textContent = '利用予定を連絡する';
-    guide.textContent = 'カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。';
+    title.textContent = '利用予定を登録する';
+    guide.textContent = '登録済みの日もカレンダーに表示されています。内容の変更はカードを直接編集、取り消しはその日をもう一度タップしてください。最後に1回「送信する」で確定します。';
     link.innerHTML = '<a href="#" id="toView">予定を確認する →</a>';
     document.getElementById('toView').onclick = (e) => { e.preventDefault(); switchTab('view'); };
   } else {
     title.textContent = '予定を確認する';
-    guide.textContent = 'これまでに送信した利用予定の一覧です。';
-    link.innerHTML = '<a href="#" id="toInput">利用予定を連絡する →</a>';
+    guide.textContent = 'これまでに登録した最新の内容です(表示のみ)。変更や取り消しは「利用予定を登録する」から行ってください。';
+    link.innerHTML = '<a href="#" id="toInput">利用予定を登録する →</a>';
     document.getElementById('toInput').onclick = (e) => { e.preventDefault(); switchTab('input'); };
     loadSchedule();
   }
@@ -272,11 +286,24 @@ function toggleDay(key){
   renderMonth();
 }
 
+function isDirty(){
+  const curKeys = Object.keys(selected);
+  const origKeys = Object.keys(originalReports);
+  if (curKeys.length !== origKeys.length) return true;
+  return curKeys.some(k => {
+    const o = originalReports[k];
+    if (!o) return true;
+    const c = selected[k];
+    return o.pickup !== c.pickup || o.location !== c.location || o.startTime !== c.startTime;
+  });
+}
+
 function renderList(){
   const list = document.getElementById('list');
-  const keys = Object.keys(selected).sort();
+  const monthPrefix = viewYear + '-' + pad(viewMonth+1);
+  const keys = Object.keys(selected).filter(k => k.startsWith(monthPrefix)).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
-  document.getElementById('submitBtn').disabled = keys.length === 0;
+  document.getElementById('submitBtn').disabled = !isDirty();
   list.innerHTML = '';
   keys.forEach(key => {
     const item = selected[key];
@@ -284,10 +311,11 @@ function renderList(){
     card.className = 'card';
     const [y,m,d] = key.split('-').map(Number);
     const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
+    const isExisting = !!originalReports[key];
     card.innerHTML = `
       <div class="cardhead">
-        <div class="datelabel">${m}/${d}(${dow})</div>
-        <button class="remove" data-key="${key}">削除</button>
+        <div class="datelabel">${m}/${d}(${dow})${isExisting ? '<span class="existing-tag">登録済み</span>' : ''}</div>
+        <button class="remove" data-key="${key}">${isExisting ? '取り消す' : '削除'}</button>
       </div>
       <div class="toggle-row">
         <button class="pk ${item.pickup ? 'on':''}" data-key="${key}" data-v="1">お迎え必要</button>
@@ -323,16 +351,18 @@ document.getElementById('nextMonth').onclick = () => {
 
 document.getElementById('submitBtn').onclick = async () => {
   const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
+  const deletes = Object.keys(originalReports).filter(key => !selected[key]);
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitmsg').textContent = '送信中...';
   try{
     await fetch(GAS_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'batchSubmit', userId, days }),
+      body: JSON.stringify({ action:'batchSubmit', userId, days, deletes }),
     });
     document.getElementById('submitmsg').textContent = '送信しました。トーク画面に戻ってください。';
-    for(const k in selected) delete selected[k];
+    originalReports = {};
+    Object.keys(selected).forEach(k => { originalReports[k] = { ...selected[k] }; });
     renderMonth();
   }catch(err){
     document.getElementById('submitmsg').textContent = '送信に失敗しました。もう一度お試しください。';
