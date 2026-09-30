@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>利用予定の連絡</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root{
+    --accent:#3E6B49;
+    --accent-soft:#EAF1E7;
+    --paper:#F6F4EC;
+    --surface:#FFFFFF;
+    --ink:#23261E;
+    --ink-soft:#767a6c;
+    --line:#DEDBC8;
+    --amber:#A8642A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+    padding-bottom:90px;
+  }
+  header{
+    padding:16px 16px 8px;
+    text-align:center;
+  }
+  header .childname{font-size:13px;color:var(--ink-soft);}
+  header h1{font-size:17px;margin:2px 0 0;}
+  #status{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:14px;}
+
+  .monthbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+  }
+  .monthbar button{
+    border:none;background:var(--surface);border:1px solid var(--line);
+    border-radius:8px;width:36px;height:36px;font-size:16px;color:var(--accent);
+  }
+  .monthbar .label{font-weight:700;font-size:16px;}
+
+  .cal{
+    background:var(--surface);
+    margin:0 16px;border-radius:12px;border:1px solid var(--line);
+    padding:10px;
+  }
+  .cal .dow{
+    display:grid;grid-template-columns:repeat(7,1fr);
+    font-size:11px;color:var(--ink-soft);text-align:center;margin-bottom:4px;
+  }
+  .cal .days{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:4px;
+  }
+  .day{
+    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    border-radius:8px;font-size:14px;background:transparent;border:none;
+    color:var(--ink);position:relative;
+  }
+  .day.empty{visibility:hidden;}
+  .day.selected{background:var(--accent);color:#fff;font-weight:700;}
+  .day .dot{
+    position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--amber);
+  }
+
+  #list{padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  }
+  .card .cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .card .datelabel{font-weight:700;font-size:14px;}
+  .card .remove{color:var(--ink-soft);font-size:12px;background:none;border:none;padding:4px;}
+  .toggle-row{display:flex;gap:8px;margin-bottom:8px;}
+  .toggle-row button{
+    flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);
+    font-size:13px;color:var(--ink);
+  }
+  .toggle-row button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  .detail-row{display:flex;gap:8px;align-items:center;font-size:13px;}
+  .detail-row label{color:var(--ink-soft);width:64px;flex:none;}
+  .detail-row input[type=time]{
+    flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);
+  }
+
+  #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
+
+  footer{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  }
+  footer button{
+    width:100%;padding:13px 0;border:none;border-radius:10px;
+    background:var(--accent);color:#fff;font-size:15px;font-weight:700;
+  }
+  footer button:disabled{background:#B9C4B4;}
+  #submitmsg{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px;}
+</style>
+</head>
+<body>
+
+<div id="status">読み込み中...</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="childname" id="childname"></div>
+    <h1>利用予定を連絡する</h1>
+  </header>
+
+  <div class="monthbar">
+    <button id="prevMonth">‹</button>
+    <div class="label" id="monthLabel"></div>
+    <button id="nextMonth">›</button>
+  </div>
+
+  <div class="cal">
+    <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+    <div class="days" id="days"></div>
+  </div>
+
+  <div id="empty-hint">通う日をカレンダーからタップして選んでください。タップした日がここに追加されます。</div>
+  <div id="list"></div>
+
+  <footer>
+    <button id="submitBtn" disabled>選択した日を送信する</button>
+    <div id="submitmsg"></div>
+  </footer>
+</div>
+
+<script>
+const GAS_URL = 'https://line-webhook-proxy-parent.takamitsuterukina.workers.dev/'; // POST送信先(Cloudflare Worker経由)
+const GAS_DIRECT_URL = 'https://script.google.com/macros/s/AKfycbza6QFA-uhlzqz3v6JOiRI-VkOnLACZq_PM1lC9ElI2J9NpWM7MjjZtwDHLj5MRYMrs/exec'; // childInfo取得用(GET)
+const LIFF_ID = '2011804898-e4TDAddj';
+
+let userId = null;
+let childInfo = null;
+let viewYear, viewMonth; // viewMonth: 0-11
+const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} }
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateKey(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
+
+async function boot(){
+  try{
+    await liff.init({ liffId: LIFF_ID });
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    const idToken = liff.getDecodedIDToken();
+    userId = idToken.sub;
+    const res = await fetch(GAS_DIRECT_URL + '?action=childInfo&userId=' + encodeURIComponent(userId));
+    childInfo = await res.json();
+    if(!childInfo.registered){
+      document.getElementById('status').textContent = 'まだお子さんの登録が済んでいません。トーク画面でお名前を送って登録してから開いてください。';
+      return;
+    }
+    document.getElementById('childname').textContent = childInfo.childName + ' さん';
+    const now = new Date();
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth();
+    document.getElementById('status').style.display='none';
+    document.getElementById('app').style.display='block';
+    renderMonth();
+  }catch(err){
+    document.getElementById('status').textContent = '読み込みに失敗しました。時間を置いてもう一度開いてください。';
+  }
+}
+
+function renderMonth(){
+  document.getElementById('monthLabel').textContent = viewYear + '年' + (viewMonth+1) + '月';
+  const daysEl = document.getElementById('days');
+  daysEl.innerHTML = '';
+  const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  for(let i=0;i<firstDow;i++){
+    const e=document.createElement('div'); e.className='day empty'; daysEl.appendChild(e);
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const key = dateKey(viewYear, viewMonth, d);
+    const btn = document.createElement('button');
+    btn.className = 'day' + (selected[key] ? ' selected' : '');
+    btn.textContent = d;
+    btn.onclick = () => toggleDay(key);
+    daysEl.appendChild(btn);
+  }
+  renderList();
+}
+
+function toggleDay(key){
+  if(selected[key]){
+    delete selected[key];
+  } else {
+    selected[key] = {
+      pickup: !!childInfo.defaultPickup,
+      location: childInfo.defaultLocation || 'genkan',
+      startTime: childInfo.defaultTime || '15:00',
+    };
+  }
+  renderMonth();
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  const keys = Object.keys(selected).sort();
+  document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
+  document.getElementById('submitBtn').disabled = keys.length === 0;
+  list.innerHTML = '';
+  keys.forEach(key => {
+    const item = selected[key];
+    const card = document.createElement('div');
+    card.className = 'card';
+    const [y,m,d] = key.split('-').map(Number);
+    const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
+    card.innerHTML = `
+      <div class="cardhead">
+        <div class="datelabel">${m}/${d}(${dow})</div>
+        <button class="remove" data-key="${key}">削除</button>
+      </div>
+      <div class="toggle-row">
+        <button class="pk ${item.pickup ? 'on':''}" data-key="${key}" data-v="1">お迎え必要</button>
+        <button class="pk ${!item.pickup ? 'on':''}" data-key="${key}" data-v="0">お迎え不要</button>
+      </div>
+      ${item.pickup ? `
+      <div class="toggle-row">
+        <button class="loc ${item.location==='genkan'?'on':''}" data-key="${key}" data-v="genkan">玄関</button>
+        <button class="loc ${item.location==='classroom'?'on':''}" data-key="${key}" data-v="classroom">子ども教室</button>
+      </div>
+      <div class="detail-row">
+        <label>時刻</label>
+        <input type="time" class="time" data-key="${key}" value="${item.startTime}">
+      </div>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; renderMonth(); });
+  list.querySelectorAll('.pk').forEach(b => b.onclick = () => { selected[b.dataset.key].pickup = b.dataset.v==='1'; renderMonth(); });
+  list.querySelectorAll('.loc').forEach(b => b.onclick = () => { selected[b.dataset.key].location = b.dataset.v; renderList(); });
+  list.querySelectorAll('.time').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].startTime = inp.value; });
+}
+
+document.getElementById('prevMonth').onclick = () => {
+  viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;}
+  renderMonth();
+};
+document.getElementById('nextMonth').onclick = () => {
+  viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;}
+  renderMonth();
+};
+
+document.getElementById('submitBtn').onclick = async () => {
+  const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitmsg').textContent = '送信中...';
+  try{
+    await fetch(GAS_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'batchSubmit', userId, days }),
+    });
+    document.getElementById('submitmsg').textContent = '送信しました。トーク画面に戻ってください。';
+    for(const k in selected) delete selected[k];
+    renderMonth();
+  }catch(err){
+    document.getElementById('submitmsg').textContent = '送信に失敗しました。もう一度お試しください。';
+    document.getElementById('submitBtn').disabled = false;
+  }
+};
+
+boot();
+</script>
+</body>
+</html>
