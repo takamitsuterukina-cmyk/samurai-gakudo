@@ -30,6 +30,7 @@
   }
   header .childname{font-size:13px;color:var(--ink-soft);}
   header h1{font-size:17px;margin:2px 0 0;}
+  header .guide{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
   #status{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:14px;}
 
   .monthbar{
@@ -86,6 +87,19 @@
 
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
+  .tabs{display:flex;gap:8px;padding:4px 16px 12px;}
+  .tabs .tab{
+    flex:1;padding:9px 0;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+    font-size:13px;color:var(--ink-soft);font-weight:700;
+  }
+  .tabs .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  #viewList{padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .viewcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+  .viewcard.past{opacity:0.5;}
+  .viewcard .viewdetail{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+  .loadingmsg{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
+
   footer{
     position:fixed;bottom:0;left:0;right:0;
     background:var(--surface);border-top:1px solid var(--line);
@@ -107,23 +121,35 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1>利用予定を連絡する</h1>
+    <div class="guide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
   </header>
 
-  <div class="monthbar">
-    <button id="prevMonth">‹</button>
-    <div class="label" id="monthLabel"></div>
-    <button id="nextMonth">›</button>
+  <div class="tabs">
+    <button id="tabInput" class="tab active">登録する</button>
+    <button id="tabView" class="tab">確認する</button>
   </div>
 
-  <div class="cal">
-    <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
-    <div class="days" id="days"></div>
+  <div id="inputPane">
+    <div class="monthbar">
+      <button id="prevMonth">‹</button>
+      <div class="label" id="monthLabel"></div>
+      <button id="nextMonth">›</button>
+    </div>
+
+    <div class="cal">
+      <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+      <div class="days" id="days"></div>
+    </div>
+
+    <div id="empty-hint">通う日をカレンダーからタップして選んでください。複数日を選んでからまとめて送信できます。</div>
+    <div id="list"></div>
   </div>
 
-  <div id="empty-hint">通う日をカレンダーからタップして選んでください。タップした日がここに追加されます。</div>
-  <div id="list"></div>
+  <div id="viewPane" style="display:none">
+    <div id="viewList"></div>
+  </div>
 
-  <footer>
+  <footer id="inputFooter">
     <button id="submitBtn" disabled>選択した日を送信する</button>
     <div id="submitmsg"></div>
   </footer>
@@ -133,6 +159,7 @@
 const GAS_URL = 'https://line-webhook-proxy-parent.takamitsuterukina.workers.dev/'; // POST送信先(Cloudflare Worker経由)
 const GAS_DIRECT_URL = 'https://script.google.com/macros/s/AKfycbza6QFA-uhlzqz3v6JOiRI-VkOnLACZq_PM1lC9ElI2J9NpWM7MjjZtwDHLj5MRYMrs/exec'; // childInfo取得用(GET)
 const LIFF_ID = '2011804898-e4TDAddj';
+const PICKUP_LOCATIONS = { genkan: '玄関', classroom: '子ども教室' };
 
 let userId = null;
 let childInfo = null;
@@ -161,8 +188,50 @@ async function boot(){
     document.getElementById('status').style.display='none';
     document.getElementById('app').style.display='block';
     renderMonth();
+    const params = new URLSearchParams(location.search);
+    switchTab(params.get('mode') === 'view' ? 'view' : 'input');
   }catch(err){
     document.getElementById('status').textContent = '読み込みに失敗しました。時間を置いてもう一度開いてください。';
+  }
+}
+
+function switchTab(tab){
+  document.getElementById('tabInput').classList.toggle('active', tab === 'input');
+  document.getElementById('tabView').classList.toggle('active', tab === 'view');
+  document.getElementById('inputPane').style.display = tab === 'input' ? 'block' : 'none';
+  document.getElementById('viewPane').style.display = tab === 'view' ? 'block' : 'none';
+  document.getElementById('inputFooter').style.display = tab === 'input' ? 'block' : 'none';
+  if(tab === 'view') loadSchedule();
+}
+document.getElementById('tabInput').onclick = () => switchTab('input');
+document.getElementById('tabView').onclick = () => switchTab('view');
+
+async function loadSchedule(){
+  const listEl = document.getElementById('viewList');
+  listEl.innerHTML = '<div class="loadingmsg">読み込み中...</div>';
+  try{
+    const res = await fetch(GAS_DIRECT_URL + '?action=myReports&userId=' + encodeURIComponent(userId));
+    const reports = await res.json();
+    if(!reports.length){
+      listEl.innerHTML = '<div class="loadingmsg">まだ登録された予定はありません。</div>';
+      return;
+    }
+    const now = new Date();
+    const today = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    listEl.innerHTML = '';
+    reports.forEach(r => {
+      const [y,m,d] = r.date.split('-').map(Number);
+      const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
+      const card = document.createElement('div');
+      card.className = 'viewcard' + (r.date < today ? ' past' : '');
+      card.innerHTML = `
+        <div class="datelabel">${y}/${m}/${d}(${dow})</div>
+        <div class="viewdetail">${r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし'}</div>
+      `;
+      listEl.appendChild(card);
+    });
+  }catch(err){
+    listEl.innerHTML = '<div class="loadingmsg">読み込みに失敗しました。もう一度開き直してください。</div>';
   }
 }
 
