@@ -87,12 +87,8 @@
 
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
-  .tabs{display:flex;gap:8px;padding:4px 16px 12px;}
-  .tabs .tab{
-    flex:1;padding:9px 0;border-radius:8px;border:1px solid var(--line);background:var(--surface);
-    font-size:13px;color:var(--ink-soft);font-weight:700;
-  }
-  .tabs .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .switchlink{margin-top:10px;}
+  .switchlink a{color:var(--accent);font-size:13px;font-weight:700;text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px;}
 
   #viewList{padding:16px;display:flex;flex-direction:column;gap:10px;}
   .viewcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
@@ -120,14 +116,10 @@
 <div id="app" style="display:none">
   <header>
     <div class="childname" id="childname"></div>
-    <h1>利用予定を連絡する</h1>
-    <div class="guide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
+    <h1 id="pageTitle">利用予定を連絡する</h1>
+    <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
+    <div class="switchlink" id="switchLink"></div>
   </header>
-
-  <div class="tabs">
-    <button id="tabInput" class="tab active">登録する</button>
-    <button id="tabView" class="tab">確認する</button>
-  </div>
 
   <div id="inputPane">
     <div class="monthbar">
@@ -196,15 +188,27 @@ async function boot(){
 }
 
 function switchTab(tab){
-  document.getElementById('tabInput').classList.toggle('active', tab === 'input');
-  document.getElementById('tabView').classList.toggle('active', tab === 'view');
   document.getElementById('inputPane').style.display = tab === 'input' ? 'block' : 'none';
   document.getElementById('viewPane').style.display = tab === 'view' ? 'block' : 'none';
   document.getElementById('inputFooter').style.display = tab === 'input' ? 'block' : 'none';
-  if(tab === 'view') loadSchedule();
+
+  const title = document.getElementById('pageTitle');
+  const guide = document.getElementById('pageGuide');
+  const link = document.getElementById('switchLink');
+
+  if(tab === 'input'){
+    title.textContent = '利用予定を連絡する';
+    guide.textContent = 'カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。';
+    link.innerHTML = '<a href="#" id="toView">予定を確認する →</a>';
+    document.getElementById('toView').onclick = (e) => { e.preventDefault(); switchTab('view'); };
+  } else {
+    title.textContent = '予定を確認する';
+    guide.textContent = 'これまでに送信した利用予定の一覧です。';
+    link.innerHTML = '<a href="#" id="toInput">利用予定を連絡する →</a>';
+    document.getElementById('toInput').onclick = (e) => { e.preventDefault(); switchTab('input'); };
+    loadSchedule();
+  }
 }
-document.getElementById('tabInput').onclick = () => switchTab('input');
-document.getElementById('tabView').onclick = () => switchTab('view');
 
 async function loadSchedule(){
   const listEl = document.getElementById('viewList');
