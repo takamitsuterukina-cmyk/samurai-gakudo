@@ -62,6 +62,7 @@
   }
   .day.empty{visibility:hidden;}
   .day.selected{background:var(--accent);color:#fff;font-weight:700;}
+  .day.disabled{color:var(--line);cursor:default;}
   .day .dot{
     position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--amber);
   }
@@ -160,14 +161,35 @@ let childInfo = null;
 let viewYear, viewMonth; // viewMonth: 0-11
 const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} } - 今日以降の「現在の予定」を常に表す
 let originalReports = {}; // 画面を開いた時点で既に登録されていた内容のスナップショット(変更/取り消しの判定用)
+let holidaySet = new Set(); // 'YYYY-MM-DD' -> 祝日名(内閣府準拠の公開データ)
 
 function pad(n){ return String(n).padStart(2,'0'); }
 function dateKey(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
+
+async function loadHolidays(){
+  try{
+    const res = await fetch('https://holidays-jp.github.io/api/v1/date.json');
+    const data = await res.json();
+    holidaySet = new Set(Object.keys(data));
+    renderMonth(); // 取得完了後にカレンダーを再描画して祝日をブロックする
+  }catch(e){
+    // 取得できなくても致命的ではない(日曜日の判定だけは機能する)ので無視する
+  }
+}
+
+/* 日曜日・祝日は休所のため予約不可とする。学童アプリ側で個別設定している閉所日(お盆・年末年始等)は
+   現時点ではここに連携できていないため対象外(今後の同期対応で解消予定)。 */
+function isBookable(key, dow){
+  if(dow === 0) return false;
+  if(holidaySet.has(key)) return false;
+  return true;
+}
 
 async function boot(){
   try{
     await liff.init({ liffId: LIFF_ID });
     if(!liff.isLoggedIn()){ liff.login(); return; }
+    loadHolidays(); // カレンダー描画をブロックしないよう非同期のまま進める(読み込み完了後に自動で再描画)
     const idToken = liff.getDecodedIDToken();
     userId = idToken.sub;
     const res = await fetch(GAS_DIRECT_URL + '?action=childInfo&userId=' + encodeURIComponent(userId));
@@ -264,10 +286,16 @@ function renderMonth(){
   }
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
+    const dow = new Date(viewYear, viewMonth, d).getDay();
+    const bookable = isBookable(key, dow) || !!selected[key]; // 既に登録済みの日は取り消せるよう押せるままにする
     const btn = document.createElement('button');
-    btn.className = 'day' + (selected[key] ? ' selected' : '');
+    btn.className = 'day' + (selected[key] ? ' selected' : '') + (bookable ? '' : ' disabled');
     btn.textContent = d;
-    btn.onclick = () => toggleDay(key);
+    if(bookable){
+      btn.onclick = () => toggleDay(key);
+    }else{
+      btn.disabled = true;
+    }
     daysEl.appendChild(btn);
   }
   renderList();
