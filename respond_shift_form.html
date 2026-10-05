@@ -23,6 +23,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
 .submit-btn:active{opacity:.85;}
 .result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
+.result-box.err{background:#fed7d7;color:#c53030;}
 </style>
 </head>
 <body>
@@ -32,7 +33,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 </div>
 <div class="container">
   <div class="card" id="day-card"></div>
-  <button class="submit-btn" onclick="sendAnswer()">📤 回答を送る</button>
+  <button class="submit-btn" id="send-btn" onclick="sendAnswer()">📤 回答を送る</button>
   <div class="result-box" id="result-box"></div>
 </div>
 
@@ -48,9 +49,11 @@ const answers={};
 
 function parseDays(){
   if(!dParam) return [];
+  // 例: "4:9:00-17:00,6:8:30-16:30"(日:開始-終了)。時刻にも「:」が含まれるため、最初の「:」だけで日と時間帯に分ける
   return dParam.split(',').map(part=>{
-    const [d,range]=part.split(':');
-    const [start,end]=range.split('-');
+    const i=part.indexOf(':');
+    const d=part.slice(0,i);
+    const [start,end]=part.slice(i+1).split('-');
     return {day:Number(d),start,end};
   });
 }
@@ -81,27 +84,71 @@ function setAnswer(day,val){
   document.getElementById('ng-'+day).classList.toggle('sel',val==='x');
 }
 
+// 二重送信を防ぐ仕組み。通信の都合で「失敗」と見えても、実際には受け取り側で処理済みのことがあるため、
+// 送信ごとに固有のrequestIdを付け、押し直し・自動再試行では同じrequestIdを使う。
+// 受け取り側は同じrequestIdを二重に処理しないので、何度押してもteruさんに届くのは1通だけになる。
+let lastReq=null; // {sig,id,at}
+function requestIdFor(sig){
+  const now=Date.now();
+  if(lastReq&&lastReq.sig===sig&&now-lastReq.at<10*60*1000) return lastReq.id;
+  lastReq={sig:sig,id:now.toString(36)+'-'+Math.random().toString(36).slice(2,10),at:now};
+  return lastReq.id;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function postOnce(payload,sig,onRetry){
+  payload.requestId=requestIdFor(sig);
+  let lastErr=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+      const json=await res.json();
+      if(json&&json.ok) return {ok:true,duplicate:!!json.duplicate};
+      return {ok:false,error:(json&&json.error)||'送信失敗'}; // サーバーが明確に断った場合は再試行しない
+    }catch(err){
+      lastErr=err;
+      if(attempt<3){ if(onRetry) onRetry(attempt); await sleep(1500*attempt); }
+    }
+  }
+  return {ok:false,network:true,error:lastErr?lastErr.message:''};
+}
+
+let sending=false;
 async function sendAnswer(){
+  if(sending) return;
   const rb=document.getElementById('result-box');
+  rb.className='result-box';
   if(!staff||!ym||Object.keys(answers).length===0){
+    rb.className='result-box err';
     rb.style.display='block';
     rb.innerHTML='⚠ リンクが正しくないようです。届いたメッセージからもう一度開いてください。';
     return;
   }
-  rb.style.display='block';
-  rb.innerHTML='送信中…';
   const days=parseDays();
   const answersPayload={};
   days.forEach(({day,start,end})=>{
     answersPayload[day]=answers[day]==='x'?{mark:'x'}:{mark:'o',start,end};
   });
+  const btn=document.getElementById('send-btn');
+  sending=true;
+  btn.disabled=true;btn.style.opacity='.6';
+  rb.style.display='block';
+  rb.innerHTML='送信中…';
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({respondShift:true,staff,ym,answers:answersPayload})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'送信失敗');
-    rb.innerHTML='✓ 回答を送りました。ありがとうございます。';
-  }catch(err){
-    rb.innerHTML=`⚠ 送信に失敗しました（${err.message}）`;
+    const r=await postOnce({respondShift:true,staff,ym,answers:answersPayload},JSON.stringify([staff,ym,answersPayload]),n=>{rb.innerHTML='通信を再試行しています…（'+n+'/2）';});
+    if(r.ok){
+      rb.innerHTML=r.duplicate
+        ?'✓ 回答はすでに届いています（同じ内容は二重には送られません）。'
+        :'✓ 回答を送りました。ありがとうございます。';
+    }else if(r.network){
+      rb.className='result-box err';
+      rb.innerHTML='⚠ 通信が不安定で、届いたか確認できませんでした。もう一度「回答を送る」を押してください。すでに届いていても、二重には送られません。';
+    }else{
+      rb.className='result-box err';
+      rb.innerHTML=`⚠ 送信できませんでした（${r.error}）`;
+    }
+  }finally{
+    sending=false;
+    btn.disabled=false;btn.style.opacity='';
   }
 }
 

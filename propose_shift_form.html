@@ -63,6 +63,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
 .submit-btn:active{opacity:.85;}
 .result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
+.result-box.err{background:#fed7d7;color:#c53030;}
 </style>
 </head>
 <body>
@@ -137,7 +138,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
   </div>
 
   <div id="submit-card" style="display:none;">
-    <button class="submit-btn" onclick="sendProposal()">📤 提案を送る</button>
+    <button class="submit-btn" id="send-btn" onclick="sendProposal()">📤 提案を送る</button>
     <div class="result-box" id="result-box"></div>
   </div>
 </div>
@@ -361,7 +362,38 @@ function refresh(){
 
 // ===== 送信 =====
 function timeToMin(t){const [h,mm]=t.split(':').map(Number);return h*60+mm;}
+
+// 二重送信を防ぐ仕組み。通信の都合で「失敗」と見えても、実際には受け取り側で処理済みのことがあるため、
+// 送信ごとに固有のrequestIdを付け、押し直し・自動再試行では同じrequestIdを使う。
+// 受け取り側は同じrequestIdを二重に処理しないので、何度押しても相手に届くのは1通だけになる。
+let lastReq=null; // {sig,id,at}
+function requestIdFor(sig){
+  const now=Date.now();
+  if(lastReq&&lastReq.sig===sig&&now-lastReq.at<10*60*1000) return lastReq.id;
+  lastReq={sig:sig,id:now.toString(36)+'-'+Math.random().toString(36).slice(2,10),at:now};
+  return lastReq.id;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function postOnce(payload,sig,onRetry){
+  payload.requestId=requestIdFor(sig);
+  let lastErr=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+      const json=await res.json();
+      if(json&&json.ok) return {ok:true,duplicate:!!json.duplicate};
+      return {ok:false,error:(json&&json.error)||'送信失敗'}; // サーバーが明確に断った場合は再試行しない
+    }catch(err){
+      lastErr=err;
+      if(attempt<3){ if(onRetry) onRetry(attempt); await sleep(1500*attempt); }
+    }
+  }
+  return {ok:false,network:true,error:lastErr?lastErr.message:''};
+}
+
+let sending=false;
 async function sendProposal(){
+  if(sending) return;
   if(!currentStaff||!currentYm){alert('スタッフ名と月を選択してください');return;}
   const ds=Object.keys(shiftData).map(Number).sort((a,b)=>a-b);
   if(ds.length===0){alert('提案したい日を1つ以上選んでください');return;}
@@ -373,15 +405,28 @@ async function sendProposal(){
   const days={};
   ds.forEach(d=>{days[d]={start:shiftData[d].start,end:shiftData[d].end};});
   const rb=document.getElementById('result-box');
+  const btn=document.getElementById('send-btn');
+  sending=true;
+  btn.disabled=true;btn.style.opacity='.6';
+  rb.className='result-box';
   rb.style.display='block';
   rb.innerHTML='送信中…';
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({proposeShift:true,staff:currentStaff,ym:currentYm,days:days})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'送信失敗');
-    rb.innerHTML=`✓ ${currentStaff}さんに${ds.length}日分の相談を送りました。返信があれば、teruさんのLINEに転送されます。`;
-  }catch(err){
-    rb.innerHTML=`⚠ 送信に失敗しました（${err.message}）`;
+    const r=await postOnce({proposeShift:true,staff:currentStaff,ym:currentYm,days:days},JSON.stringify([currentStaff,currentYm,days]),n=>{rb.innerHTML='通信を再試行しています…（'+n+'/2）';});
+    if(r.ok){
+      rb.innerHTML=r.duplicate
+        ?`✓ ${currentStaff}さんへは、すでに届いています（同じ内容は二重には送られません）。`
+        :`✓ ${currentStaff}さんに${ds.length}日分の相談を送りました。返信があれば、teruさんのLINEに転送されます。`;
+    }else if(r.network){
+      rb.className='result-box err';
+      rb.innerHTML=`⚠ 通信が不安定で、届いたか確認できませんでした。もう一度「提案を送る」を押してください。すでに届いていても、二重には送られません。`;
+    }else{
+      rb.className='result-box err';
+      rb.innerHTML=`⚠ 送信できませんでした（${r.error}）`;
+    }
+  }finally{
+    sending=false;
+    btn.disabled=false;btn.style.opacity='';
   }
 }
 </script>
