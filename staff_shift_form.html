@@ -13,39 +13,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .container{max-width:480px;margin:0 auto;padding:16px;}
 .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
 .card h2{font-size:15px;font-weight:600;margin-bottom:12px;color:#2b6cb0;}
+.hint{font-size:12px;color:#888;margin-bottom:12px;line-height:1.6;}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500;}
 .field select,.field input[type=text],.field input[type=month]{width:100%;max-width:100%;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;background:#fff;color:#1a202c;-webkit-appearance:none;appearance:none;box-sizing:border-box;}
 .month-disp{text-align:center;font-size:20px;font-weight:700;color:#2b6cb0;padding:8px 0;}
+.staff-name-disp{font-size:18px;font-weight:700;color:#1c1a16;text-align:center;padding:4px 0;}
 
-/* シフトパターンボタン */
-.pattern-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;}
-.pattern-btn{padding:10px 4px;border:2px solid #ddd;border-radius:8px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;}
-.pattern-btn:active{transform:scale(.95);}
-.pattern-btn.sel{border-color:#2b6cb0;background:#ebf4ff;color:#2b6cb0;}
-.pattern-sub{font-size:10px;color:#888;margin-top:2px;}
-
-/* 日付カード */
-.day-card{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:12px;margin-bottom:10px;}
-.day-card.has-shift{background:#ebf8ff;border-color:#90cdf4;}
-.day-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.day-num{font-size:18px;font-weight:700;}
-.day-dow{font-size:13px;color:#666;margin-left:6px;}
-.day-dow.sat{color:#2b6cb0;}
-.day-dow.sun{color:#e53e3e;}
+/* いつもの時間 */
+.usual-row{margin-bottom:12px;}
+.usual-row:last-child{margin-bottom:0;}
+.usual-label{font-size:13px;font-weight:600;margin-bottom:6px;}
+.usual-row.need .usual-label{color:#e53e3e;}
 .time-row{display:flex;gap:8px;align-items:center;}
-.time-row select{flex:1;height:40px;border:1px solid #ddd;border-radius:7px;padding:0 8px;font-size:14px;background:#fff;}
+.time-row select{flex:1;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 8px;font-size:15px;background:#fff;}
 .time-sep{font-size:14px;color:#888;flex-shrink:0;}
-.pattern-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-.pat-chip{padding:5px 10px;border:1px solid #cbd5e0;border-radius:6px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.pat-chip:active{transform:scale(.95);}
-.pat-chip.sel{background:#2b6cb0;color:#fff;border-color:#2b6cb0;}
-.clear-btn{padding:5px 10px;border:1px solid #fc8181;border-radius:6px;background:#fff;font-size:12px;color:#e53e3e;cursor:pointer;margin-left:auto;}
+
+/* カレンダー */
+.bulk-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.bulk-btn{padding:7px 10px;border:1px solid #cbd5e0;border-radius:8px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;}
+.bulk-btn:active{transform:scale(.96);}
+.bulk-btn.danger{border-color:#fc8181;color:#e53e3e;margin-left:auto;}
+.cal-msg{display:none;background:#fff5f5;border:1px solid #feb2b2;color:#c53030;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-h{text-align:center;font-size:12px;color:#666;padding:2px 0;font-weight:600;}
+.cal-h.sat{color:#2b6cb0;}
+.cal-h.sun{color:#e53e3e;}
+.cal-cell{min-height:58px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:16px;font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+.cal-cell:active{transform:scale(.95);}
+.cal-cell .t{font-size:9px;font-weight:500;line-height:1.25;color:#4a5568;text-align:center;}
+.cal-cell.sat .n{color:#2b6cb0;}
+.cal-cell.on{background:#2b6cb0;border-color:#2b6cb0;color:#fff;}
+.cal-cell.on .n{color:#fff;}
+.cal-cell.on .t{color:#e2e8f0;}
+.cal-cell.off{background:#f1f1f1;color:#aaa;cursor:default;}
+.cal-cell.off:active{transform:none;}
+
+/* 選んだ日の一覧 */
+.sel-row{background:#ebf8ff;border:1px solid #90cdf4;border-radius:10px;padding:10px;margin-bottom:8px;}
+.sel-row.diff{background:#fffaf0;border-color:#f6ad55;}
+.sel-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.sel-day{font-size:15px;font-weight:700;}
+.sel-day .sat{color:#2b6cb0;}
+.tag{font-size:11px;color:#c05621;font-weight:600;margin-left:8px;}
+.x-btn{padding:4px 10px;border:1px solid #fc8181;border-radius:6px;background:#fff;font-size:12px;color:#e53e3e;cursor:pointer;}
+.sel-row .time-row select{height:40px;font-size:14px;}
+.empty{font-size:13px;color:#a0aec0;text-align:center;padding:8px 0;}
 
 .submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
 .submit-btn:active{opacity:.85;}
 .result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
-.staff-name-disp{font-size:18px;font-weight:700;color:#1c1a16;text-align:center;padding:4px 0;}
 </style>
 </head>
 <body>
@@ -79,16 +96,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
     </div>
   </div>
 
-  <div id="patterns-card" class="card" style="display:none;">
-    <h2>② シフトパターン（全日一括設定）</h2>
-    <p style="font-size:12px;color:#888;margin-bottom:10px;">ボタンを押すと未入力の日に一括適用できます</p>
-    <div class="pattern-btns" id="pattern-btns"></div>
+  <div id="usual-card" class="card" style="display:none;">
+    <h2>② いつもの時間</h2>
+    <p class="hint">一度選ぶと、このスマホが覚えています。次の月からは選び直さなくて大丈夫です。</p>
+    <div class="usual-row" id="usual-wk">
+      <div class="usual-label">平日（月〜金）</div>
+      <div class="time-row">
+        <select id="u-wk-s" onchange="onUsualChange()"></select>
+        <span class="time-sep">〜</span>
+        <select id="u-wk-e" onchange="onUsualChange()"></select>
+      </div>
+    </div>
+    <div class="usual-row" id="usual-sat">
+      <div class="usual-label">土曜（土曜に出勤しない人は空のままで大丈夫です）</div>
+      <div class="time-row">
+        <select id="u-sat-s" onchange="onUsualChange()"></select>
+        <span class="time-sep">〜</span>
+        <select id="u-sat-e" onchange="onUsualChange()"></select>
+      </div>
+    </div>
   </div>
 
   <div id="calendar-card" class="card" style="display:none;">
-    <h2>③ 日付ごとのシフト入力</h2>
-    <p style="font-size:12px;color:#888;margin-bottom:12px;">出勤する日だけ入力してください。パターンボタンで素早く入力できます。</p>
-    <div id="day-list"></div>
+    <h2>③ 出勤する日をタップ</h2>
+    <p class="hint">タップした日は「いつもの時間」で入ります。もう一度タップすると取り消せます。</p>
+    <div class="bulk-row">
+      <button class="bulk-btn" onclick="selectAll('wk')">平日すべて</button>
+      <button class="bulk-btn" onclick="selectAll('sat')">土曜すべて</button>
+      <button class="bulk-btn danger" onclick="clearAll()">全部取り消す</button>
+    </div>
+    <div class="cal-msg" id="cal-msg"></div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div id="list-card" class="card" style="display:none;">
+    <h2>④ 選んだ日の時間</h2>
+    <p class="hint">いつもと違う時間の日だけ、ここで変えてください。</p>
+    <div id="sel-list"></div>
   </div>
 
   <div id="submit-card" style="display:none;">
@@ -115,11 +159,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6Lovy7vdSnGox7dJfFegh1FpgZzWQNRAS8hk7fibFI5FoF1ajviLzVxxaHft4TJHt/exec';
 
 const STAFF_EN={'照喜名':'Terukina','オゲ':'Oge','新関':'Niizeki','森':'Mori','中村':'Nakamura','芝田':'Shibata','荻島':'Ogishima'};
-const PATTERNS={
-  'A':'8:00-17:00','B':'8:00-19:00','C':'9:00-13:00',
-  'D':'9:00-17:00','E':'9:00-19:00','F':'9:30-18:30',
-  'G':'13:00-19:00','H':'12:00-19:00','I':'14:30-18:30'
-};
 const TIMES=['6:00','6:30','7:00','7:30','8:00','8:30','9:00','9:30','10:00','10:30',
   '11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30',
   '16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
@@ -127,8 +166,10 @@ const DOW=['日','月','火','水','木','金','土'];
 
 let currentStaff='';
 let currentYm='';
-// {day: {start, end, pattern}}
+// {day: {start, end}}
 let shiftData={};
+// いつもの時間(スタッフごとにこのスマホへ保存)
+let usual={wk:{start:'',end:''},sat:{start:'',end:''}};
 
 // 翌月をデフォルト設定
 (function(){
@@ -136,24 +177,72 @@ let shiftData={};
   d.setMonth(d.getMonth()+1);
   const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
   document.getElementById('month-input').value=ym;
+  // いつもの時間のプルダウンを用意
+  fillTimeSelect('u-wk-s','-- 開始 --');
+  fillTimeSelect('u-wk-e','-- 終了 --');
+  fillTimeSelect('u-sat-s','-- 開始 --');
+  fillTimeSelect('u-sat-e','-- 終了 --');
 })();
+
+function fillTimeSelect(id,placeholder,selected){
+  const el=document.getElementById(id);
+  el.innerHTML=`<option value="">${placeholder}</option>`+TIMES.map(t=>`<option value="${t}"${selected===t?' selected':''}>${t}</option>`).join('');
+}
 
 // ===== LocalStorage自動保存 =====
 function saveKey(){return`shift_${currentStaff}_${currentYm}`;}
+function usualKey(){return`shift_usual_${currentStaff}`;}
 function autoSave(){
   if(!currentStaff||!currentYm) return;
   try{localStorage.setItem(saveKey(),JSON.stringify(shiftData));}catch(e){}
 }
 function autoLoad(){
-  if(!currentStaff||!currentYm) return;
+  if(!currentStaff||!currentYm) return false;
   try{
     const saved=localStorage.getItem(saveKey());
     if(saved){
-      shiftData=JSON.parse(saved);
+      const raw=JSON.parse(saved);
+      // 以前のシフトパターン付きのデータも、開始・終了が揃った日だけ引き継ぐ
+      shiftData={};
+      Object.keys(raw).forEach(d=>{
+        const v=raw[d];
+        if(v&&v.start&&v.end) shiftData[d]={start:v.start,end:v.end};
+      });
       return true;
     }
   }catch(e){}
   return false;
+}
+function loadUsual(){
+  usual={wk:{start:'',end:''},sat:{start:'',end:''}};
+  try{
+    const s=localStorage.getItem(usualKey());
+    if(s){
+      const o=JSON.parse(s);
+      usual.wk=Object.assign(usual.wk,o.wk||{});
+      usual.sat=Object.assign(usual.sat,o.sat||{});
+    }
+  }catch(e){}
+}
+function saveUsual(){
+  try{localStorage.setItem(usualKey(),JSON.stringify(usual));}catch(e){}
+}
+function syncUsualInputs(){
+  fillTimeSelect('u-wk-s','-- 開始 --',usual.wk.start);
+  fillTimeSelect('u-wk-e','-- 終了 --',usual.wk.end);
+  fillTimeSelect('u-sat-s','-- 開始 --',usual.sat.start);
+  fillTimeSelect('u-sat-e','-- 終了 --',usual.sat.end);
+}
+function onUsualChange(){
+  usual.wk.start=document.getElementById('u-wk-s').value;
+  usual.wk.end=document.getElementById('u-wk-e').value;
+  usual.sat.start=document.getElementById('u-sat-s').value;
+  usual.sat.end=document.getElementById('u-sat-e').value;
+  saveUsual();
+  document.getElementById('usual-wk').classList.remove('need');
+  document.getElementById('usual-sat').classList.remove('need');
+  hideCalMsg();
+  renderList();
 }
 
 function onStaffChange(){
@@ -174,27 +263,20 @@ function updateDisplay(){
   const [y,m]=ym.split('-').map(Number);
   // 保存データがあれば復元
   const restored=autoLoad();
+  loadUsual();
+  syncUsualInputs();
   document.getElementById('staff-disp').textContent=staff+' / '+STAFF_EN[staff];
   document.getElementById('month-disp').textContent=y+'年'+m+'月'+(restored&&Object.keys(shiftData).length>0?' 📂 前回の入力を復元しました':'');
   document.getElementById('staff-month-disp').style.display='block';
-  document.getElementById('patterns-card').style.display='block';
+  document.getElementById('usual-card').style.display='block';
   document.getElementById('calendar-card').style.display='block';
+  document.getElementById('list-card').style.display='block';
   document.getElementById('submit-card').style.display='block';
-  renderPatternBtns();
-  renderDayList(y,m);
-  updateHoursSummary();
+  hideCalMsg();
+  refresh();
 }
-function renderPatternBtns(){
-  const html=Object.entries(PATTERNS).map(([k,v])=>{
-    const [s,e]=v.split('-');
-    return`<div class="pattern-btn" data-pat="${k}" onclick="applyPatternAll('${k}')">
-      <div>${k}</div>
-      <div class="pattern-sub">${s}</div>
-      <div class="pattern-sub">${e}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('pattern-btns').innerHTML=html;
-}
+
+// ===== 勤務時間計算 =====
 function laborMinutes(startStr,endStr){
   const [sh,sm]=startStr.split(':').map(Number);
   const [eh,em]=endStr.split(':').map(Number);
@@ -228,113 +310,144 @@ function updateHoursSummary(){
     statusEl.style.color=isOver?'#2b6cb0':'#c53030';
   }
 }
-function applyPattern(d,pat){
-  const [s,e]=PATTERNS[pat].split('-');
-  shiftData[d]={start:s,end:e,pattern:pat};
-  const [y,m]=currentYm.split('-').map(Number);
-  renderDayList(y,m);
-  updateHoursSummary();
-  autoSave();
+
+// ===== カレンダー =====
+function ymParts(){return currentYm.split('-').map(Number);}
+function usualFor(dow){return dow===6?usual.sat:usual.wk;}
+function hasUsual(u){return !!(u.start&&u.end);}
+
+function showCalMsg(text,needIds){
+  const el=document.getElementById('cal-msg');
+  el.textContent=text;
+  el.style.display='block';
+  document.getElementById('usual-wk').classList.remove('need');
+  document.getElementById('usual-sat').classList.remove('need');
+  (needIds||[]).forEach(id=>document.getElementById(id).classList.add('need'));
+  const card=document.getElementById('usual-card');
+  if(card&&card.scrollIntoView) card.scrollIntoView({behavior:'smooth',block:'center'});
 }
-function clearDay(d){
-  delete shiftData[d];
-  const [y,m]=currentYm.split('-').map(Number);
-  renderDayList(y,m);
-  updateHoursSummary();
-  autoSave();
+function hideCalMsg(){
+  const el=document.getElementById('cal-msg');
+  if(el) el.style.display='none';
 }
-function applyPatternAll(pat){
-  const ym=currentYm;
-  const [y,m]=ym.split('-').map(Number);
+
+function toggleDay(d){
+  const [y,m]=ymParts();
+  if(shiftData[d]){
+    delete shiftData[d];
+  } else {
+    const dow=new Date(y,m-1,d).getDay();
+    const u=usualFor(dow);
+    if(!hasUsual(u)){
+      showCalMsg(dow===6?'先に「土曜のいつもの時間」を選んでください':'先に「平日のいつもの時間」を選んでください',[dow===6?'usual-sat':'usual-wk']);
+      return;
+    }
+    shiftData[d]={start:u.start,end:u.end};
+  }
+  hideCalMsg();
+  refresh();
+}
+function selectAll(kind){
+  const [y,m]=ymParts();
+  const u=kind==='sat'?usual.sat:usual.wk;
+  if(!hasUsual(u)){
+    showCalMsg(kind==='sat'?'先に「土曜のいつもの時間」を選んでください':'先に「平日のいつもの時間」を選んでください',[kind==='sat'?'usual-sat':'usual-wk']);
+    return;
+  }
   const days=new Date(y,m,0).getDate();
   for(let d=1;d<=days;d++){
     const dow=new Date(y,m-1,d).getDay();
     if(dow===0) continue;
-    if(!shiftData[d]){
-      const [s,e]=PATTERNS[pat].split('-');
-      shiftData[d]={start:s,end:e,pattern:pat};
-    }
+    if(kind==='sat'?dow!==6:dow===6) continue;
+    if(!shiftData[d]) shiftData[d]={start:u.start,end:u.end};
   }
-  renderDayList(y,m);
-  updateHoursSummary();
+  hideCalMsg();
+  refresh();
 }
-function timeOptions(selected){
-  return TIMES.map(t=>`<option value="${t}"${selected===t?' selected':''}>${t}</option>`).join('');
+function clearAll(){
+  if(Object.keys(shiftData).length===0) return;
+  if(!confirm('選んだ日をすべて取り消しますか？')) return;
+  shiftData={};
+  refresh();
 }
-function renderDayList(y,m){
-  const days=new Date(y,m,0).getDate();
-  let html='';
-  for(let d=1;d<=days;d++){
-    const dow=new Date(y,m-1,d).getDay();
-    const isSun=dow===0,isSat=dow===6;
-    if(isSun){
-      html+=`<div class="day-card" style="opacity:.4;">
-        <div class="day-header">
-          <span><span class="day-num">${d}</span><span class="day-dow sun">日（休）</span></span>
-        </div>
-      </div>`;
-      continue;
-    }
-    const sd=shiftData[d];
-    const hasShift=!!sd;
-    html+=`<div class="day-card${hasShift?' has-shift':''}" id="dc-${d}">
-      <div class="day-header">
-        <span><span class="day-num">${d}</span><span class="day-dow${isSat?' sat':''}">${DOW[dow]}</span></span>
-        ${hasShift?`<button class="clear-btn" onclick="clearDay(${d})">クリア</button>`:''}
-      </div>
-      <div class="time-row">
-        <select id="s-${d}" onchange="onTimeChange(${d})">
-          <option value="">-- 開始 --</option>
-          ${timeOptions(sd?.start||'')}
-        </select>
-        <span class="time-sep">〜</span>
-        <select id="e-${d}" onchange="onTimeChange(${d})">
-          <option value="">-- 終了 --</option>
-          ${timeOptions(sd?.end||'')}
-        </select>
-      </div>
-      <div class="pattern-row">
-        ${Object.entries(PATTERNS).map(([k,v])=>`<div class="pat-chip${sd?.pattern===k?' sel':''}" onclick="applyPattern(${d},'${k}')"><b>${k}</b> <span style="font-size:10px;font-weight:400;">${v}</span></div>`).join('')}
-      </div>
-    </div>`;
-  }
-  document.getElementById('day-list').innerHTML=html;
+function clearDay(d){
+  delete shiftData[d];
+  refresh();
 }
 function onTimeChange(d){
   const s=document.getElementById('s-'+d)?.value||'';
   const e=document.getElementById('e-'+d)?.value||'';
-  if(s||e){
-    if(!shiftData[d]) shiftData[d]={start:'',end:'',pattern:''};
-    if(s) shiftData[d].start=s;
-    if(e) shiftData[d].end=e;
-    document.getElementById('dc-'+d)?.classList.add('has-shift');
-  }
-  if(!s&&!e){
-    delete shiftData[d];
-    document.getElementById('dc-'+d)?.classList.remove('has-shift');
-  }
-  // 開始・終了両方揃った時だけ再描画・保存
-  if(shiftData[d]?.start&&shiftData[d]?.end){
-    const [y,m]=currentYm.split('-').map(Number);
-    renderDayList(y,m);
-    updateHoursSummary();
-    autoSave();
-  }
+  if(!shiftData[d]||!s||!e) return;
+  shiftData[d]={start:s,end:e};
+  refresh();
 }
-function applyPattern(d,pat){
-  const [s,e]=PATTERNS[pat].split('-');
-  shiftData[d]={start:s,end:e,pattern:pat};
-  const [y,m]=currentYm.split('-').map(Number);
-  renderDayList(y,m);
+
+function renderCal(){
+  const [y,m]=ymParts();
+  const days=new Date(y,m,0).getDate();
+  const first=(new Date(y,m-1,1).getDay()+6)%7; // 月曜始まり
+  let html=['月','火','水','木','金','土','日'].map((n,i)=>`<div class="cal-h${i===5?' sat':''}${i===6?' sun':''}">${n}</div>`).join('');
+  for(let i=0;i<first;i++) html+='<div></div>';
+  for(let d=1;d<=days;d++){
+    const dow=new Date(y,m-1,d).getDay();
+    if(dow===0){
+      html+=`<div class="cal-cell off"><span class="n">${d}</span><span class="t">休</span></div>`;
+      continue;
+    }
+    const sd=shiftData[d];
+    const on=!!(sd&&sd.start&&sd.end);
+    html+=`<div class="cal-cell${on?' on':''}${dow===6?' sat':''}" onclick="toggleDay(${d})"><span class="n">${d}</span>${on?`<span class="t">${sd.start}<br>${sd.end}</span>`:''}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+function timeOptions(selected){
+  return TIMES.map(t=>`<option value="${t}"${selected===t?' selected':''}>${t}</option>`).join('');
+}
+function renderList(){
+  const [y,m]=ymParts();
+  const ds=Object.keys(shiftData).map(Number).sort((a,b)=>a-b);
+  if(!ds.length){
+    document.getElementById('sel-list').innerHTML='<div class="empty">まだ日付が選ばれていません</div>';
+    return;
+  }
+  document.getElementById('sel-list').innerHTML=ds.map(d=>{
+    const dow=new Date(y,m-1,d).getDay();
+    const sd=shiftData[d];
+    const u=usualFor(dow);
+    const diff=hasUsual(u)&&(sd.start!==u.start||sd.end!==u.end);
+    return`<div class="sel-row${diff?' diff':''}">
+      <div class="sel-top">
+        <span class="sel-day">${d}日<span class="${dow===6?'sat':''}">(${DOW[dow]})</span>${diff?'<span class="tag">いつもと違う</span>':''}</span>
+        <button class="x-btn" onclick="clearDay(${d})">取り消す</button>
+      </div>
+      <div class="time-row">
+        <select id="s-${d}" onchange="onTimeChange(${d})">${timeOptions(sd.start)}</select>
+        <span class="time-sep">〜</span>
+        <select id="e-${d}" onchange="onTimeChange(${d})">${timeOptions(sd.end)}</select>
+      </div>
+    </div>`;
+  }).join('');
+}
+function refresh(){
+  renderCal();
+  renderList();
   updateHoursSummary();
+  autoSave();
 }
-function clearDay(d){
-  delete shiftData[d];
-  const [y,m]=currentYm.split('-').map(Number);
-  renderDayList(y,m);
+
+// ===== 送信 =====
+function checkTimes(){
+  const bad=Object.keys(shiftData).map(Number).sort((a,b)=>a-b).filter(d=>laborMinutes(shiftData[d].start,shiftData[d].end)<=0);
+  if(bad.length){
+    alert(bad.map(d=>d+'日').join('、')+'は、終了が開始より前（または同じ）になっています。時間を直してください。');
+    return false;
+  }
+  return true;
 }
 function buildOutput(){
   if(!currentStaff||!currentYm){alert('スタッフ名と月を選択してください');return null;}
+  if(!checkTimes()) return null;
   const ymKey=currentYm;
 
   // 月間総労働時間計算(休憩控除後)
@@ -342,9 +455,11 @@ function buildOutput(){
   const totalH=Math.floor(totalMinutes/60);
   const totalM=totalMinutes%60;
 
+  const days={};
+  Object.keys(shiftData).forEach(d=>{days[d]={start:shiftData[d].start,end:shiftData[d].end};});
   const staffShiftData={};
   staffShiftData[ymKey]={};
-  staffShiftData[ymKey][currentStaff]=shiftData;
+  staffShiftData[ymKey][currentStaff]=days;
   return {
     staffShiftOnly:true,
     staff:currentStaff,
