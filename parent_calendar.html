@@ -86,6 +86,14 @@
     flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);
   }
 
+  #childpick{margin:0 16px 8px;display:none;}
+  #childpick .pickhead{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  #childpick .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  #childpick .chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink);}
+  #childpick .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  #childpick .pickmsg{font-size:11px;color:var(--amber);margin-top:6px;line-height:1.5;}
+  .viewcard .who{font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;}
+
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
   .switchlink{margin-top:10px;}
@@ -125,6 +133,7 @@
   </header>
 
   <div id="inputPane">
+    <div id="childpick"><div class="pickhead">予定を登録するお子さん（タップで選択・複数選ぶとまとめて登録）</div><div class="chips" id="chips"></div><div class="pickmsg" id="pickmsg"></div></div>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
       <div class="label" id="monthLabel"></div>
@@ -161,6 +170,10 @@ let childInfo = null;
 let viewYear, viewMonth; // viewMonth: 0-11
 const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} } - 今日以降の「現在の予定」を常に表す
 let originalReports = {}; // 画面を開いた時点で既に登録されていた内容のスナップショット(変更/取り消しの判定用)
+let children = [];            // 登録されているお子さん(きょうだいがいれば複数)
+let selectedChildren = [];    // 今、予定を登録する対象のお子さん(複数ならまとめて登録)
+let reportsByChild = {};      // { お子さん名: { 'YYYY-MM-DD': {pickup, location, startTime} } } 今日以降の登録済みの内容
+let todayKeyG = '';
 let holidaySet = new Set(); // 'YYYY-MM-DD' -> 祝日名(内閣府準拠の公開データ)
 
 function pad(n){ return String(n).padStart(2,'0'); }
@@ -198,20 +211,24 @@ async function boot(){
       document.getElementById('status').textContent = 'まだお子さんの登録が済んでいません。トーク画面でお名前を送って登録してから開いてください。';
       return;
     }
-    document.getElementById('childname').textContent = childInfo.childName + ' さん';
+    children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
+    document.getElementById('childname').textContent = children.join('・') + ' さん';
     const now = new Date();
     viewYear = now.getFullYear();
     viewMonth = now.getMonth();
-    const todayKey = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const reportsRes = await fetch(GAS_DIRECT_URL + '?action=myReports&userId=' + encodeURIComponent(userId));
+    const reportsRes = await fetch(GAS_DIRECT_URL + '?action=myReports&all=1&userId=' + encodeURIComponent(userId));
     const reports = await reportsRes.json();
+    children.forEach(c => { reportsByChild[c] = {}; });
     reports.forEach(r => {
-      if (r.date < todayKey) return; // 過去の記録は編集対象にしない
-      const item = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || '15:00' };
-      selected[r.date] = { ...item };
-      originalReports[r.date] = { ...item };
+      if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
+      const name = (r.childName && reportsByChild[r.childName]) ? r.childName : children[0];
+      reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || '15:00' };
     });
+    selectedChildren = children.slice(); // 初期状態は全員まとめて
+    loadChildState();
+    renderChips();
 
     document.getElementById('status').style.display='none';
     document.getElementById('app').style.display='block';
@@ -250,7 +267,7 @@ async function loadSchedule(){
   const listEl = document.getElementById('viewList');
   listEl.innerHTML = '<div class="loadingmsg">読み込み中...</div>';
   try{
-    const res = await fetch(GAS_DIRECT_URL + '?action=myReports&userId=' + encodeURIComponent(userId));
+    const res = await fetch(GAS_DIRECT_URL + '?action=myReports&all=1&userId=' + encodeURIComponent(userId));
     const reports = await res.json();
     if(!reports.length){
       listEl.innerHTML = '<div class="loadingmsg">まだ登録された予定はありません。</div>';
@@ -259,15 +276,26 @@ async function loadSchedule(){
     const now = new Date();
     const today = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
     listEl.innerHTML = '';
-    reports.forEach(r => {
-      const [y,m,d] = r.date.split('-').map(Number);
+    const multi = children.length > 1;
+    const dates = Array.from(new Set(reports.map(r => r.date))).sort();
+    dates.forEach(date => {
+      const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
+      const rs = reports.filter(r => r.date === date);
+      const detailOf = r => r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし';
+      // きょうだいで内容が同じなら1行にまとめる
+      const groups = [];
+      rs.forEach(r => {
+        const dt = detailOf(r);
+        const g = groups.find(x => x.dt === dt);
+        if (g) g.names.push(r.childName); else groups.push({ dt, names: [r.childName] });
+      });
+      const body = groups.map(g => multi
+        ? '<div class="who">' + g.names.join('・') + 'さん</div><div class="viewdetail">' + g.dt + '</div>'
+        : '<div class="viewdetail">' + g.dt + '</div>').join('');
       const card = document.createElement('div');
-      card.className = 'viewcard' + (r.date < today ? ' past' : '');
-      card.innerHTML = `
-        <div class="datelabel">${y}/${m}/${d}(${dow})</div>
-        <div class="viewdetail">${r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし'}</div>
-      `;
+      card.className = 'viewcard' + (date < today ? ' past' : '');
+      card.innerHTML = '<div class="datelabel">' + y + '/' + m + '/' + d + '(' + dow + ')</div>' + body;
       listEl.appendChild(card);
     });
   }catch(err){
@@ -314,16 +342,62 @@ function toggleDay(key){
   renderMonth();
 }
 
-function isDirty(){
+/* 画面に表示している内容を基準に、選択中のお子さんのうち1人でも登録済みの内容と違えば「送信できる」状態にする。
+   (まとめて登録のとき、お子さん同士で予定が違っていても、送信すれば全員同じにそろう) */
+function sameAsSelected(rep){
   const curKeys = Object.keys(selected);
-  const origKeys = Object.keys(originalReports);
-  if (curKeys.length !== origKeys.length) return true;
-  return curKeys.some(k => {
-    const o = originalReports[k];
-    if (!o) return true;
+  if (curKeys.length !== Object.keys(rep).length) return false;
+  return curKeys.every(k => {
+    const o = rep[k];
+    if (!o) return false;
     const c = selected[k];
-    return o.pickup !== c.pickup || o.location !== c.location || o.startTime !== c.startTime;
+    return o.pickup === c.pickup && o.location === c.location && o.startTime === c.startTime;
   });
+}
+function isDirty(){
+  return selectedChildren.some(c => !sameAsSelected(reportsByChild[c] || {}));
+}
+
+/* 画面で触った変更があるか(基準のお子さんの登録内容と、いま表示している内容が違うか) */
+function isEdited(){
+  return !sameAsSelected(reportsByChild[selectedChildren[0]] || {});
+}
+
+/* 対象のお子さんが変わった時に、カレンダーに出す内容を切り替える(先頭のお子さんの登録内容を基準に表示) */
+function loadChildState(){
+  Object.keys(selected).forEach(k => delete selected[k]);
+  const base = reportsByChild[selectedChildren[0]] || {};
+  Object.keys(base).forEach(k => { selected[k] = { ...base[k] }; });
+  originalReports = {};
+  Object.keys(base).forEach(k => { originalReports[k] = { ...base[k] }; });
+}
+
+function renderChips(){
+  const box = document.getElementById('childpick');
+  if (children.length < 2) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const chips = document.getElementById('chips');
+  chips.innerHTML = '';
+  const allOn = selectedChildren.length === children.length;
+  const mk = (label, on, fn) => { const b = document.createElement('button'); b.className = 'chip' + (on ? ' on' : ''); b.textContent = label; b.onclick = fn; chips.appendChild(b); };
+  mk('全員まとめて', allOn, () => changeChildren(children.slice()));
+  children.forEach(c => mk(c, !allOn && selectedChildren.indexOf(c) >= 0 && selectedChildren.length === 1, () => changeChildren([c])));
+  const msg = document.getElementById('pickmsg');
+  const differ = selectedChildren.length > 1 && selectedChildren.some(c => !sameAsReports(reportsByChild[c] || {}, reportsByChild[selectedChildren[0]] || {}));
+  msg.textContent = differ ? '※ お子さんごとに登録済みの予定が違います。いま表示しているのは「' + selectedChildren[0] + '」さんの内容です。送信すると、選んだ全員がこの内容にそろいます。' : '';
+}
+function sameAsReports(a, b){
+  const ak = Object.keys(a), bk = Object.keys(b);
+  if (ak.length !== bk.length) return false;
+  return ak.every(k => b[k] && a[k].pickup === b[k].pickup && a[k].location === b[k].location && a[k].startTime === b[k].startTime);
+}
+function changeChildren(list){
+  if (list.join('|') === selectedChildren.join('|')) return;
+  if (isEdited() && !confirm('まだ送信していない変更があります。お子さんを切り替えると、その変更は消えます。よろしいですか？')) return;
+  selectedChildren = list;
+  loadChildState();
+  renderChips();
+  renderMonth();
 }
 
 function renderList(){
@@ -332,6 +406,7 @@ function renderList(){
   const keys = Object.keys(selected).filter(k => k.startsWith(monthPrefix)).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
   document.getElementById('submitBtn').disabled = !isDirty();
+  document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
   list.innerHTML = '';
   keys.forEach(key => {
     const item = selected[key];
@@ -379,18 +454,25 @@ document.getElementById('nextMonth').onclick = () => {
 
 document.getElementById('submitBtn').onclick = async () => {
   const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
-  const deletes = Object.keys(originalReports).filter(key => !selected[key]);
+  // 取り消す日: 選んだお子さんのうち誰かに登録済みで、今の画面では選ばれていない日(まとめて登録のときは全員そろえる)
+  const delSet = new Set();
+  selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => { if (!selected[k]) delSet.add(k); }));
+  const deletes = Array.from(delSet);
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitmsg').textContent = '送信中...';
   try{
     await fetch(GAS_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'batchSubmit', userId, days, deletes }),
+      body: JSON.stringify({ action:'batchSubmit', userId, days, deletes, children: selectedChildren }),
     });
     document.getElementById('submitmsg').textContent = '送信しました。トーク画面に戻ってください。';
-    originalReports = {};
-    Object.keys(selected).forEach(k => { originalReports[k] = { ...selected[k] }; });
+    selectedChildren.forEach(c => {
+      reportsByChild[c] = {};
+      Object.keys(selected).forEach(k => { reportsByChild[c][k] = { ...selected[k] }; });
+    });
+    loadChildState();
+    renderChips();
     renderMonth();
   }catch(err){
     document.getElementById('submitmsg').textContent = '送信に失敗しました。もう一度お試しください。';
