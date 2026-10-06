@@ -29,7 +29,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 <body>
 <div class="header">
   <h1>📅 さむらい学童 シフト回答</h1>
-  <p>日ごとに○×で回答してください</p>
+  <p>日ごとに回答してください(入れる日は○、入れない日は×。「お休みにしてもいいですか？」の日は、OKか、入るかを選びます)</p>
 </div>
 <div class="container">
   <div class="card" id="day-card"></div>
@@ -57,7 +57,9 @@ function parseDays(){
   return dParam.split(',').map(part=>{
     const i=part.indexOf(':');
     const d=part.slice(0,i);
-    const [start,end]=part.slice(i+1).split('-');
+    const v=part.slice(i+1);
+    if(v==='R') return {day:Number(d),remove:true}; // 「お休みにしたい」の打診
+    const [start,end]=v.split('-');
     return {day:Number(d),start,end};
   });
 }
@@ -65,9 +67,21 @@ function parseDays(){
 function render(){
   const [y,m]=ym.split('-').map(Number);
   const days=parseDays();
-  const html=days.map(({day,start,end})=>{
+  const html=days.map(({day,start,end,remove})=>{
     answers[day]='o';
     const dow=DOW[new Date(y,m-1,day).getDay()];
+    if(remove){
+      return `<div class="day-row">
+      <div>
+        <div class="day-label">${m}/${day}(${dow})</div>
+        <div class="day-time" style="color:#c53030;">お休みにしてもいいですか？</div>
+      </div>
+      <div class="toggle">
+        <button class="toggle-btn ok sel" id="ok-${day}" onclick="setAnswer(${day},'o')">OK</button>
+        <button class="toggle-btn ng" id="ng-${day}" onclick="setAnswer(${day},'x')">入る</button>
+      </div>
+    </div>`;
+    }
     return `<div class="day-row">
       <div>
         <div class="day-label">${m}/${day}(${dow})</div>
@@ -137,7 +151,8 @@ async function sendAnswer(){
   const days=parseDays();
   const answersPayload={};
   const missing=[];
-  days.forEach(({day,start,end})=>{
+  days.forEach(({day,start,end,remove})=>{
+    if(remove){answersPayload[day]={mark:answers[day]==='x'?'x':'o',remove:true};return;} // お休みにしたい日: OK=お休み / 入る=そのまま
     if(answers[day]==='x'){answersPayload[day]={mark:'x'};return;}
     // 時間が決まっていなかった日は、ここで選んだ時間を使う
     const s=start||(document.getElementById('ts-'+day)||{}).value||'';
