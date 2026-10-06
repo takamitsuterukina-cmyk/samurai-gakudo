@@ -81,7 +81,7 @@
   }
   .toggle-row button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   .detail-row{display:flex;gap:8px;align-items:center;font-size:13px;}
-  .detail-row label{color:var(--ink-soft);width:64px;flex:none;}
+  .detail-row label{color:var(--ink-soft);width:84px;flex:none;}
   .detail-row input[type=time]{
     flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);
   }
@@ -93,6 +93,10 @@
   #childpick .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   #childpick .pickmsg{font-size:11px;color:var(--amber);margin-top:6px;line-height:1.5;}
   .viewcard .who{font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;}
+
+  .detail-row .clear{flex:none;border:none;background:none;color:var(--ink-soft);font-size:12px;padding:4px 6px;text-decoration:underline;}
+  .detail-row.end{margin-top:8px;}
+  .hint{font-size:11px;color:var(--ink-soft);margin:4px 0 0 92px;line-height:1.4;}
 
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
@@ -224,7 +228,7 @@ async function boot(){
     reports.forEach(r => {
       if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
       const name = (r.childName && reportsByChild[r.childName]) ? r.childName : children[0];
-      reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || '15:00' };
+      reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || '15:00', endTime: r.endTime || '' };
     });
     selectedChildren = children.slice(); // 初期状態は全員まとめて
     loadChildState();
@@ -282,7 +286,7 @@ async function loadSchedule(){
       const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
       const rs = reports.filter(r => r.date === date);
-      const detailOf = r => r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし';
+      const detailOf = r => (r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし') + (r.endTime ? '・帰り' + r.endTime : '');
       // きょうだいで内容が同じなら1行にまとめる
       const groups = [];
       rs.forEach(r => {
@@ -337,6 +341,7 @@ function toggleDay(key){
       pickup: !!childInfo.defaultPickup,
       location: childInfo.defaultLocation || 'genkan',
       startTime: childInfo.defaultTime || '15:00',
+      endTime: '',
     };
   }
   renderMonth();
@@ -351,7 +356,7 @@ function sameAsSelected(rep){
     const o = rep[k];
     if (!o) return false;
     const c = selected[k];
-    return o.pickup === c.pickup && o.location === c.location && o.startTime === c.startTime;
+    return o.pickup === c.pickup && o.location === c.location && o.startTime === c.startTime && (o.endTime || '') === (c.endTime || '');
   });
 }
 function isDirty(){
@@ -389,7 +394,7 @@ function renderChips(){
 function sameAsReports(a, b){
   const ak = Object.keys(a), bk = Object.keys(b);
   if (ak.length !== bk.length) return false;
-  return ak.every(k => b[k] && a[k].pickup === b[k].pickup && a[k].location === b[k].location && a[k].startTime === b[k].startTime);
+  return ak.every(k => b[k] && a[k].pickup === b[k].pickup && a[k].location === b[k].location && a[k].startTime === b[k].startTime && (a[k].endTime || '') === (b[k].endTime || ''));
 }
 function changeChildren(list){
   if (list.join('|') === selectedChildren.join('|')) return;
@@ -430,9 +435,15 @@ function renderList(){
         <button class="loc ${item.location==='classroom'?'on':''}" data-key="${key}" data-v="classroom">子ども教室</button>
       </div>
       <div class="detail-row">
-        <label>時刻</label>
+        <label>下校の時刻</label>
         <input type="time" class="time" data-key="${key}" value="${item.startTime}">
       </div>` : ''}
+      <div class="detail-row end">
+        <label>帰りの時刻</label>
+        <input type="time" class="etime" data-key="${key}" value="${item.endTime || ''}">
+        <button class="clear" data-key="${key}" style="${item.endTime ? '' : 'visibility:hidden'}">消す</button>
+      </div>
+      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。</div>
     `;
     list.appendChild(card);
   });
@@ -440,7 +451,9 @@ function renderList(){
   list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; renderMonth(); });
   list.querySelectorAll('.pk').forEach(b => b.onclick = () => { selected[b.dataset.key].pickup = b.dataset.v==='1'; renderMonth(); });
   list.querySelectorAll('.loc').forEach(b => b.onclick = () => { selected[b.dataset.key].location = b.dataset.v; renderList(); });
-  list.querySelectorAll('.time').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].startTime = inp.value; });
+  list.querySelectorAll('.time').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].startTime = inp.value; renderList(); });
+  list.querySelectorAll('.etime').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].endTime = inp.value; renderList(); });
+  list.querySelectorAll('.clear').forEach(b => b.onclick = () => { selected[b.dataset.key].endTime = ''; renderList(); });
 }
 
 document.getElementById('prevMonth').onclick = () => {
@@ -454,6 +467,11 @@ document.getElementById('nextMonth').onclick = () => {
 
 document.getElementById('submitBtn').onclick = async () => {
   const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
+  const bad = days.filter(d => d.endTime && d.pickup && d.startTime && d.endTime <= d.startTime);
+  if (bad.length) {
+    document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
+    return;
+  }
   // 取り消す日: 選んだお子さんのうち誰かに登録済みで、今の画面では選ばれていない日(まとめて登録のときは全員そろえる)
   const delSet = new Set();
   selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => { if (!selected[k]) delSet.add(k); }));
