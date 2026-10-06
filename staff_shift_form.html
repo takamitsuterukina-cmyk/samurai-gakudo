@@ -160,8 +160,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6Lovy7vdSnGox7dJfFegh1FpgZzWQNRAS8hk7fibFI5FoF1ajviLzVxxaHft4TJHt/exec';
 
 const STAFF_EN={'照喜名':'Terukina','オゲ':'Oge','新関':'Niizeki','森':'Mori','中村':'Nakamura','芝田':'Shibata','荻島':'Ogishima','テスト':'Test'};
-// 管理者が自分のスマホでテストする時だけ(アドレスの末尾に ?test=1)、架空のスタッフ「テスト」を選べる
-try{ if(new URLSearchParams(location.search).get('test')==='1'){ const o=document.createElement('option'); o.value='テスト'; o.textContent='テスト(確認用)'; document.getElementById('staff-select').appendChild(o); } }catch(e){}
+// 管理者が自分のスマホでテストする時だけ、架空のスタッフ「テスト」を選べる。
+// 「テストスタッフ開始」の返信のリンク(末尾が ?test=1)を一度開くと、このスマホでは、メニューのボタンから開いても「テスト」が出る。
+// 「?test=0」のリンク(テストスタッフ終了の返信に付く)で、元に戻る。実際のスタッフのスマホには出ない。
+try{
+  const q=new URLSearchParams(location.search).get('test');
+  if(q==='1') localStorage.setItem('samuraiTestStaff','1');
+  if(q==='0') localStorage.removeItem('samuraiTestStaff');
+  if(localStorage.getItem('samuraiTestStaff')==='1'){
+    const sel=document.getElementById('staff-select');
+    const o=document.createElement('option'); o.value='テスト'; o.textContent='テスト(確認用)';
+    sel.appendChild(o);
+  }
+}catch(e){}
 const TIMES=['6:00','6:30','7:00','7:30','8:00','8:30','9:00','9:30','10:00','10:30',
   '11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30',
   '16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
