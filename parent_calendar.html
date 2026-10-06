@@ -94,7 +94,7 @@
   #childpick .pickmsg{font-size:11px;color:var(--amber);margin-top:6px;line-height:1.5;}
   .viewcard .who{font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;}
 
-  .detail-row .clear{flex:none;border:none;background:none;color:var(--ink-soft);font-size:12px;padding:4px 6px;text-decoration:underline;}
+  .hint .clear{display:inline-block;margin-left:8px;border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;padding:2px 0;text-decoration:underline;}
   .detail-row.end{margin-top:8px;}
   .hint{font-size:11px;color:var(--ink-soft);margin:4px 0 0 92px;line-height:1.4;}
 
@@ -441,9 +441,8 @@ function renderList(){
       <div class="detail-row end">
         <label>帰りの時刻</label>
         <input type="time" class="etime" data-key="${key}" value="${item.endTime || ''}">
-        <button class="clear" data-key="${key}" style="${item.endTime ? '' : 'visibility:hidden'}">消す</button>
       </div>
-      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。</div>
+      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。${item.endTime ? '<button class="clear" data-key="' + key + '">いつも通りに戻す</button>' : ''}</div>
     `;
     list.appendChild(card);
   });
