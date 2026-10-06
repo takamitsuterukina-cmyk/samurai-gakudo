@@ -46,6 +46,10 @@ const staff=params.get('staff')||'';
 const ym=params.get('ym')||'';
 const dParam=params.get('d')||'';
 const answers={};
+const TIMES=['6:00','6:30','7:00','7:30','8:00','8:30','9:00','9:30','10:00','10:30',
+  '11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30',
+  '16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+const timeOpts=ph=>`<option value="">${ph}</option>`+TIMES.map(t=>`<option value="${t}">${t}</option>`).join('');
 
 function parseDays(){
   if(!dParam) return [];
@@ -67,7 +71,13 @@ function render(){
     return `<div class="day-row">
       <div>
         <div class="day-label">${m}/${day}(${dow})</div>
-        <div class="day-time">${start}〜${end}</div>
+        ${start&&end
+          ?`<div class="day-time">${start}〜${end}</div>`
+          :`<div class="day-time" style="font-size:13px;color:#4a5568;">入れる時間を選んでください</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+              <select id="ts-${day}" style="padding:6px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px;">${timeOpts('開始')}</select>〜
+              <select id="te-${day}" style="padding:6px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px;">${timeOpts('終了')}</select>
+            </div>`}
       </div>
       <div class="toggle">
         <button class="toggle-btn ok sel" id="ok-${day}" onclick="setAnswer(${day},'o')">○</button>
@@ -78,6 +88,7 @@ function render(){
   document.getElementById('day-card').innerHTML=html||'<p style="font-size:13px;color:#888;">日程情報が読み取れませんでした。リンクを確認してください。</p>';
 }
 
+function toMin(t){const [h,mm]=t.split(':').map(Number);return h*60+mm;}
 function setAnswer(day,val){
   answers[day]=val;
   document.getElementById('ok-'+day).classList.toggle('sel',val==='o');
@@ -125,9 +136,21 @@ async function sendAnswer(){
   }
   const days=parseDays();
   const answersPayload={};
+  const missing=[];
   days.forEach(({day,start,end})=>{
-    answersPayload[day]=answers[day]==='x'?{mark:'x'}:{mark:'o',start,end};
+    if(answers[day]==='x'){answersPayload[day]={mark:'x'};return;}
+    // 時間が決まっていなかった日は、ここで選んだ時間を使う
+    const s=start||(document.getElementById('ts-'+day)||{}).value||'';
+    const e=end||(document.getElementById('te-'+day)||{}).value||'';
+    if(!s||!e||s===e||toMin(e)<toMin(s)){missing.push(day);return;}
+    answersPayload[day]={mark:'o',start:s,end:e};
   });
+  if(missing.length){
+    rb.className='result-box err';
+    rb.style.display='block';
+    rb.innerHTML='⚠ '+missing.map(d=>d+'日').join('、')+'は、○にする場合は、入れる時間(開始と終了)を選んでください。入れない日は×にしてください。';
+    return;
+  }
   const btn=document.getElementById('send-btn');
   sending=true;
   btn.disabled=true;btn.style.opacity='.6';

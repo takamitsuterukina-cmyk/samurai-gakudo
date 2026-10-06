@@ -100,7 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
   <div id="usual-card" class="card" style="display:none;">
     <h2>② いつもの時間</h2>
-    <p class="hint">一度選ぶと、このスマホが覚えています。相手ごとに別々に覚えます。</p>
+    <p class="hint" id="usual-hint">分かる時だけ選べば大丈夫です(空のままでも、日にちの打診はできます)。一度選ぶと、このスマホが覚えています。相手ごとに別々に覚えます。</p>
     <div class="usual-row" id="usual-wk">
       <div class="usual-label">平日（月〜金）</div>
       <div class="time-row">
@@ -121,7 +121,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
   <div id="calendar-card" class="card" style="display:none;">
     <h2>③ 提案したい日をタップ</h2>
-    <p class="hint">タップした日は「いつもの時間」で入ります。もう一度タップすると取り消せます。</p>
+    <p class="hint">タップした日は「いつもの時間」で入ります。いつもの時間が空の時は、「時間はお任せ」で入り、相手が○にする時に時間を選びます。もう一度タップすると取り消せます。</p>
     <div class="bulk-row">
       <button class="bulk-btn" onclick="selectAll('wk')">平日すべて</button>
       <button class="bulk-btn" onclick="selectAll('sat')">土曜すべて</button>
@@ -133,7 +133,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
   <div id="list-card" class="card" style="display:none;">
     <h2>④ 選んだ日の時間</h2>
-    <p class="hint">いつもと違う時間の日だけ、ここで変えてください。</p>
+    <p class="hint">いつもと違う時間の日だけ、ここで変えてください。時間を選ばない日は「時間はお任せ」で、相手が時間を選びます。</p>
     <div id="sel-list"></div>
   </div>
 
@@ -212,6 +212,52 @@ function onStaffChange(){
   currentStaff=document.getElementById('staff-select').value;
   shiftData={};
   updateDisplay();
+  guessUsualFromSubmitted();
+}
+
+// そのスタッフが出したシフトから、いつもの時間(平日・土曜それぞれで、いちばん多い時間)を推測して、空欄に入れておく。
+// 自分で選んだ時間があればそちらを優先する。違っていれば、直せばよい。
+let _allShiftCache=null;
+async function guessUsualFromSubmitted(){
+  const staff=currentStaff;
+  if(!staff) return;
+  try{
+    if(!_allShiftCache){
+      const res=await fetch(GAS_URL);
+      _allShiftCache=await res.json();
+    }
+    const all=(_allShiftCache&&_allShiftCache.staffShiftData)||{};
+    const cnt={wk:{},sat:{}};
+    Object.keys(all).forEach(ym=>{
+      const days=(all[ym]||{})[staff]||{};
+      const [y,m]=ym.split('-').map(Number);
+      Object.keys(days).forEach(d=>{
+        const v=days[d];
+        if(!v||!v.start||!v.end) return;
+        const dow=new Date(y,m-1,Number(d)).getDay();
+        if(dow===0) return;
+        const kind=dow===6?'sat':'wk';
+        const k=v.start+'|'+v.end;
+        cnt[kind][k]=(cnt[kind][k]||0)+1;
+      });
+    });
+    if(staff!==currentStaff) return; // 取得中に別のスタッフへ切り替えられた
+    let filled=false;
+    ['wk','sat'].forEach(kind=>{
+      if(usual[kind].start&&usual[kind].end) return;
+      const best=Object.keys(cnt[kind]).sort((a,b)=>cnt[kind][b]-cnt[kind][a])[0];
+      if(!best) return;
+      const [st,en]=best.split('|');
+      if(TIMES.indexOf(st)<0||TIMES.indexOf(en)<0) return;
+      usual[kind]={start:st,end:en};
+      filled=true;
+    });
+    if(filled){
+      syncUsualInputs();
+      document.getElementById('usual-hint').textContent=staff+'さんが出したシフトから、いつもの時間を入れました。違う時は直してください。(空欄のままでも、日にちの打診はできます)';
+      refresh();
+    }
+  }catch(e){ /* 取得できなくても、日にちだけの打診ができるので何もしない */ }
 }
 function onMonthChange(){
   currentYm=document.getElementById('month-input').value;
@@ -264,11 +310,8 @@ function toggleDay(d){
   } else {
     const dow=new Date(y,m-1,d).getDay();
     const u=usualFor(dow);
-    if(!hasUsual(u)){
-      showCalMsg(dow===6?'先に「土曜のいつもの時間」を選んでください':'先に「平日のいつもの時間」を選んでください',[dow===6?'usual-sat':'usual-wk']);
-      return;
-    }
-    shiftData[d]={start:u.start,end:u.end};
+    // いつもの時間が分からなくても、日にちだけ打診できる(時間は相手が○にする時に選ぶ)
+    shiftData[d]=hasUsual(u)?{start:u.start,end:u.end}:{start:'',end:''};
   }
   hideCalMsg();
   refresh();
@@ -276,16 +319,12 @@ function toggleDay(d){
 function selectAll(kind){
   const [y,m]=ymParts();
   const u=kind==='sat'?usual.sat:usual.wk;
-  if(!hasUsual(u)){
-    showCalMsg(kind==='sat'?'先に「土曜のいつもの時間」を選んでください':'先に「平日のいつもの時間」を選んでください',[kind==='sat'?'usual-sat':'usual-wk']);
-    return;
-  }
   const days=new Date(y,m,0).getDate();
   for(let d=1;d<=days;d++){
     const dow=new Date(y,m-1,d).getDay();
     if(dow===0) continue;
     if(kind==='sat'?dow!==6:dow===6) continue;
-    if(!shiftData[d]) shiftData[d]={start:u.start,end:u.end};
+    if(!shiftData[d]) shiftData[d]=hasUsual(u)?{start:u.start,end:u.end}:{start:'',end:''};
   }
   hideCalMsg();
   refresh();
@@ -303,7 +342,7 @@ function clearDay(d){
 function onTimeChange(d){
   const s=document.getElementById('s-'+d)?.value||'';
   const e=document.getElementById('e-'+d)?.value||'';
-  if(!shiftData[d]||!s||!e) return;
+  if(!shiftData[d]) return;
   shiftData[d]={start:s,end:e};
   refresh();
 }
@@ -321,14 +360,15 @@ function renderCal(){
       continue;
     }
     const sd=shiftData[d];
-    const on=!!(sd&&sd.start&&sd.end);
-    html+=`<div class="cal-cell${on?' on':''}${dow===6?' sat':''}" onclick="toggleDay(${d})"><span class="n">${d}</span>${on?`<span class="t">${sd.start}<br>${sd.end}</span>`:''}</div>`;
+    const on=!!sd;
+    const timed=!!(sd&&sd.start&&sd.end);
+    html+=`<div class="cal-cell${on?' on':''}${dow===6?' sat':''}" onclick="toggleDay(${d})"><span class="n">${d}</span>${on?(timed?`<span class="t">${sd.start}<br>${sd.end}</span>`:'<span class="t">時間<br>お任せ</span>'):''}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
 }
 
 function timeOptions(selected){
-  return TIMES.map(t=>`<option value="${t}"${selected===t?' selected':''}>${t}</option>`).join('');
+  return '<option value="">-- お任せ --</option>'+TIMES.map(t=>`<option value="${t}"${selected===t?' selected':''}>${t}</option>`).join('');
 }
 function renderList(){
   const [y,m]=ymParts();
@@ -341,7 +381,7 @@ function renderList(){
     const dow=new Date(y,m-1,d).getDay();
     const sd=shiftData[d];
     const u=usualFor(dow);
-    const diff=hasUsual(u)&&(sd.start!==u.start||sd.end!==u.end);
+    const diff=hasUsual(u)&&!!sd.start&&!!sd.end&&(sd.start!==u.start||sd.end!==u.end);
     return`<div class="sel-row${diff?' diff':''}">
       <div class="sel-top">
         <span class="sel-day">${d}日<span class="${dow===6?'sat':''}">(${DOW[dow]})</span>${diff?'<span class="tag">いつもと違う</span>':''}</span>
@@ -397,13 +437,18 @@ async function sendProposal(){
   if(!currentStaff||!currentYm){alert('スタッフ名と月を選択してください');return;}
   const ds=Object.keys(shiftData).map(Number).sort((a,b)=>a-b);
   if(ds.length===0){alert('提案したい日を1つ以上選んでください');return;}
-  const bad=ds.filter(d=>timeToMin(shiftData[d].end)<=timeToMin(shiftData[d].start));
+  const half=ds.filter(d=>!!shiftData[d].start!==!!shiftData[d].end);
+  if(half.length){
+    alert(half.map(d=>d+'日').join('、')+'は、開始か終了の片方だけが選ばれています。両方選ぶか、両方「お任せ」にしてください。');
+    return;
+  }
+  const bad=ds.filter(d=>shiftData[d].start&&shiftData[d].end&&timeToMin(shiftData[d].end)<=timeToMin(shiftData[d].start));
   if(bad.length){
     alert(bad.map(d=>d+'日').join('、')+'は、終了が開始より前（または同じ）になっています。時間を直してください。');
     return;
   }
   const days={};
-  ds.forEach(d=>{days[d]={start:shiftData[d].start,end:shiftData[d].end};});
+  ds.forEach(d=>{days[d]={start:shiftData[d].start||'',end:shiftData[d].end||''};});
   const rb=document.getElementById('result-box');
   const btn=document.getElementById('send-btn');
   sending=true;
@@ -416,7 +461,7 @@ async function sendProposal(){
     if(r.ok){
       rb.innerHTML=r.duplicate
         ?`✓ ${currentStaff}さんへは、すでに届いています（同じ内容は二重には送られません）。`
-        :`✓ ${currentStaff}さんに${ds.length}日分の相談を送りました。返信があれば、teruさんのLINEに転送されます。`;
+        :`✓ ${currentStaff}さんに${ds.length}日分の相談を送りました。${ds.some(d=>!shiftData[d].start)?'時間が決まっていない日は、相手が○にする時に時間を選びます。':''}返信があれば、teruさんのLINEに転送されます。`;
     }else if(r.network){
       rb.className='result-box err';
       rb.innerHTML=`⚠ 通信が不安定で、届いたか確認できませんでした。もう一度「提案を送る」を押してください。すでに届いていても、二重には送られません。`;
