@@ -423,7 +423,7 @@ function renderCal(){
     const on=!!sd&&!rm;
     const timed=!!(sd&&sd.start&&sd.end);
     const ex=existing[d];
-    const inner=rm?'<span class="t">お休み<br>にしたい</span>'
+    const inner=rm?'<span class="t">お休み</span>'
       :on?(timed?`<span class="t">${sd.start}<br>${sd.end}</span>`:'<span class="t">時間<br>お任せ</span>')
       :(ex?`<span class="t">${ex.start}<br>${ex.end}</span>`:'');
     html+=`<div class="cal-cell${on?' on':''}${rm?' rm':''}${!sd&&ex?' has':''}${dow===6?' sat':''}" onclick="toggleDay(${d})"><span class="n">${d}</span>${inner}</div>`;
@@ -448,7 +448,7 @@ function renderList(){
       const ex=existing[d];
       return`<div class="sel-row rm">
       <div class="sel-top">
-        <span class="sel-day">${d}日<span class="${dow===6?'sat':''}">(${DOW[dow]})</span><span class="tag" style="background:#e53e3e;color:#fff;">お休みにしたい</span></span>
+        <span class="sel-day">${d}日<span class="${dow===6?'sat':''}">(${DOW[dow]})</span><span class="tag" style="background:#e53e3e;color:#fff;">お休み</span></span>
         <button class="x-btn" onclick="clearDay(${d})">取り消す</button>
       </div>
       <div style="font-size:12px;color:#718096;">${ex?'いまは '+ex.start+'〜'+ex.end+' で入っています':'いまの予定は、読み取れていません'}</div>
