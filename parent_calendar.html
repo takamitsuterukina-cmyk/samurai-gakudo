@@ -151,6 +151,14 @@
   #regReview .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #regReview .btns button.go2{background:var(--accent);border-color:var(--accent);color:#fff;}
   #childpick .pickhint{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:8px;}
+  .kidsrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 10px;font-size:12px;color:var(--ink-soft);}
+  .kidsrow .kid{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:13px;color:var(--ink-soft);}
+  .kidsrow .kid.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  .kidblock{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;}
+  .kidhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;}
+  .kidhead .kidtog{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:12px;color:var(--ink-soft);}
+  .kidhead .kidtog.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700;}
+  .splitbtn,.unsplit{display:block;margin:10px 0 0;border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;text-decoration:underline;padding:4px 0;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
   .switchlink{margin-top:10px;}
@@ -203,13 +211,13 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-s</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-t</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
 
   <div id="inputPane">
-    <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">まずは「全員まとめて」で登録すると、かんたんです。1日だけ違う日などは、送信したあと、お子さんのお名前を選んで、その日だけ直せます。</div><div class="pickmsg" id="pickmsg"></div></div>
+    <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">「全員まとめて」で日にちを選ぶと、かんたんです。1日だけ違う日は、下に出る、その日のカードで、お休みにしたり、お子さんごとに内容を変えたりできます。</div><div class="pickmsg" id="pickmsg"></div></div>
     <details class="usual" id="usualBox">
       <summary><span class="ut">便利機能「いつもの時間を設定する」</span><span class="us">日にちを選ぶだけで「いつもの時間」が自動入力されます。<br>そのあとで各日にち個別調整も可能です。</span></summary>
       <div class="urow">
@@ -275,6 +283,7 @@ const PICKUP_LOCATIONS = { genkan: '玄関', classroom: '子ども教室' };
 let userId = null;
 let childInfo = null;
 let viewYear, viewMonth; // viewMonth: 0-11
+const ovr = {}; // まとめて登録の時、その日だけお子さんごとに変える内容。{ 'YYYY-MM-DD': { お子さんの名前: {skip:true}(その日はお休み) | {pickup,location,startTime,endTime}(その子だけ別内容) } }
 const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} } - 今日以降の「現在の予定」を常に表す
 let originalReports = {}; // 画面を開いた時点で既に登録されていた内容のスナップショット(変更/取り消しの判定用)
 let children = [];            // 登録されているお子さん(きょうだいがいれば複数)
@@ -365,10 +374,14 @@ document.getElementById('applyUsual').onclick = () => {
   saveUsualT();
   const keys = Object.keys(selected);
   // いつもの時間として入っている欄だけを入れ直す(空欄の項目は、今の値のままにする)
+  const applyTo = it => {
+    const u = it.pickup ? usualT.pk : usualT.np;
+    if (u.start) it.startTime = u.start;
+    if (u.end) it.endTime = u.end;
+  };
   keys.forEach(k => {
-    const u = selected[k].pickup ? usualT.pk : usualT.np;
-    if (u.start) selected[k].startTime = u.start;
-    if (u.end) selected[k].endTime = u.end;
+    applyTo(selected[k]);
+    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n]); });
   });
   document.getElementById('applyUsualMsg').textContent = keys.length ? keys.length + '日分に、いつもの時間を入れました。下のカードで確認してください。' : 'まだ日にちが選ばれていません。日にちを選ぶと、いつもの時間が自動で入ります。';
   renderMonth();
@@ -643,7 +656,7 @@ function renderMonth(){
 
 function toggleDay(key){
   if(selected[key]){
-    delete selected[key];
+    delete selected[key]; delete ovr[key];
   } else {
     const pk = effectivePickup();
     selected[key] = Object.assign({
@@ -654,34 +667,49 @@ function toggleDay(key){
   renderMonth();
 }
 
-/* 画面に表示している内容を基準に、選択中のお子さんのうち1人でも登録済みの内容と違えば「送信できる」状態にする。
-   (まとめて登録のとき、お子さん同士で予定が違っていても、送信すれば全員同じにそろう) */
-function sameAsSelected(rep){
-  const curKeys = Object.keys(selected);
-  if (curKeys.length !== Object.keys(rep).length) return false;
-  return curKeys.every(k => {
-    const o = rep[k];
-    if (!o) return false;
-    const c = selected[k];
-    return o.pickup === c.pickup && o.location === c.location && o.startTime === c.startTime && (o.endTime || '') === (c.endTime || '');
-  });
+/* お子さんごとの、いま画面で決まっている内容。まとめて登録でも、その日だけお休み・別内容にした子はそちらを使う。 */
+function finalItem(child, key){
+  const o = ovr[key] && ovr[key][child];
+  if (o && o.skip) return null;
+  return o || selected[key] || null;
 }
+function finalMap(child){
+  const m = {};
+  Object.keys(selected).forEach(k => { const it = finalItem(child, k); if (it) m[k] = it; });
+  return m;
+}
+function sameItem(a, b){
+  return a.pickup === b.pickup && a.location === b.location && a.startTime === b.startTime && (a.endTime || '') === (b.endTime || '');
+}
+function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).some(n => !ovr[key][n].skip); }
 function isDirty(){
-  return selectedChildren.some(c => !sameAsSelected(reportsByChild[c] || {}));
+  return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {}));
 }
 
-/* 画面で触った変更があるか(基準のお子さんの登録内容と、いま表示している内容が違うか) */
-function isEdited(){
-  return !sameAsSelected(reportsByChild[selectedChildren[0]] || {});
-}
+/* 画面で触った変更があるか(登録済みの内容と、いま画面の内容が違うか) */
+function isEdited(){ return isDirty(); }
 
-/* 対象のお子さんが変わった時に、カレンダーに出す内容を切り替える(先頭のお子さんの登録内容を基準に表示) */
+/* 対象のお子さんが変わった時に、カレンダーに出す内容を切り替える。
+   登録済みの内容が、お子さんで違う日は、「その日だけお休み」「その子だけ別内容」として、画面に出す。 */
 function loadChildState(){
   Object.keys(selected).forEach(k => delete selected[k]);
-  const base = reportsByChild[selectedChildren[0]] || {};
-  Object.keys(base).forEach(k => { selected[k] = { ...base[k] }; });
+  Object.keys(ovr).forEach(k => delete ovr[k]);
+  const maps = selectedChildren.map(c => reportsByChild[c] || {});
+  const keys = new Set();
+  maps.forEach(m => Object.keys(m).forEach(k => keys.add(k)));
   originalReports = {};
-  Object.keys(base).forEach(k => { originalReports[k] = { ...base[k] }; });
+  keys.forEach(k => {
+    const baseIdx = maps.findIndex(m => m[k]);
+    const base = maps[baseIdx][k];
+    selected[k] = { ...base };
+    originalReports[k] = { ...base };
+    selectedChildren.forEach((c, i) => {
+      const it = maps[i][k];
+      if (!it) (ovr[k] = ovr[k] || {})[c] = { skip: true };
+      else if (!sameItem(it, base)) (ovr[k] = ovr[k] || {})[c] = { ...it };
+    });
+    if (isSplit(k)) selectedChildren.forEach(c => { if (!ovr[k][c]) ovr[k][c] = { ...selected[k] }; });
+  });
 }
 
 function renderChips(){
@@ -695,8 +723,7 @@ function renderChips(){
   mk('全員まとめて', allOn, () => changeChildren(children.slice()));
   children.forEach(c => mk(c, !allOn && selectedChildren.indexOf(c) >= 0 && selectedChildren.length === 1, () => changeChildren([c])));
   const msg = document.getElementById('pickmsg');
-  const differ = selectedChildren.length > 1 && selectedChildren.some(c => !sameAsReports(reportsByChild[c] || {}, reportsByChild[selectedChildren[0]] || {}));
-  msg.textContent = differ ? '※ お子さんごとに登録済みの予定が違います。いま表示しているのは「' + selectedChildren[0] + '」さんの内容です。送信すると、選んだ全員がこの内容にそろいます。' : '';
+  msg.textContent = '';
 }
 function sameAsReports(a, b){
   const ak = Object.keys(a), bk = Object.keys(b);
@@ -722,6 +749,7 @@ function renderList(){
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
   list.innerHTML = '';
+  const multi = selectedChildren.length > 1;
   keys.forEach(key => {
     const item = selected[key];
     const card = document.createElement('div');
@@ -729,38 +757,61 @@ function renderList(){
     const [y,m,d] = key.split('-').map(Number);
     const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
     const isExisting = !!originalReports[key];
+    const o = ovr[key] || {};
+    const split = multi && isSplit(key);
+    const allSkip = multi && selectedChildren.every(n => o[n] && o[n].skip);
+    let body;
+    if (!multi) {
+      body = fieldsHtml(key, item, '');
+    } else if (!split) {
+      body = '<div class="kidsrow"><span>この日に来るお子さん:</span>' +
+        selectedChildren.map((n, i) => '<button class="kid ' + ((o[n] && o[n].skip) ? '' : 'on') + '" data-key="' + key + '" data-n="' + i + '">' + n + '</button>').join('') + '</div>' +
+        (allSkip ? '<div class="hint">この日は、全員お休みです(登録されません)。</div>' : fieldsHtml(key, item, '') +
+          '<button class="splitbtn" data-key="' + key + '">この日だけ、お子さんごとに内容を変える</button>');
+    } else {
+      body = selectedChildren.map((n, i) => {
+        const oo = o[n];
+        const skip = !!(oo && oo.skip);
+        return '<div class="kidblock"><div class="kidhead"><b>' + n + 'さん</b>' +
+          '<button class="kidtog ' + (skip ? '' : 'on') + '" data-key="' + key + '" data-n="' + i + '">' + (skip ? 'お休み(押すと、来る日に戻ります)' : '来る日') + '</button></div>' +
+          (skip ? '' : fieldsHtml(key, oo, String(i))) + '</div>';
+      }).join('') + '<button class="unsplit" data-key="' + key + '">全員同じ内容に戻す</button>';
+    }
     card.innerHTML = `
       <div class="cardhead">
         <div class="datelabel">${m}/${d}(${dow})${isExisting ? '<span class="existing-tag">登録済み</span>' : ''}</div>
         <button class="remove" data-key="${key}">キャンセル</button>
       </div>
-      <div class="toggle-row">
-        <button class="pk ${item.pickup ? 'on':''}" data-key="${key}" data-v="1">お迎え必要</button>
-        <button class="pk ${!item.pickup ? 'on':''}" data-key="${key}" data-v="0">お迎え不要</button>
-      </div>
-      ${item.pickup ? `
-      <div class="toggle-row">
-        <button class="loc ${item.location==='genkan'?'on':''}" data-key="${key}" data-v="genkan">玄関</button>
-        <button class="loc ${item.location==='classroom'?'on':''}" data-key="${key}" data-v="classroom">子ども教室</button>
-      </div>` : ''}
-      <div class="detail-row">
-        <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
-        <span class="tp time" data-key="${key}"></span>
-      </div>
-      <div class="detail-row end">
-        <label>帰りの時刻</label>
-        <span class="tp etime" data-key="${key}"></span>
-      </div>
-      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。<button class="clear" data-key="${key}" style="display:${item.endTime ? 'inline-block' : 'none'}">いつも通りに戻す</button></div>
+      ${body}
     `;
     list.appendChild(card);
   });
 
-  list.querySelectorAll('.time').forEach(el => initTimePair(el, selected[el.dataset.key].startTime));
-  list.querySelectorAll('.etime').forEach(el => initTimePair(el, selected[el.dataset.key].endTime));
-  list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; renderMonth(); });
+  // いま押された部品が扱う内容(まとめて=共通の内容 / その子だけ別内容の時は、その子の内容)
+  const itemAt = el => el.dataset.c === '' ? selected[el.dataset.key] : ovr[el.dataset.key][selectedChildren[Number(el.dataset.c)]];
+  list.querySelectorAll('.time').forEach(el => initTimePair(el, itemAt(el).startTime));
+  list.querySelectorAll('.etime').forEach(el => initTimePair(el, itemAt(el).endTime));
+  list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; delete ovr[b.dataset.key]; renderMonth(); });
+  const tidy = key => { if (ovr[key] && !Object.keys(ovr[key]).length) delete ovr[key]; };
+  const toggleKid = (key, name) => {
+    const oo = ovr[key] = ovr[key] || {};
+    if (oo[name] && oo[name].skip) { if (isSplit(key)) oo[name] = { ...selected[key] }; else delete oo[name]; }
+    else oo[name] = { skip: true };
+    tidy(key); renderMonth();
+  };
+  list.querySelectorAll('.kid, .kidtog').forEach(b => b.onclick = () => toggleKid(b.dataset.key, selectedChildren[Number(b.dataset.n)]));
+  list.querySelectorAll('.splitbtn').forEach(b => b.onclick = () => {
+    const key = b.dataset.key, oo = ovr[key] = ovr[key] || {};
+    selectedChildren.forEach(n => { if (!(oo[n] && oo[n].skip)) oo[n] = { ...selected[key] }; });
+    renderList();
+  });
+  list.querySelectorAll('.unsplit').forEach(b => b.onclick = () => {
+    const key = b.dataset.key, oo = ovr[key] || {};
+    Object.keys(oo).forEach(n => { if (!oo[n].skip) delete oo[n]; });
+    tidy(key); renderList();
+  });
   list.querySelectorAll('.pk').forEach(b => b.onclick = () => {
-    const it = selected[b.dataset.key];
+    const it = itemAt(b);
     const next = b.dataset.v === '1';
     if(next !== it.pickup){
       const was = defaultTimesFor(it.pickup);
@@ -772,24 +823,49 @@ function renderList(){
     }
     renderMonth();
   });
-  list.querySelectorAll('.loc').forEach(b => b.onclick = () => { selected[b.dataset.key].location = b.dataset.v; renderList(); });
+  list.querySelectorAll('.loc').forEach(b => b.onclick = () => { itemAt(b).location = b.dataset.v; renderList(); });
   // 時刻の回転ロールを指で回している途中で、カードを作り直すと、ロールが閉じて「決定」扱いになってしまう。
   // そのため、時刻を変えても、画面は作り直さない(中身だけ更新する)。ロールは、✓などで本人が閉じるまで開いたままになる。
   const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; };
   list.querySelectorAll('.time').forEach(inp => {
-    const upd = () => { selected[inp.dataset.key].startTime = inp.value; refreshSubmit(); };
+    const upd = () => { itemAt(inp).startTime = inp.value; refreshSubmit(); };
     inp.addEventListener('input', upd); inp.addEventListener('change', upd);
   });
   list.querySelectorAll('.etime').forEach(inp => {
     const upd = () => {
-      selected[inp.dataset.key].endTime = inp.value;
-      const clr = inp.closest('.card').querySelector('.clear');
+      itemAt(inp).endTime = inp.value;
+      const clr = inp.closest('.card, .kidblock').querySelector('.clear[data-c="' + inp.dataset.c + '"]');
       if (clr) clr.style.display = inp.value ? 'inline-block' : 'none';
       refreshSubmit();
     };
     inp.addEventListener('input', upd); inp.addEventListener('change', upd);
   });
-  list.querySelectorAll('.clear').forEach(b => b.onclick = () => { selected[b.dataset.key].endTime = ''; renderList(); });
+  list.querySelectorAll('.clear').forEach(b => b.onclick = () => { itemAt(b).endTime = ''; renderList(); });
+}
+
+// 1日分の入力欄(お迎えの要否・場所・時刻)。c は、まとめての時は空、その子だけ別内容の時は、お子さんの番号。
+function fieldsHtml(key, item, c){
+  const at = ' data-key="' + key + '" data-c="' + c + '"';
+  return `
+      <div class="toggle-row">
+        <button class="pk ${item.pickup ? 'on':''}"${at} data-v="1">お迎え必要</button>
+        <button class="pk ${!item.pickup ? 'on':''}"${at} data-v="0">お迎え不要</button>
+      </div>
+      ${item.pickup ? `
+      <div class="toggle-row">
+        <button class="loc ${item.location==='genkan'?'on':''}"${at} data-v="genkan">玄関</button>
+        <button class="loc ${item.location==='classroom'?'on':''}"${at} data-v="classroom">子ども教室</button>
+      </div>` : ''}
+      <div class="detail-row">
+        <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
+        <span class="tp time"${at}></span>
+      </div>
+      <div class="detail-row end">
+        <label>帰りの時刻</label>
+        <span class="tp etime"${at}></span>
+      </div>
+      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。<button class="clear"${at} style="display:${item.endTime ? 'inline-block' : 'none'}">いつも通りに戻す</button></div>
+  `;
 }
 
 document.getElementById('prevMonth').onclick = () => {
@@ -803,12 +879,25 @@ document.getElementById('nextMonth').onclick = () => {
 
 // 送信ボタンを押すと、まず「この内容で送ります」の確認を出す(日ごとの詳細を見ないまま送ってしまうのを防ぐ)
 function badDays(){
-  return Object.keys(selected).map(key => ({ date:key, ...selected[key] })).filter(d => d.endTime && d.pickup && d.startTime && d.endTime <= d.startTime);
+  const out = [];
+  Object.keys(selected).forEach(k => {
+    const bad = selectedChildren.some(c => { const d = finalItem(c, k); return d && d.endTime && d.pickup && d.startTime && d.endTime <= d.startTime; });
+    if (bad) out.push({ date: k });
+  });
+  return out;
 }
-function deleteDays(){
-  const delSet = new Set();
-  selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => { if (!selected[k]) delSet.add(k); }));
-  return Array.from(delSet).sort();
+// お子さんごとの「登録・変更する日」と「取り消す日」。内容が同じお子さんは、1つにまとめる。
+function planGroups(){
+  const groups = [];
+  selectedChildren.forEach(c => {
+    const m = finalMap(c);
+    const days = Object.keys(m).sort().map(k => ({ date: k, ...m[k] }));
+    const deletes = Object.keys(reportsByChild[c] || {}).filter(k => !m[k]).sort();
+    const sig = JSON.stringify([days, deletes]);
+    const g = groups.find(x => x.sig === sig);
+    if (g) g.children.push(c); else groups.push({ sig, children: [c], days, deletes });
+  });
+  return groups;
 }
 function mdw(key){
   const [y,m,d] = key.split('-').map(Number);
@@ -820,18 +909,17 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
     return;
   }
-  const keys = Object.keys(selected).sort();
-  const dels = deleteDays();
+  const groups = planGroups();
+  const rowsOf = g => g.days.map(it => {
+    const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
+    return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
+  }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   document.getElementById('reviewSub').textContent =
-    (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : '')) +
+    (groups.length > 1 ? 'お子さんごとに、内容がちがいます。　' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : ''))) +
     '内容がちがう日は、「戻って直す」で、カードの内容を直してください。';
-  document.getElementById('reviewBody').innerHTML =
-    keys.map(k => {
-      const it = selected[k];
-      const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
-      return '<div class="row"><b>' + mdw(k) + '</b>' + detail + '</div>';
-    }).join('') +
-    dels.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
+  document.getElementById('reviewBody').innerHTML = groups.length > 1
+    ? groups.map(g => '<div class="row" style="background:var(--accent-soft);"><b>対象</b>' + g.children.join('・') + 'さん</div>' + rowsOf(g)).join('')
+    : rowsOf(groups[0]);
   document.getElementById('review').style.display = 'flex';
 };
 document.getElementById('reviewBack').onclick = () => {
@@ -845,23 +933,25 @@ document.getElementById('reviewGo').onclick = () => {
 };
 
 async function doSubmit(){
-  const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
-  // 取り消す日: 選んだお子さんのうち誰かに登録済みで、今の画面では選ばれていない日(まとめて登録のときは全員そろえる)
-  const delSet = new Set();
-  selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => { if (!selected[k]) delSet.add(k); }));
-  const deletes = Array.from(delSet);
+  // お子さんごとの内容(まとめて登録でも、その日だけお休み・別内容の子は、その内容で)
+  const perChild = {};
+  selectedChildren.forEach(c => {
+    const m = finalMap(c);
+    perChild[c] = { days: Object.keys(m).map(k => ({ date: k, ...m[k] })), deletes: Object.keys(reportsByChild[c] || {}).filter(k => !m[k]) };
+  });
+  const first = perChild[selectedChildren[0]];
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitmsg').textContent = '送信中...';
   try{
     await fetch(GAS_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'batchSubmit', userId, days, deletes, children: selectedChildren }),
+      body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }),
     });
     document.getElementById('submitmsg').textContent = '送信しました。トーク画面に戻ってください。';
     selectedChildren.forEach(c => {
       reportsByChild[c] = {};
-      Object.keys(selected).forEach(k => { reportsByChild[c][k] = { ...selected[k] }; });
+      perChild[c].days.forEach(it => { const { date, ...rest } = it; reportsByChild[c][date] = rest; });
     });
     loadChildState();
     renderChips();
