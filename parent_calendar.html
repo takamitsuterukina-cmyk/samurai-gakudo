@@ -327,8 +327,8 @@ function switchTab(tab){
   if(tab === 'input'){
     title.textContent = '利用予定を登録する';
     guide.textContent = '登録済みの日もカレンダーに表示されています。内容の変更はカードを直接編集、取り消しはその日をもう一度タップしてください。最後に1回「送信する」で確定します。';
-    link.innerHTML = '<a href="#" id="toView">予定を確認する →</a>';
-    document.getElementById('toView').onclick = (e) => { e.preventDefault(); switchTab('view'); };
+    // 登録中に、間違って「予定を確認する」へ移ってしまわないよう、この画面にはリンクを置かない(確認はメニューから開く)
+    link.innerHTML = '';
   } else {
     title.textContent = '予定を確認する';
     guide.textContent = 'これまでに登録した最新の内容です(表示のみ)。変更や取り消しは「利用予定を登録する」から行ってください。';
