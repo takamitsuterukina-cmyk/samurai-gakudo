@@ -153,7 +153,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-e</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-f</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -349,8 +349,7 @@ function switchTab(tab){
   } else {
     title.textContent = '予定を確認する';
     guide.textContent = 'これまでに登録した最新の内容です(表示のみ)。変更や取り消しは「利用予定を登録する」から行ってください。';
-    link.innerHTML = '<a href="#" id="toInput">利用予定を登録する →</a>';
-    document.getElementById('toInput').onclick = (e) => { e.preventDefault(); switchTab('input'); };
+    link.innerHTML = ''; // 確認画面にも、登録画面へのリンクは置かない(登録は、メニューの「利用予定を登録する」から開く)
     loadSchedule();
   }
 }
