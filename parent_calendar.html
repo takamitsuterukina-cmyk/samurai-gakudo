@@ -153,7 +153,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-g</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-h</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -343,7 +343,7 @@ function switchTab(tab){
 
   if(tab === 'input'){
     title.textContent = '利用予定を登録する';
-    guide.textContent = '登録済みの日もカレンダーに表示されています。内容の変更はカードを直接編集、取り消しはその日をもう一度タップしてください。最後に1回「送信する」で確定します。';
+    guide.textContent = '登録済みの日もカレンダーに表示されています。内容の変更はカードを直接編集、キャンセルはその日をもう一度タップしてください。最後に1回「送信する」で確定します。';
     // 登録中に、間違って「予定を確認する」へ移ってしまわないよう、この画面にはリンクを置かない(確認はメニューから開く)
     link.innerHTML = '';
   } else {
@@ -510,7 +510,7 @@ function renderList(){
     card.innerHTML = `
       <div class="cardhead">
         <div class="datelabel">${m}/${d}(${dow})${isExisting ? '<span class="existing-tag">登録済み</span>' : ''}</div>
-        <button class="remove" data-key="${key}">${isExisting ? '取り消す' : '削除'}</button>
+        <button class="remove" data-key="${key}">キャンセル</button>
       </div>
       <div class="toggle-row">
         <button class="pk ${item.pickup ? 'on':''}" data-key="${key}" data-v="1">お迎え必要</button>
@@ -607,7 +607,7 @@ document.getElementById('submitBtn').onclick = () => {
       const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
       return '<div class="row"><b>' + mdw(k) + '</b>' + detail + '</div>';
     }).join('') +
-    dels.map(k => '<div class="row del"><b>' + mdw(k) + '</b>取り消し</div>').join('');
+    dels.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   document.getElementById('review').style.display = 'flex';
 };
 document.getElementById('reviewBack').onclick = () => {
