@@ -153,7 +153,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-j</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-k</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -311,7 +311,19 @@ async function boot(){
     const initData = await res.json();
     childInfo = initData.info;
     if(!childInfo.registered){
-      document.getElementById('status').textContent = 'まだお子さんの登録が済んでいません。トーク画面でお名前を送って登録してから開いてください。';
+      // まだ登録していない人には、何をすればよいかを、順番に案内する
+      document.getElementById('status').innerHTML =
+        '<div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:12px;">はじめに、お子さんの登録をお願いします</div>' +
+        '<div style="line-height:1.9;text-align:left;display:inline-block;color:var(--ink);">' +
+        '① この画面を閉じて、トーク画面に戻ります<br>' +
+        '② お子さんのお名前(フルネーム)を、トークに送ります<br>' +
+        '　　例: さむらい太郎<br>' +
+        '　　(きょうだいは、「、」で区切って全員分)<br>' +
+        '③ 確認とお迎えの設定に、ボタンで答えます<br>' +
+        '④ 登録が終わったら、もう一度、下のメニューを押します' +
+        '</div>' +
+        '<div style="margin-top:18px;"><button id="closeBtn" style="padding:12px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;">トーク画面に戻る</button></div>';
+      document.getElementById('closeBtn').onclick = () => { try{ liff.closeWindow(); }catch(e){} };
       return;
     }
     children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
