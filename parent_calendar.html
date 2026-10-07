@@ -197,7 +197,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-n</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-o</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -373,6 +373,38 @@ function isBookable(key, dow){
   return true;
 }
 
+let freshLoaded = false; // 最新の内容をサーバーから読み終えたか(前回の内容を先に表示している間は、送信できないようにする)
+
+// 読み込んだ内容(子ども情報と予定)から、登録画面を組み立てる。keepView=true の時は、いま見ている月・タブはそのまま。
+function setupApp(initData, keepView){
+  childInfo = initData.info;
+  children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
+  document.getElementById('childname').textContent = children.join('・') + ' さん';
+  const now = new Date();
+  if(!keepView){ viewYear = now.getFullYear(); viewMonth = now.getMonth(); }
+  todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+  loadUsualT();
+  if (usualFirstVisit) document.getElementById('usualBox').open = true; // 初めて開いた時は、基本設定が目に入るよう、開いておく
+  const reports = initData.reports || [];
+  reportsByChild = {};
+  children.forEach(c => { reportsByChild[c] = {}; });
+  reports.forEach(r => {
+    if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
+    const name = (r.childName && reportsByChild[r.childName]) ? r.childName : children[0];
+    reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
+  });
+  selectedChildren = children.slice(); // 初期状態は全員まとめて
+  loadChildState();
+  renderChips();
+  document.getElementById('status').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  renderMonth();
+  if(!keepView){
+    const params = new URLSearchParams(location.search);
+    switchTab(params.get('mode') === 'view' ? 'view' : 'input');
+  }
+}
+
 async function boot(){
   try{
     await liff.init({ liffId: LIFF_ID });
@@ -380,41 +412,45 @@ async function boot(){
     loadHolidays(); // カレンダー描画をブロックしないよう非同期のまま進める(読み込み完了後に自動で再描画)
     const idToken = liff.getDecodedIDToken();
     userId = idToken.sub;
-    // 子ども情報と登録済みの予定を、1回の通信でまとめて取る(通信のたびに待たされるため、回数を減らす)
-    const res = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
-    const initData = await res.json();
-    childInfo = initData.info;
-    if(!childInfo.registered){
-      // まだ登録していない人には、登録フォームを出す(最初の1回だけ)
-      showRegForm();
-      return;
+    // 開くのを速く見せるため、前回の内容を先に表示し、最新の内容は裏で読み込んで、あとから入れ替える。
+    // (最新を読み終えるまでは、送信できないようにして、古い内容のまま送ってしまうのを防ぐ)
+    const cacheKey = 'samuraiInitCache_' + userId;
+    let rendered = false;
+    try{
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if(cached && cached.info && cached.info.registered){ setupApp(cached, false); rendered = true; }
+    }catch(e){}
+    // 子ども情報と登録済みの予定を、1回の通信でまとめて取る
+    let initData = null;
+    try{
+      const res = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
+      initData = await res.json();
+    }catch(e){ if(!rendered) throw e; }
+    if(!initData) { // 最新を読めなかった時は、前回の内容のまま、送信はできないことを伝える
+      document.getElementById('submitmsg').textContent = '最新の内容を読み込めませんでした。画面を開き直してください。';
       return;
     }
-    children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
-    document.getElementById('childname').textContent = children.join('・') + ' さん';
-    const now = new Date();
-    viewYear = now.getFullYear();
-    viewMonth = now.getMonth();
-    todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
-    loadUsualT();
-    if (usualFirstVisit) document.getElementById('usualBox').open = true; // 初めて開いた時は、基本設定が目に入るよう、開いておく
-
-    const reports = initData.reports || [];
-    children.forEach(c => { reportsByChild[c] = {}; });
-    reports.forEach(r => {
-      if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
-      const name = (r.childName && reportsByChild[r.childName]) ? r.childName : children[0];
-      reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
-    });
-    selectedChildren = children.slice(); // 初期状態は全員まとめて
-    loadChildState();
-    renderChips();
-
-    document.getElementById('status').style.display='none';
-    document.getElementById('app').style.display='block';
-    renderMonth();
-    const params = new URLSearchParams(location.search);
-    switchTab(params.get('mode') === 'view' ? 'view' : 'input');
+    if(!initData.info.registered){
+      try{ localStorage.removeItem(cacheKey); }catch(e){}
+      document.getElementById('app').style.display = 'none';
+      showRegForm(); // まだ登録していない人には、登録フォームを出す(最初の1回だけ)
+      return;
+    }
+    try{ localStorage.setItem(cacheKey, JSON.stringify(initData)); }catch(e){}
+    if(!rendered){
+      setupApp(initData, false);
+    }else if(!isEdited()){
+      setupApp(initData, true); // まだ何も触っていなければ、最新の内容に入れ替える(見ている月はそのまま)
+    }else{
+      // すでに触り始めている時は、入力中の内容を消さないよう、登録済みの内容だけ、裏で更新する
+      childInfo = initData.info;
+      (initData.reports || []).forEach(r => {
+        if (r.date < todayKeyG || !reportsByChild[r.childName]) return;
+        reportsByChild[r.childName][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
+      });
+    }
+    freshLoaded = true;
+    renderList();
   }catch(err){
     document.getElementById('status').textContent = '読み込みに失敗しました。時間を置いてもう一度開いてください。';
   }
@@ -456,16 +492,23 @@ function showRegForm(){
     const names = regNamesList();
     const goBtn = document.getElementById('regGo');
     goBtn.disabled = true; goBtn.textContent = '登録中...';
+    let j = null;
     try{
-      const res = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'registerForm', userId, names }) });
-      const j = await res.json();
-      if (j && (j.ok || j.error === 'already')) { location.reload(); return; } // 登録できたら(すでに登録済みでも)、予定の登録画面へ
-      document.getElementById('regReview').style.display = 'none';
-      document.getElementById('regErr').textContent = (j && j.message) || '登録できませんでした。もう一度お試しください。';
-    }catch(e){
-      document.getElementById('regReview').style.display = 'none';
-      document.getElementById('regErr').textContent = '通信に失敗しました。もう一度お試しください。';
+      // 結果を読み取れるよう、Cloudflareを通さず、直接送る(余計なヘッダーを付けない形で、通信の事前確認を避ける)
+      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'registerForm', userId, names }) });
+      j = await res.json();
+    }catch(e){ j = null; }
+    if (j && (j.ok || j.error === 'already')) { location.reload(); return; } // 登録できたら(すでに登録済みでも)、予定の登録画面へ
+    if (!j) {
+      // 結果が読み取れなくても、実際には登録できていることがあるので、サーバーに確かめる
+      try{
+        const r2 = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
+        const d2 = await r2.json();
+        if (d2 && d2.info && d2.info.registered) { location.reload(); return; }
+      }catch(e){}
     }
+    document.getElementById('regReview').style.display = 'none';
+    document.getElementById('regErr').textContent = (j && j.message) || '登録できませんでした。もう一度お試しください。';
     goBtn.disabled = false; goBtn.textContent = '登録する';
   };
 }
@@ -635,7 +678,7 @@ function renderList(){
   const keys = Object.keys(selected).filter(k => k.startsWith(monthPrefix)).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
   document.getElementById('detail-hint').style.display = keys.length ? 'block' : 'none';
-  document.getElementById('submitBtn').disabled = !isDirty();
+  document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
   list.innerHTML = '';
   keys.forEach(key => {
@@ -689,7 +732,7 @@ function renderList(){
   list.querySelectorAll('.loc').forEach(b => b.onclick = () => { selected[b.dataset.key].location = b.dataset.v; renderList(); });
   // 時刻の回転ロールを指で回している途中で、カードを作り直すと、ロールが閉じて「決定」扱いになってしまう。
   // そのため、時刻を変えても、画面は作り直さない(中身だけ更新する)。ロールは、✓などで本人が閉じるまで開いたままになる。
-  const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty(); };
+  const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; };
   list.querySelectorAll('.time').forEach(inp => {
     const upd = () => { selected[inp.dataset.key].startTime = inp.value; refreshSubmit(); };
     inp.addEventListener('input', upd); inp.addEventListener('change', upd);
