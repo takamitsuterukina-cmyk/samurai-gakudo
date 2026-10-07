@@ -197,7 +197,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-o</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-p</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -415,17 +415,23 @@ async function boot(){
     // 開くのを速く見せるため、前回の内容を先に表示し、最新の内容は裏で読み込んで、あとから入れ替える。
     // (最新を読み終えるまでは、送信できないようにして、古い内容のまま送ってしまうのを防ぐ)
     const cacheKey = 'samuraiInitCache_' + userId;
-    let rendered = false;
+    // ただし、最新の確認がすぐ終わる時(1.5秒以内)は、前回の内容は出さない。
+    // (登録をやり直した直後などに、前回の「登録済み」の画面が一瞬でも出てしまうのを防ぐ)
+    let rendered = false, freshDone = false, cached = null, cacheTimer = null;
+    const showCached = () => { if(cached && !rendered && !freshDone){ setupApp(cached, false); rendered = true; } };
     try{
-      const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-      if(cached && cached.info && cached.info.registered){ setupApp(cached, false); rendered = true; }
-    }catch(e){}
+      cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if(!(cached && cached.info && cached.info.registered)) cached = null;
+    }catch(e){ cached = null; }
+    if(cached) cacheTimer = setTimeout(showCached, 1500);
     // 子ども情報と登録済みの予定を、1回の通信でまとめて取る
     let initData = null;
     try{
       const res = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
       initData = await res.json();
-    }catch(e){ if(!rendered) throw e; }
+    }catch(e){ freshDone = true; if(cacheTimer) clearTimeout(cacheTimer); if(cached && !rendered){ freshDone = false; showCached(); freshDone = true; } if(!rendered) throw e; }
+    freshDone = true;
+    if(cacheTimer) clearTimeout(cacheTimer);
     if(!initData) { // 最新を読めなかった時は、前回の内容のまま、送信はできないことを伝える
       document.getElementById('submitmsg').textContent = '最新の内容を読み込めませんでした。画面を開き直してください。';
       return;
