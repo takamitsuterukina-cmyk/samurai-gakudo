@@ -82,7 +82,7 @@
   .toggle-row button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   .detail-row{display:flex;gap:8px;align-items:center;font-size:13px;}
   .detail-row label{color:var(--ink-soft);width:84px;flex:none;}
-  .detail-row input[type=time]{
+  .detail-row select, .detail-row input[type=time]{
     flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);
   }
 
@@ -117,7 +117,7 @@
   details.usual .utitle{font-size:13px;font-weight:700;margin-bottom:6px;}
   details.usual .uline{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
   details.usual .uline label{width:84px;flex:none;color:var(--ink-soft);}
-  details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
+  details.usual .uline select, details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
   details.usual .unote{font-size:11px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
@@ -153,7 +153,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-i</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-j</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -164,13 +164,13 @@
       <summary><span class="ut">便利機能「いつもの時間を設定する」</span><span class="us">日にちを選ぶだけで「いつもの時間」が自動入力されます。<br>そのあとで各日にち個別調整も可能です。</span></summary>
       <div class="urow">
         <div class="utitle">お迎えが必要な日</div>
-        <div class="uline"><label>下校の時刻</label><input type="time" id="u-pk-s"></div>
-        <div class="uline"><label>帰りの時刻</label><input type="time" id="u-pk-e"></div>
+        <div class="uline"><label>下校の時刻</label><select id="u-pk-s"></select></div>
+        <div class="uline"><label>帰りの時刻</label><select id="u-pk-e"></select></div>
       </div>
       <div class="urow">
         <div class="utitle">お迎えが不要な日</div>
-        <div class="uline"><label>来所の時刻</label><input type="time" id="u-np-s"></div>
-        <div class="uline"><label>帰りの時刻</label><input type="time" id="u-np-e"></div>
+        <div class="uline"><label>来所の時刻</label><select id="u-np-s"></select></div>
+        <div class="uline"><label>帰りの時刻</label><select id="u-np-e"></select></div>
       </div>
       <div class="unote">空欄のままでも大丈夫です。このスマホに覚えます。いつもと違う日だけ、日ごとのカードで直してください。</div>
       <div style="padding:0 0 12px;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
@@ -223,6 +223,17 @@ let children = [];            // 登録されているお子さん(きょうだ�
 let selectedChildren = [];    // 今、予定を登録する対象のお子さん(複数ならまとめて登録)
 let reportsByChild = {};      // { お子さん名: { 'YYYY-MM-DD': {pickup, location, startTime} } } 今日以降の登録済みの内容
 let todayKeyG = '';
+// 時刻の選択肢は、8:00〜18:00の間(5分きざみ)に限る。すでに入っている値がその外にある時は、消えないよう、その値も選択肢に加える。
+const TIME_CHOICES = (() => { const a = []; for (let m = 8 * 60; m <= 18 * 60; m += 5) a.push(pad2(Math.floor(m / 60)) + ':' + pad2(m % 60)); return a; })();
+function pad2(n){ return String(n).padStart(2, '0'); }
+function normTime(v){ const m = /^(\d{1,2}):(\d{2})/.exec(v || ''); return m ? pad2(Number(m[1])) + ':' + m[2] : ''; }
+function timeOptionsHtml(value){
+  const v = normTime(value);
+  const list = TIME_CHOICES.slice();
+  if (v && list.indexOf(v) < 0) { list.push(v); list.sort(); }
+  return '<option value="">--:--</option>' + list.map(t => '<option value="' + t + '"' + (t === v ? ' selected' : '') + '>' + t + '</option>').join('');
+}
+function fillTimeSelectEl(el, value){ el.innerHTML = timeOptionsHtml(value); el.value = normTime(value); }
 let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' } }; // いつもの時間(お迎えあり/なし別。このスマホに覚える)
 function usualKey(){ return 'samuraiUsualTimes_' + (userId || ''); }
 function loadUsualT(){
@@ -230,8 +241,8 @@ function loadUsualT(){
     const o = JSON.parse(localStorage.getItem(usualKey()) || 'null');
     if(o){ ['pk','np'].forEach(k => { usualT[k] = Object.assign({ start:'', end:'' }, o[k] || {}); }); }
   }catch(e){}
-  document.getElementById('u-pk-s').value = usualT.pk.start; document.getElementById('u-pk-e').value = usualT.pk.end;
-  document.getElementById('u-np-s').value = usualT.np.start; document.getElementById('u-np-e').value = usualT.np.end;
+  fillTimeSelectEl(document.getElementById('u-pk-s'), usualT.pk.start); fillTimeSelectEl(document.getElementById('u-pk-e'), usualT.pk.end);
+  fillTimeSelectEl(document.getElementById('u-np-s'), usualT.np.start); fillTimeSelectEl(document.getElementById('u-np-e'), usualT.np.end);
 }
 function saveUsualT(){
   usualT.pk.start = document.getElementById('u-pk-s').value; usualT.pk.end = document.getElementById('u-pk-e').value;
@@ -523,11 +534,11 @@ function renderList(){
       </div>` : ''}
       <div class="detail-row">
         <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
-        <input type="time" class="time" data-key="${key}" value="${item.startTime || ''}">
+        <select class="time" data-key="${key}">${timeOptionsHtml(item.startTime)}</select>
       </div>
       <div class="detail-row end">
         <label>帰りの時刻</label>
-        <input type="time" class="etime" data-key="${key}" value="${item.endTime || ''}">
+        <select class="etime" data-key="${key}">${timeOptionsHtml(item.endTime)}</select>
       </div>
       <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。<button class="clear" data-key="${key}" style="display:${item.endTime ? 'inline-block' : 'none'}">いつも通りに戻す</button></div>
     `;
