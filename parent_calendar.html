@@ -119,6 +119,30 @@
   details.usual .uline label{width:84px;flex:none;color:var(--ink-soft);}
   details.usual .uline select, details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
   details.usual .unote{font-size:11px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
+  #regPane{display:none;padding:16px;}
+  #regPane h2{font-size:18px;margin:4px 0 4px;text-align:center;}
+  #regPane .lead{font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.6;margin-bottom:16px;}
+  #regPane .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
+  #regPane .box h3{font-size:14px;margin:0 0 8px;}
+  #regPane .namerow{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  #regPane .namerow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px;background:var(--paper);}
+  #regPane .namerow button{flex:none;border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;text-decoration:underline;padding:6px;}
+  #regPane .addbtn{width:100%;padding:10px 0;border-radius:10px;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;}
+  #regPane .tg{display:flex;gap:8px;margin-bottom:8px;}
+  #regPane .tg button{flex:1;padding:11px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:14px;color:var(--ink);}
+  #regPane .tg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  #regPane .hint2{font-size:11px;color:var(--ink-soft);line-height:1.5;margin-top:4px;}
+  #regPane .go{width:100%;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;}
+  #regPane .go:disabled{background:#B9C4B4;}
+  #regPane .err{color:#a33;font-size:13px;margin:8px 0 0;text-align:center;}
+  #regReview{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
+  #regReview .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
+  #regReview h2{font-size:16px;margin:0 0 8px;}
+  #regReview .row{padding:9px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5;}
+  #regReview .row b{display:block;font-size:12px;color:var(--ink-soft);font-weight:400;}
+  #regReview .btns{display:flex;gap:10px;margin-top:14px;}
+  #regReview .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+  #regReview .btns button.go2{background:var(--accent);border-color:var(--accent);color:#fff;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
   .switchlink{margin-top:10px;}
@@ -149,11 +173,39 @@
 
 <div id="status">読み込み中...</div>
 
+<div id="regPane">
+  <h2>お子さんの登録</h2>
+  <div class="lead">最初の1回だけ、お願いします(1分ほど)。<br>登録が済むと、通う日を選べるようになります。</div>
+  <div class="box">
+    <h3>① お子さんのお名前(フルネーム)</h3>
+    <div id="regNames"></div>
+    <button class="addbtn" id="regAdd">＋ きょうだいを追加</button>
+  </div>
+  <div class="box">
+    <h3>② お迎えは必要ですか？</h3>
+    <div class="tg"><button id="regPkYes" class="on">必要</button><button id="regPkNo">不要</button></div>
+    <div id="regPkDetail">
+      <div style="font-size:13px;margin:10px 0 6px;">お迎えの場所</div>
+      <div class="tg"><button id="regLocG" class="on">玄関</button><button id="regLocC">子ども教室</button></div>
+      <div style="font-size:13px;margin:10px 0 6px;">いつもの下校の時刻</div>
+      <select id="regTime" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px;background:var(--paper);"></select>
+    </div>
+    <div class="hint2">あとから、日ごとに変えられます。</div>
+  </div>
+  <button class="go" id="regSubmit">登録する</button>
+  <div class="err" id="regErr"></div>
+</div>
+<div id="regReview"><div class="sheet">
+  <h2>この内容で登録します。よろしいですか？</h2>
+  <div id="regReviewBody"></div>
+  <div class="btns"><button id="regBack">戻って直す</button><button class="go2" id="regGo">登録する</button></div>
+</div></div>
+
 <div id="app" style="display:none">
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-k</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-l</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -311,19 +363,9 @@ async function boot(){
     const initData = await res.json();
     childInfo = initData.info;
     if(!childInfo.registered){
-      // まだ登録していない人には、何をすればよいかを、順番に案内する
-      document.getElementById('status').innerHTML =
-        '<div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:12px;">はじめに、お子さんの登録をお願いします</div>' +
-        '<div style="line-height:1.9;text-align:left;display:inline-block;color:var(--ink);">' +
-        '① この画面を閉じて、トーク画面に戻ります<br>' +
-        '② お子さんのお名前(フルネーム)を、トークに送ります<br>' +
-        '　　例: さむらい太郎<br>' +
-        '　　(きょうだいは、「、」で区切って全員分)<br>' +
-        '③ 確認とお迎えの設定に、ボタンで答えます<br>' +
-        '④ 登録が終わったら、もう一度、下のメニューを押します' +
-        '</div>' +
-        '<div style="margin-top:18px;"><button id="closeBtn" style="padding:12px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;">トーク画面に戻る</button></div>';
-      document.getElementById('closeBtn').onclick = () => { try{ liff.closeWindow(); }catch(e){} };
+      // まだ登録していない人には、登録フォームを出す(最初の1回だけ)
+      showRegForm();
+      return;
       return;
     }
     children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
@@ -353,6 +395,77 @@ async function boot(){
   }catch(err){
     document.getElementById('status').textContent = '読み込みに失敗しました。時間を置いてもう一度開いてください。';
   }
+}
+
+// ===== 新規登録フォーム =====
+let regPickup = true, regLoc = 'genkan';
+function regAddName(value){
+  const wrap = document.getElementById('regNames');
+  if (wrap.children.length >= 6) return;
+  const row = document.createElement('div');
+  row.className = 'namerow';
+  row.innerHTML = '<input type="text" maxlength="30" placeholder="例: さむらい太郎" autocomplete="off">' + (wrap.children.length ? '<button type="button">削除</button>' : '');
+  row.querySelector('input').value = value || '';
+  const del = row.querySelector('button');
+  if (del) del.onclick = () => { row.remove(); };
+  wrap.appendChild(row);
+}
+function regNamesList(){
+  const out = [];
+  document.querySelectorAll('#regNames input').forEach(i => { const v = i.value.trim(); if (v && out.indexOf(v) < 0) out.push(v); });
+  return out;
+}
+function showRegForm(){
+  document.getElementById('status').style.display = 'none';
+  document.getElementById('regPane').style.display = 'block';
+  document.getElementById('regTime').innerHTML = timeOptionsHtml('15:00').replace('<option value="">--:--</option>', '');
+  document.getElementById('regTime').value = '15:00';
+  regAddName('');
+  document.getElementById('regAdd').onclick = () => { regAddName(''); const ins = document.querySelectorAll('#regNames input'); ins[ins.length - 1].focus(); };
+  const setPk = (yes) => {
+    regPickup = yes;
+    document.getElementById('regPkYes').classList.toggle('on', yes);
+    document.getElementById('regPkNo').classList.toggle('on', !yes);
+    document.getElementById('regPkDetail').style.display = yes ? 'block' : 'none';
+  };
+  document.getElementById('regPkYes').onclick = () => setPk(true);
+  document.getElementById('regPkNo').onclick = () => setPk(false);
+  const setLoc = (g) => {
+    regLoc = g ? 'genkan' : 'classroom';
+    document.getElementById('regLocG').classList.toggle('on', g);
+    document.getElementById('regLocC').classList.toggle('on', !g);
+  };
+  document.getElementById('regLocG').onclick = () => setLoc(true);
+  document.getElementById('regLocC').onclick = () => setLoc(false);
+  document.getElementById('regSubmit').onclick = () => {
+    const names = regNamesList();
+    const err = document.getElementById('regErr');
+    err.textContent = '';
+    if (!names.length) { err.textContent = 'お子さんのお名前を入れてください。'; return; }
+    const time = document.getElementById('regTime').value || '15:00';
+    document.getElementById('regReviewBody').innerHTML =
+      '<div class="row"><b>お子さん</b>' + names.map(n => n.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('、') + '</div>' +
+      '<div class="row"><b>お迎え</b>' + (regPickup ? '必要(' + (PICKUP_LOCATIONS[regLoc]) + '・下校' + time + ')' : '不要') + '</div>';
+    document.getElementById('regReview').style.display = 'flex';
+  };
+  document.getElementById('regBack').onclick = () => { document.getElementById('regReview').style.display = 'none'; };
+  document.getElementById('regGo').onclick = async () => {
+    const names = regNamesList();
+    const time = document.getElementById('regTime').value || '15:00';
+    const goBtn = document.getElementById('regGo');
+    goBtn.disabled = true; goBtn.textContent = '登録中...';
+    try{
+      const res = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'registerForm', userId, names, pickup: regPickup, location: regLoc, time }) });
+      const j = await res.json();
+      if (j && (j.ok || j.error === 'already')) { location.reload(); return; } // 登録できたら(すでに登録済みでも)、予定の登録画面へ
+      document.getElementById('regReview').style.display = 'none';
+      document.getElementById('regErr').textContent = (j && j.message) || '登録できませんでした。もう一度お試しください。';
+    }catch(e){
+      document.getElementById('regReview').style.display = 'none';
+      document.getElementById('regErr').textContent = '通信に失敗しました。もう一度お試しください。';
+    }
+    goBtn.disabled = false; goBtn.textContent = '登録する';
+  };
 }
 
 function switchTab(tab){
