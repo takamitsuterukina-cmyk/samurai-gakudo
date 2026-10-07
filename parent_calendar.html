@@ -110,7 +110,9 @@
   #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
   details.usual{margin:0 16px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
-  details.usual summary{padding:12px 0;font-size:14px;font-weight:700;color:var(--accent);cursor:pointer;}
+  details.usual summary{padding:12px 0;cursor:pointer;}
+  details.usual summary .ut{display:block;font-size:14px;font-weight:700;color:var(--accent);}
+  details.usual summary .us{display:block;margin-top:4px;font-size:12px;font-weight:400;color:var(--ink-soft);line-height:1.55;}
   details.usual .urow{padding:8px 0;border-top:1px solid var(--line);}
   details.usual .utitle{font-size:13px;font-weight:700;margin-bottom:6px;}
   details.usual .uline{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
@@ -151,7 +153,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-d</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-e</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -159,7 +161,7 @@
   <div id="inputPane">
     <div id="childpick"><div class="pickhead">予定を登録するお子さん（タップで選択・複数選ぶとまとめて登録）</div><div class="chips" id="chips"></div><div class="pickmsg" id="pickmsg"></div></div>
     <details class="usual" id="usualBox">
-      <summary>⏰ いつもの時間を設定する(いつも同じ時間なら、ここに入れておくと、日にちを選ぶだけで入ります)</summary>
+      <summary><span class="ut">便利機能「いつもの時間を設定する」</span><span class="us">日にちを選ぶだけで「いつもの時間」が自動入力されます。<br>そのあとで各日にち個別調整も可能です。</span></summary>
       <div class="urow">
         <div class="utitle">お迎えが必要な日</div>
         <div class="uline"><label>下校の時刻</label><input type="time" id="u-pk-s"></div>
