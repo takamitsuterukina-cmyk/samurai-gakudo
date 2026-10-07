@@ -151,6 +151,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-d</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -170,6 +171,7 @@
         <div class="uline"><label>帰りの時刻</label><input type="time" id="u-np-e"></div>
       </div>
       <div class="unote">空欄のままでも大丈夫です。このスマホに覚えます。いつもと違う日だけ、日ごとのカードで直してください。</div>
+      <div style="padding:0 0 12px;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
     </details>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
@@ -240,6 +242,19 @@ function saveUsualT(){
   const el = document.getElementById(id);
   ['change','input','blur'].forEach(ev => el.addEventListener(ev, saveUsualT));
 });
+// いま選んでいる日(登録済みの日も含む)の時刻を、いつもの時間で入れ直す。先に日にちを選んでから、いつもの時間を決めた時のために。
+document.getElementById('applyUsual').onclick = () => {
+  saveUsualT();
+  const keys = Object.keys(selected);
+  // いつもの時間として入っている欄だけを入れ直す(空欄の項目は、今の値のままにする)
+  keys.forEach(k => {
+    const u = selected[k].pickup ? usualT.pk : usualT.np;
+    if (u.start) selected[k].startTime = u.start;
+    if (u.end) selected[k].endTime = u.end;
+  });
+  document.getElementById('applyUsualMsg').textContent = keys.length ? keys.length + '日分に、いつもの時間を入れました。下のカードで確認してください。' : 'まだ日にちが選ばれていません。日にちを選ぶと、いつもの時間が自動で入ります。';
+  renderMonth();
+};
 // 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
 // お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
 function defaultTimesFor(pickup){
