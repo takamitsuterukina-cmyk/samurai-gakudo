@@ -234,10 +234,16 @@ function saveUsualT(){
   usualT.np.start = document.getElementById('u-np-s').value; usualT.np.end = document.getElementById('u-np-e').value;
   try{ localStorage.setItem(usualKey(), JSON.stringify(usualT)); }catch(e){}
 }
-['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => { document.getElementById(id).onchange = saveUsualT; });
+// スマホでは、時刻を選んだだけ(入力欄から離れていない)だと、「変更」の合図が出ないことがある。
+// 選んでいる途中の値も拾い、日にちを選ぶ直前にも、入力欄の今の値を読み直す。
+['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => {
+  const el = document.getElementById(id);
+  ['change','input','blur'].forEach(ev => el.addEventListener(ev, saveUsualT));
+});
 // 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
 // お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
 function defaultTimesFor(pickup){
+  saveUsualT(); // 入力欄の今の値を、そのまま使う
   if(pickup) return { startTime: usualT.pk.start || (childInfo && childInfo.defaultTime) || '15:00', endTime: usualT.pk.end || '' };
   return { startTime: usualT.np.start || '', endTime: usualT.np.end || '' };
 }
