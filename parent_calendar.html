@@ -146,6 +146,7 @@
   #regReview .btns{display:flex;gap:10px;margin-top:14px;}
   #regReview .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #regReview .btns button.go2{background:var(--accent);border-color:var(--accent);color:#fff;}
+  #childpick .pickhint{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:8px;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
   .switchlink{margin-top:10px;}
@@ -191,19 +192,20 @@
   <h2>この内容で登録します。よろしいですか？</h2>
   <div id="regReviewBody"></div>
   <div class="btns"><button id="regBack">戻って直す</button><button class="go2" id="regGo">登録する</button></div>
+  <div id="regWait" style="display:none;font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:10px;text-align:center;">登録しています。そのままお待ちください。</div>
 </div></div>
 
 <div id="app" style="display:none">
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-p</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-r</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
 
   <div id="inputPane">
-    <div id="childpick"><div class="pickhead">予定を登録するお子さん（タップで選択・複数選ぶとまとめて登録）</div><div class="chips" id="chips"></div><div class="pickmsg" id="pickmsg"></div></div>
+    <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">まずは「全員まとめて」で登録すると、かんたんです。1日だけ違う日などは、送信したあと、お子さんのお名前を選んで、その日だけ直せます。</div><div class="pickmsg" id="pickmsg"></div></div>
     <details class="usual" id="usualBox">
       <summary><span class="ut">便利機能「いつもの時間を設定する」</span><span class="us">日にちを選ぶだけで「いつもの時間」が自動入力されます。<br>そのあとで各日にち個別調整も可能です。</span></summary>
       <div class="urow">
@@ -498,6 +500,8 @@ function showRegForm(){
     const names = regNamesList();
     const goBtn = document.getElementById('regGo');
     goBtn.disabled = true; goBtn.textContent = '登録中...';
+    const waitMsg = document.getElementById('regWait'); waitMsg.style.display = 'block';
+    const waitTimer = setTimeout(() => { waitMsg.textContent = 'もう少しお待ちください。混み合っていると、1分ほどかかることがあります。画面はそのままで大丈夫です。'; }, 8000);
     let j = null;
     try{
       // 結果を読み取れるよう、Cloudflareを通さず、直接送る(余計なヘッダーを付けない形で、通信の事前確認を避ける)
@@ -513,6 +517,7 @@ function showRegForm(){
         if (d2 && d2.info && d2.info.registered) { location.reload(); return; }
       }catch(e){}
     }
+    clearTimeout(waitTimer); waitMsg.style.display = 'none';
     document.getElementById('regReview').style.display = 'none';
     document.getElementById('regErr').textContent = (j && j.message) || '登録できませんでした。もう一度お試しください。';
     goBtn.disabled = false; goBtn.textContent = '登録する';
