@@ -98,6 +98,17 @@
   .detail-row.end{margin-top:8px;}
   .hint{font-size:11px;color:var(--ink-soft);margin:4px 0 0 92px;line-height:1.4;}
 
+  #detail-hint{display:none;margin:12px 16px 0;padding:10px 12px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#6b4a12;font-size:13px;line-height:1.55;font-weight:700;}
+  #review{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
+  #review .sheet{background:var(--surface);width:100%;max-width:560px;max-height:86vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
+  #review h2{font-size:16px;margin:0 0 4px;}
+  #review .sub{font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;}
+  #review .row{padding:9px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5;}
+  #review .row b{display:block;}
+  #review .row.del b{color:#a33;}
+  #review .btns{display:flex;gap:10px;margin-top:14px;}
+  #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+  #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
   .switchlink{margin-top:10px;}
@@ -150,12 +161,20 @@
     </div>
 
     <div id="empty-hint">通う日をカレンダーからタップして選んでください。複数日を選んでからまとめて送信できます。</div>
+    <div id="detail-hint">↓ 選んだ日ごとに、お迎え・場所・時刻を、下のカードで確認・入力してください。入力したあと、いちばん下の「送信する」を押します。</div>
     <div id="list"></div>
   </div>
 
   <div id="viewPane" style="display:none">
     <div id="viewList"></div>
   </div>
+
+  <div id="review"><div class="sheet">
+    <h2>この内容で送ります。よろしいですか？</h2>
+    <div class="sub" id="reviewSub"></div>
+    <div id="reviewBody"></div>
+    <div class="btns"><button id="reviewBack">戻って直す</button><button class="go" id="reviewGo">この内容で送信する</button></div>
+  </div></div>
 
   <footer id="inputFooter">
     <button id="submitBtn" disabled>選択した日を送信する</button>
@@ -410,6 +429,7 @@ function renderList(){
   const monthPrefix = viewYear + '-' + pad(viewMonth+1);
   const keys = Object.keys(selected).filter(k => k.startsWith(monthPrefix)).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
+  document.getElementById('detail-hint').style.display = keys.length ? 'block' : 'none';
   document.getElementById('submitBtn').disabled = !isDirty();
   document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
   list.innerHTML = '';
@@ -464,13 +484,51 @@ document.getElementById('nextMonth').onclick = () => {
   renderMonth();
 };
 
-document.getElementById('submitBtn').onclick = async () => {
-  const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
-  const bad = days.filter(d => d.endTime && d.pickup && d.startTime && d.endTime <= d.startTime);
+// 送信ボタンを押すと、まず「この内容で送ります」の確認を出す(日ごとの詳細を見ないまま送ってしまうのを防ぐ)
+function badDays(){
+  return Object.keys(selected).map(key => ({ date:key, ...selected[key] })).filter(d => d.endTime && d.pickup && d.startTime && d.endTime <= d.startTime);
+}
+function deleteDays(){
+  const delSet = new Set();
+  selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => { if (!selected[k]) delSet.add(k); }));
+  return Array.from(delSet).sort();
+}
+function mdw(key){
+  const [y,m,d] = key.split('-').map(Number);
+  return m + '/' + d + '(' + ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()] + ')';
+}
+document.getElementById('submitBtn').onclick = () => {
+  const bad = badDays();
   if (bad.length) {
     document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
     return;
   }
+  const keys = Object.keys(selected).sort();
+  const dels = deleteDays();
+  document.getElementById('reviewSub').textContent =
+    (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : '')) +
+    '内容がちがう日は、「戻って直す」で、カードの内容を直してください。';
+  document.getElementById('reviewBody').innerHTML =
+    keys.map(k => {
+      const it = selected[k];
+      const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし') + (it.endTime ? '・帰り' + it.endTime : '');
+      return '<div class="row"><b>' + mdw(k) + '</b>' + detail + '</div>';
+    }).join('') +
+    dels.map(k => '<div class="row del"><b>' + mdw(k) + '</b>取り消し</div>').join('');
+  document.getElementById('review').style.display = 'flex';
+};
+document.getElementById('reviewBack').onclick = () => {
+  document.getElementById('review').style.display = 'none';
+  const first = document.querySelector('#list .card');
+  if (first && first.scrollIntoView) first.scrollIntoView({ behavior:'smooth', block:'start' });
+};
+document.getElementById('reviewGo').onclick = () => {
+  document.getElementById('review').style.display = 'none';
+  doSubmit();
+};
+
+async function doSubmit(){
+  const days = Object.keys(selected).map(key => ({ date:key, ...selected[key] }));
   // 取り消す日: 選んだお子さんのうち誰かに登録済みで、今の画面では選ばれていない日(まとめて登録のときは全員そろえる)
   const delSet = new Set();
   selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => { if (!selected[k]) delSet.add(k); }));
@@ -495,7 +553,7 @@ document.getElementById('submitBtn').onclick = async () => {
     document.getElementById('submitmsg').textContent = '送信に失敗しました。もう一度お試しください。';
     document.getElementById('submitBtn').disabled = false;
   }
-};
+}
 
 boot();
 </script>
