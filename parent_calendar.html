@@ -82,9 +82,13 @@
   .toggle-row button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   .detail-row{display:flex;gap:8px;align-items:center;font-size:13px;}
   .detail-row label{color:var(--ink-soft);width:84px;flex:none;}
-  .detail-row select, .detail-row input[type=time]{
+  .detail-row input[type=time]{
     flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);
   }
+  /* 時刻は「時」と「分」を、別々のロールにする */
+  .tp{flex:1;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--ink-soft);}
+  .tp select{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 6px;font-size:14px;background:var(--paper);color:var(--ink);}
+  .tp select:disabled{opacity:.5;}
 
   #childpick{margin:0 16px 8px;display:none;}
   #childpick .pickhead{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
@@ -117,7 +121,7 @@
   details.usual .utitle{font-size:13px;font-weight:700;margin-bottom:6px;}
   details.usual .uline{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
   details.usual .uline label{width:84px;flex:none;color:var(--ink-soft);}
-  details.usual .uline select, details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
+  details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
   details.usual .utg{display:flex;gap:8px;}
   details.usual .utg button{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:14px;color:var(--ink);}
   details.usual .utg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
@@ -199,7 +203,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-r</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-s</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -214,18 +218,20 @@
         <div class="utg"><button type="button" id="u-pk-yes">必要</button><button type="button" id="u-pk-no">不要</button></div>
         <div id="u-loc-row" class="utg" style="margin-top:8px;"><button type="button" id="u-loc-g">玄関</button><button type="button" id="u-loc-c">子ども教室</button></div>
       </div>
-      <div class="urow">
+      <div class="urow" id="u-pk-row">
         <div class="utitle">お迎えが必要な日</div>
-        <div class="uline"><label>下校の時刻</label><select id="u-pk-s"></select></div>
-        <div class="uline"><label>帰りの時刻</label><select id="u-pk-e"></select></div>
+        <div class="unote" style="padding:0 0 8px;">基本の時間です。日にちを選んだあと、日ごとのカードで、その日だけ変えられます。</div>
+        <div class="uline"><label>下校の時刻</label><span class="tp" id="u-pk-s"></span></div>
+        <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-pk-e"></span></div>
       </div>
-      <div class="urow">
+      <div class="urow" id="u-np-row">
         <div class="utitle">お迎えが不要な日</div>
-        <div class="uline"><label>来所の時刻</label><select id="u-np-s"></select></div>
-        <div class="uline"><label>帰りの時刻</label><select id="u-np-e"></select></div>
+        <div class="unote" style="padding:0 0 8px;">基本の時間です。日にちを選んだあと、日ごとのカードで、その日だけ変えられます。</div>
+        <div class="uline"><label>来所の時刻</label><span class="tp" id="u-np-s"></span></div>
+        <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-np-e"></span></div>
       </div>
-      <div class="unote">空欄のままでも大丈夫です。このスマホに覚えます。いつもと違う日だけ、日ごとのカードで直してください。</div>
-      <div style="padding:0 0 12px;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
+      <div class="unote">空欄のままでも大丈夫です。このスマホに覚えます。</div>
+      <div id="applyUsualWrap" style="padding:0 0 12px;display:none;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
     </details>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
@@ -279,13 +285,34 @@ let todayKeyG = '';
 const TIME_CHOICES = (() => { const a = []; for (let m = 8 * 60; m <= 18 * 60; m += 5) a.push(pad2(Math.floor(m / 60)) + ':' + pad2(m % 60)); return a; })();
 function pad2(n){ return String(n).padStart(2, '0'); }
 function normTime(v){ const m = /^(\d{1,2}):(\d{2})/.exec(v || ''); return m ? pad2(Number(m[1])) + ':' + m[2] : ''; }
-function timeOptionsHtml(value){
+// 時刻の入力は「時」と「分」の2つのロール。時は8〜18、分は5分きざみ(18時は、ちょうどのみ)。
+// すでに入っている値が、その外にある時は、消えないよう、その値も選択肢に加える。
+function initTimePair(el, value){
   const v = normTime(value);
-  const list = TIME_CHOICES.slice();
-  if (v && list.indexOf(v) < 0) { list.push(v); list.sort(); }
-  return '<option value="">--:--</option>' + list.map(t => '<option value="' + t + '"' + (t === v ? ' selected' : '') + '>' + t + '</option>').join('');
+  const hh = v ? Number(v.slice(0, 2)) : null, mm = v ? v.slice(3) : '';
+  const hours = []; for (let h = 8; h <= 18; h++) hours.push(h);
+  if (hh !== null && hours.indexOf(hh) < 0) { hours.push(hh); hours.sort((x, y) => x - y); }
+  const mins = []; for (let m = 0; m < 60; m += 5) mins.push(pad2(m));
+  if (mm && mins.indexOf(mm) < 0) { mins.push(mm); mins.sort(); }
+  el.innerHTML =
+    '<select class="th"><option value="">--</option>' + hours.map(h => '<option value="' + h + '">' + h + '</option>').join('') + '</select>時' +
+    '<select class="tm">' + mins.map(m => '<option value="' + m + '">' + m + '</option>').join('') + '</select>分';
+  const th = el.querySelector('.th'), tm = el.querySelector('.tm');
+  th.value = hh === null ? '' : String(hh);
+  tm.value = mm || '00';
+  const sync = () => { tm.disabled = !th.value; };
+  sync();
+  // 外から値を読み書きできるようにする(ふつうの入力欄と同じように、.value で扱える)
+  Object.defineProperty(el, 'value', {
+    configurable: true,
+    get(){ return th.value ? pad2(Number(th.value)) + ':' + tm.value : ''; },
+    set(x){ const n = normTime(x); th.value = n ? String(Number(n.slice(0, 2))) : ''; tm.value = n ? n.slice(3) : '00'; sync(); },
+  });
+  // 18時は、18:00まで(分は00に戻す)。時が空の時は、分は選べない。
+  // (外側の「変更」の受け取りより先に動くよう、中のロール自身で受け取る)
+  [th, tm].forEach(x => x.addEventListener('change', () => { if (th.value === '18' && tm.value !== '00' && mins.indexOf(tm.value) >= 0) tm.value = '00'; sync(); }));
 }
-function fillTimeSelectEl(el, value){ el.innerHTML = timeOptionsHtml(value); el.value = normTime(value); }
+function fillTimeSelectEl(el, value){ initTimePair(el, value); }
 let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' }, pickup: null, loc: '' }; // pickup: ふだんのお迎え(null=未設定) loc: ふだんの場所 // いつもの時間(お迎えあり/なし別。このスマホに覚える)
 function usualKey(){ return 'samuraiUsualTimes_' + (userId || ''); }
 function loadUsualT(){
@@ -309,6 +336,8 @@ function syncUsualButtons(){
   document.getElementById('u-pk-yes').classList.toggle('on', pk === true);
   document.getElementById('u-pk-no').classList.toggle('on', pk === false);
   document.getElementById('u-loc-row').style.display = pk === false ? 'none' : 'flex';
+  document.getElementById('u-pk-row').style.display = pk === false ? 'none' : 'block';
+  document.getElementById('u-np-row').style.display = pk === false ? 'block' : 'none';
   const loc = effectiveLoc();
   document.getElementById('u-loc-g').classList.toggle('on', loc === 'genkan');
   document.getElementById('u-loc-c').classList.toggle('on', loc === 'classroom');
@@ -325,7 +354,7 @@ function saveUsualT(){
 // 選んでいる途中の値も拾い、日にちを選ぶ直前にも、入力欄の今の値を読み直す。
 ['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => {
   const el = document.getElementById(id);
-  ['change','input','blur'].forEach(ev => el.addEventListener(ev, saveUsualT));
+  ['change','input','focusout'].forEach(ev => el.addEventListener(ev, saveUsualT));
 });
 document.getElementById('u-pk-yes').onclick = () => { usualT.pickup = true; saveUsualT(); };
 document.getElementById('u-pk-no').onclick = () => { usualT.pickup = false; saveUsualT(); };
@@ -689,6 +718,7 @@ function renderList(){
   const keys = Object.keys(selected).filter(k => k.startsWith(monthPrefix)).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
   document.getElementById('detail-hint').style.display = keys.length ? 'block' : 'none';
+  document.getElementById('applyUsualWrap').style.display = Object.keys(selected).length ? 'block' : 'none'; // 日にちを選んでいない間は、出さない
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
   list.innerHTML = '';
@@ -715,17 +745,19 @@ function renderList(){
       </div>` : ''}
       <div class="detail-row">
         <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
-        <select class="time" data-key="${key}">${timeOptionsHtml(item.startTime)}</select>
+        <span class="tp time" data-key="${key}"></span>
       </div>
       <div class="detail-row end">
         <label>帰りの時刻</label>
-        <select class="etime" data-key="${key}">${timeOptionsHtml(item.endTime)}</select>
+        <span class="tp etime" data-key="${key}"></span>
       </div>
       <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。<button class="clear" data-key="${key}" style="display:${item.endTime ? 'inline-block' : 'none'}">いつも通りに戻す</button></div>
     `;
     list.appendChild(card);
   });
 
+  list.querySelectorAll('.time').forEach(el => initTimePair(el, selected[el.dataset.key].startTime));
+  list.querySelectorAll('.etime').forEach(el => initTimePair(el, selected[el.dataset.key].endTime));
   list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; renderMonth(); });
   list.querySelectorAll('.pk').forEach(b => b.onclick = () => {
     const it = selected[b.dataset.key];
