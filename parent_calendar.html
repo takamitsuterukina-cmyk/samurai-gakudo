@@ -118,6 +118,9 @@
   details.usual .uline{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
   details.usual .uline label{width:84px;flex:none;color:var(--ink-soft);}
   details.usual .uline select, details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
+  details.usual .utg{display:flex;gap:8px;}
+  details.usual .utg button{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:14px;color:var(--ink);}
+  details.usual .utg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   details.usual .unote{font-size:11px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
   #regPane{display:none;padding:16px;}
   #regPane h2{font-size:18px;margin:4px 0 4px;text-align:center;}
@@ -175,22 +178,11 @@
 
 <div id="regPane">
   <h2>お子さんの登録</h2>
-  <div class="lead">最初の1回だけ、お願いします(1分ほど)。<br>登録が済むと、通う日を選べるようになります。</div>
+  <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。お迎えの設定や時刻は、このあと、予定の登録画面で決められます。</div>
   <div class="box">
     <h3>① お子さんのお名前(フルネーム)</h3>
     <div id="regNames"></div>
     <button class="addbtn" id="regAdd">＋ きょうだいを追加</button>
-  </div>
-  <div class="box">
-    <h3>② お迎えは必要ですか？</h3>
-    <div class="hint2" style="margin:0 0 10px;font-size:12px;">基本設定です。必要のない日は登録時に編集できます。</div>
-    <div class="tg"><button id="regPkYes" class="on">必要</button><button id="regPkNo">不要</button></div>
-    <div id="regPkDetail">
-      <div style="font-size:13px;margin:10px 0 6px;">お迎えの場所</div>
-      <div class="tg"><button id="regLocG" class="on">玄関</button><button id="regLocC">子ども教室</button></div>
-      <div style="font-size:13px;margin:10px 0 6px;">いつもの下校の時刻</div>
-      <select id="regTime" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px;background:var(--paper);"></select>
-    </div>
   </div>
   <button class="go" id="regSubmit">登録する</button>
   <div class="err" id="regErr"></div>
@@ -205,7 +197,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-m</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-n</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -214,6 +206,12 @@
     <div id="childpick"><div class="pickhead">予定を登録するお子さん（タップで選択・複数選ぶとまとめて登録）</div><div class="chips" id="chips"></div><div class="pickmsg" id="pickmsg"></div></div>
     <details class="usual" id="usualBox">
       <summary><span class="ut">便利機能「いつもの時間を設定する」</span><span class="us">日にちを選ぶだけで「いつもの時間」が自動入力されます。<br>そのあとで各日にち個別調整も可能です。</span></summary>
+      <div class="urow">
+        <div class="utitle">ふだんのお迎え</div>
+        <div class="unote" style="padding:0 0 8px;">基本設定です。必要のない日は、日ごとのカードで変えられます。</div>
+        <div class="utg"><button type="button" id="u-pk-yes">必要</button><button type="button" id="u-pk-no">不要</button></div>
+        <div id="u-loc-row" class="utg" style="margin-top:8px;"><button type="button" id="u-loc-g">玄関</button><button type="button" id="u-loc-c">子ども教室</button></div>
+      </div>
       <div class="urow">
         <div class="utitle">お迎えが必要な日</div>
         <div class="uline"><label>下校の時刻</label><select id="u-pk-s"></select></div>
@@ -286,20 +284,40 @@ function timeOptionsHtml(value){
   return '<option value="">--:--</option>' + list.map(t => '<option value="' + t + '"' + (t === v ? ' selected' : '') + '>' + t + '</option>').join('');
 }
 function fillTimeSelectEl(el, value){ el.innerHTML = timeOptionsHtml(value); el.value = normTime(value); }
-let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' } }; // いつもの時間(お迎えあり/なし別。このスマホに覚える)
+let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' }, pickup: null, loc: '' }; // pickup: ふだんのお迎え(null=未設定) loc: ふだんの場所 // いつもの時間(お迎えあり/なし別。このスマホに覚える)
 function usualKey(){ return 'samuraiUsualTimes_' + (userId || ''); }
 function loadUsualT(){
   try{
     const o = JSON.parse(localStorage.getItem(usualKey()) || 'null');
-    if(o){ ['pk','np'].forEach(k => { usualT[k] = Object.assign({ start:'', end:'' }, o[k] || {}); }); }
+    if(o){
+      ['pk','np'].forEach(k => { usualT[k] = Object.assign({ start:'', end:'' }, o[k] || {}); });
+      usualT.pickup = (o.pickup === true || o.pickup === false) ? o.pickup : null;
+      usualT.loc = o.loc === 'classroom' || o.loc === 'genkan' ? o.loc : '';
+    }
+    usualFirstVisit = !o;
   }catch(e){}
+  syncUsualButtons();
   fillTimeSelectEl(document.getElementById('u-pk-s'), usualT.pk.start); fillTimeSelectEl(document.getElementById('u-pk-e'), usualT.pk.end);
   fillTimeSelectEl(document.getElementById('u-np-s'), usualT.np.start); fillTimeSelectEl(document.getElementById('u-np-e'), usualT.np.end);
 }
+let usualFirstVisit = false;
+// ふだんのお迎え・場所のボタンの見た目を合わせる(未設定の時は、登録時の設定を使うので、どちらも押されていない見た目)
+function syncUsualButtons(){
+  const pk = effectivePickup();
+  document.getElementById('u-pk-yes').classList.toggle('on', pk === true);
+  document.getElementById('u-pk-no').classList.toggle('on', pk === false);
+  document.getElementById('u-loc-row').style.display = pk === false ? 'none' : 'flex';
+  const loc = effectiveLoc();
+  document.getElementById('u-loc-g').classList.toggle('on', loc === 'genkan');
+  document.getElementById('u-loc-c').classList.toggle('on', loc === 'classroom');
+}
+function effectivePickup(){ return usualT.pickup !== null ? usualT.pickup : !!(childInfo && childInfo.defaultPickup); }
+function effectiveLoc(){ return usualT.loc || (childInfo && childInfo.defaultLocation) || 'genkan'; }
 function saveUsualT(){
   usualT.pk.start = document.getElementById('u-pk-s').value; usualT.pk.end = document.getElementById('u-pk-e').value;
   usualT.np.start = document.getElementById('u-np-s').value; usualT.np.end = document.getElementById('u-np-e').value;
   try{ localStorage.setItem(usualKey(), JSON.stringify(usualT)); }catch(e){}
+  syncUsualButtons();
 }
 // スマホでは、時刻を選んだだけ(入力欄から離れていない)だと、「変更」の合図が出ないことがある。
 // 選んでいる途中の値も拾い、日にちを選ぶ直前にも、入力欄の今の値を読み直す。
@@ -307,6 +325,10 @@ function saveUsualT(){
   const el = document.getElementById(id);
   ['change','input','blur'].forEach(ev => el.addEventListener(ev, saveUsualT));
 });
+document.getElementById('u-pk-yes').onclick = () => { usualT.pickup = true; saveUsualT(); };
+document.getElementById('u-pk-no').onclick = () => { usualT.pickup = false; saveUsualT(); };
+document.getElementById('u-loc-g').onclick = () => { usualT.loc = 'genkan'; saveUsualT(); };
+document.getElementById('u-loc-c').onclick = () => { usualT.loc = 'classroom'; saveUsualT(); };
 // いま選んでいる日(登録済みの日も含む)の時刻を、いつもの時間で入れ直す。先に日にちを選んでから、いつもの時間を決めた時のために。
 document.getElementById('applyUsual').onclick = () => {
   saveUsualT();
@@ -375,6 +397,7 @@ async function boot(){
     viewMonth = now.getMonth();
     todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
     loadUsualT();
+    if (usualFirstVisit) document.getElementById('usualBox').open = true; // 初めて開いた時は、基本設定が目に入るよう、開いておく
 
     const reports = initData.reports || [];
     children.forEach(c => { reportsByChild[c] = {}; });
@@ -398,7 +421,6 @@ async function boot(){
 }
 
 // ===== 新規登録フォーム =====
-let regPickup = true, regLoc = 'genkan';
 function regAddName(value){
   const wrap = document.getElementById('regNames');
   if (wrap.children.length >= 6) return;
@@ -418,44 +440,24 @@ function regNamesList(){
 function showRegForm(){
   document.getElementById('status').style.display = 'none';
   document.getElementById('regPane').style.display = 'block';
-  document.getElementById('regTime').innerHTML = timeOptionsHtml('15:00').replace('<option value="">--:--</option>', '');
-  document.getElementById('regTime').value = '15:00';
   regAddName('');
   document.getElementById('regAdd').onclick = () => { regAddName(''); const ins = document.querySelectorAll('#regNames input'); ins[ins.length - 1].focus(); };
-  const setPk = (yes) => {
-    regPickup = yes;
-    document.getElementById('regPkYes').classList.toggle('on', yes);
-    document.getElementById('regPkNo').classList.toggle('on', !yes);
-    document.getElementById('regPkDetail').style.display = yes ? 'block' : 'none';
-  };
-  document.getElementById('regPkYes').onclick = () => setPk(true);
-  document.getElementById('regPkNo').onclick = () => setPk(false);
-  const setLoc = (g) => {
-    regLoc = g ? 'genkan' : 'classroom';
-    document.getElementById('regLocG').classList.toggle('on', g);
-    document.getElementById('regLocC').classList.toggle('on', !g);
-  };
-  document.getElementById('regLocG').onclick = () => setLoc(true);
-  document.getElementById('regLocC').onclick = () => setLoc(false);
   document.getElementById('regSubmit').onclick = () => {
     const names = regNamesList();
     const err = document.getElementById('regErr');
     err.textContent = '';
     if (!names.length) { err.textContent = 'お子さんのお名前を入れてください。'; return; }
-    const time = document.getElementById('regTime').value || '15:00';
     document.getElementById('regReviewBody').innerHTML =
-      '<div class="row"><b>お子さん</b>' + names.map(n => n.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('、') + '</div>' +
-      '<div class="row"><b>お迎え</b>' + (regPickup ? '必要(' + (PICKUP_LOCATIONS[regLoc]) + '・下校' + time + ')' : '不要') + '</div>';
+      '<div class="row"><b>お子さん</b>' + names.map(n => n.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('、') + '</div>';
     document.getElementById('regReview').style.display = 'flex';
   };
   document.getElementById('regBack').onclick = () => { document.getElementById('regReview').style.display = 'none'; };
   document.getElementById('regGo').onclick = async () => {
     const names = regNamesList();
-    const time = document.getElementById('regTime').value || '15:00';
     const goBtn = document.getElementById('regGo');
     goBtn.disabled = true; goBtn.textContent = '登録中...';
     try{
-      const res = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'registerForm', userId, names, pickup: regPickup, location: regLoc, time }) });
+      const res = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'registerForm', userId, names }) });
       const j = await res.json();
       if (j && (j.ok || j.error === 'already')) { location.reload(); return; } // 登録できたら(すでに登録済みでも)、予定の登録画面へ
       document.getElementById('regReview').style.display = 'none';
@@ -560,10 +562,10 @@ function toggleDay(key){
   if(selected[key]){
     delete selected[key];
   } else {
-    const pk = !!childInfo.defaultPickup;
+    const pk = effectivePickup();
     selected[key] = Object.assign({
       pickup: pk,
-      location: childInfo.defaultLocation || 'genkan',
+      location: effectiveLoc(),
     }, defaultTimesFor(pk));
   }
   renderMonth();
