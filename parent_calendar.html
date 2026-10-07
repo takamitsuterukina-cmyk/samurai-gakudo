@@ -228,8 +228,10 @@ async function boot(){
     loadHolidays(); // カレンダー描画をブロックしないよう非同期のまま進める(読み込み完了後に自動で再描画)
     const idToken = liff.getDecodedIDToken();
     userId = idToken.sub;
-    const res = await fetch(GAS_DIRECT_URL + '?action=childInfo&userId=' + encodeURIComponent(userId));
-    childInfo = await res.json();
+    // 子ども情報と登録済みの予定を、1回の通信でまとめて取る(通信のたびに待たされるため、回数を減らす)
+    const res = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
+    const initData = await res.json();
+    childInfo = initData.info;
     if(!childInfo.registered){
       document.getElementById('status').textContent = 'まだお子さんの登録が済んでいません。トーク画面でお名前を送って登録してから開いてください。';
       return;
@@ -241,8 +243,7 @@ async function boot(){
     viewMonth = now.getMonth();
     todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const reportsRes = await fetch(GAS_DIRECT_URL + '?action=myReports&all=1&userId=' + encodeURIComponent(userId));
-    const reports = await reportsRes.json();
+    const reports = initData.reports || [];
     children.forEach(c => { reportsByChild[c] = {}; });
     reports.forEach(r => {
       if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
