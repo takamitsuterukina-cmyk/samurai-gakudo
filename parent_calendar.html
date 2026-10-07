@@ -109,6 +109,14 @@
   #review .btns{display:flex;gap:10px;margin-top:14px;}
   #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
+  details.usual{margin:0 16px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
+  details.usual summary{padding:12px 0;font-size:14px;font-weight:700;color:var(--accent);cursor:pointer;}
+  details.usual .urow{padding:8px 0;border-top:1px solid var(--line);}
+  details.usual .utitle{font-size:13px;font-weight:700;margin-bottom:6px;}
+  details.usual .uline{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
+  details.usual .uline label{width:84px;flex:none;color:var(--ink-soft);}
+  details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
+  details.usual .unote{font-size:11px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
 
   .switchlink{margin-top:10px;}
@@ -149,6 +157,20 @@
 
   <div id="inputPane">
     <div id="childpick"><div class="pickhead">予定を登録するお子さん（タップで選択・複数選ぶとまとめて登録）</div><div class="chips" id="chips"></div><div class="pickmsg" id="pickmsg"></div></div>
+    <details class="usual" id="usualBox">
+      <summary>⏰ いつもの時間を設定する(いつも同じ時間なら、ここに入れておくと、日にちを選ぶだけで入ります)</summary>
+      <div class="urow">
+        <div class="utitle">お迎えが必要な日</div>
+        <div class="uline"><label>下校の時刻</label><input type="time" id="u-pk-s"></div>
+        <div class="uline"><label>帰りの時刻</label><input type="time" id="u-pk-e"></div>
+      </div>
+      <div class="urow">
+        <div class="utitle">お迎えが不要な日</div>
+        <div class="uline"><label>来所の時刻</label><input type="time" id="u-np-s"></div>
+        <div class="uline"><label>帰りの時刻</label><input type="time" id="u-np-e"></div>
+      </div>
+      <div class="unote">空欄のままでも大丈夫です。このスマホに覚えます。いつもと違う日だけ、日ごとのカードで直してください。</div>
+    </details>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
       <div class="label" id="monthLabel"></div>
@@ -197,6 +219,28 @@ let children = [];            // 登録されているお子さん(きょうだ�
 let selectedChildren = [];    // 今、予定を登録する対象のお子さん(複数ならまとめて登録)
 let reportsByChild = {};      // { お子さん名: { 'YYYY-MM-DD': {pickup, location, startTime} } } 今日以降の登録済みの内容
 let todayKeyG = '';
+let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' } }; // いつもの時間(お迎えあり/なし別。このスマホに覚える)
+function usualKey(){ return 'samuraiUsualTimes_' + (userId || ''); }
+function loadUsualT(){
+  try{
+    const o = JSON.parse(localStorage.getItem(usualKey()) || 'null');
+    if(o){ ['pk','np'].forEach(k => { usualT[k] = Object.assign({ start:'', end:'' }, o[k] || {}); }); }
+  }catch(e){}
+  document.getElementById('u-pk-s').value = usualT.pk.start; document.getElementById('u-pk-e').value = usualT.pk.end;
+  document.getElementById('u-np-s').value = usualT.np.start; document.getElementById('u-np-e').value = usualT.np.end;
+}
+function saveUsualT(){
+  usualT.pk.start = document.getElementById('u-pk-s').value; usualT.pk.end = document.getElementById('u-pk-e').value;
+  usualT.np.start = document.getElementById('u-np-s').value; usualT.np.end = document.getElementById('u-np-e').value;
+  try{ localStorage.setItem(usualKey(), JSON.stringify(usualT)); }catch(e){}
+}
+['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => { document.getElementById(id).onchange = saveUsualT; });
+// 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
+// お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
+function defaultTimesFor(pickup){
+  if(pickup) return { startTime: usualT.pk.start || (childInfo && childInfo.defaultTime) || '15:00', endTime: usualT.pk.end || '' };
+  return { startTime: usualT.np.start || '', endTime: usualT.np.end || '' };
+}
 let holidaySet = new Set(); // 'YYYY-MM-DD' -> 祝日名(内閣府準拠の公開データ)
 
 function pad(n){ return String(n).padStart(2,'0'); }
@@ -242,13 +286,14 @@ async function boot(){
     viewYear = now.getFullYear();
     viewMonth = now.getMonth();
     todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    loadUsualT();
 
     const reports = initData.reports || [];
     children.forEach(c => { reportsByChild[c] = {}; });
     reports.forEach(r => {
       if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
       const name = (r.childName && reportsByChild[r.childName]) ? r.childName : children[0];
-      reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || '15:00', endTime: r.endTime || '' };
+      reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
     });
     selectedChildren = children.slice(); // 初期状態は全員まとめて
     loadChildState();
@@ -306,7 +351,7 @@ async function loadSchedule(){
       const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
       const rs = reports.filter(r => r.date === date);
-      const detailOf = r => (r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし') + (r.endTime ? '・帰り' + r.endTime : '');
+      const detailOf = r => (r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし' + (r.startTime ? '・来所' + r.startTime : '')) + (r.endTime ? '・帰り' + r.endTime : '');
       // きょうだいで内容が同じなら1行にまとめる
       const groups = [];
       rs.forEach(r => {
@@ -357,12 +402,11 @@ function toggleDay(key){
   if(selected[key]){
     delete selected[key];
   } else {
-    selected[key] = {
-      pickup: !!childInfo.defaultPickup,
+    const pk = !!childInfo.defaultPickup;
+    selected[key] = Object.assign({
+      pickup: pk,
       location: childInfo.defaultLocation || 'genkan',
-      startTime: childInfo.defaultTime || '15:00',
-      endTime: '',
-    };
+    }, defaultTimesFor(pk));
   }
   renderMonth();
 }
@@ -454,11 +498,11 @@ function renderList(){
       <div class="toggle-row">
         <button class="loc ${item.location==='genkan'?'on':''}" data-key="${key}" data-v="genkan">玄関</button>
         <button class="loc ${item.location==='classroom'?'on':''}" data-key="${key}" data-v="classroom">子ども教室</button>
-      </div>
-      <div class="detail-row">
-        <label>下校の時刻</label>
-        <input type="time" class="time" data-key="${key}" value="${item.startTime}">
       </div>` : ''}
+      <div class="detail-row">
+        <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
+        <input type="time" class="time" data-key="${key}" value="${item.startTime || ''}">
+      </div>
       <div class="detail-row end">
         <label>帰りの時刻</label>
         <input type="time" class="etime" data-key="${key}" value="${item.endTime || ''}">
@@ -469,7 +513,19 @@ function renderList(){
   });
 
   list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; renderMonth(); });
-  list.querySelectorAll('.pk').forEach(b => b.onclick = () => { selected[b.dataset.key].pickup = b.dataset.v==='1'; renderMonth(); });
+  list.querySelectorAll('.pk').forEach(b => b.onclick = () => {
+    const it = selected[b.dataset.key];
+    const next = b.dataset.v === '1';
+    if(next !== it.pickup){
+      const was = defaultTimesFor(it.pickup);
+      // 時刻を自分で変えていなければ、切り替えた側のいつもの時間にする(変えてあれば、そのまま残す)
+      if((it.startTime || '') === (was.startTime || '') && (it.endTime || '') === (was.endTime || '')){
+        Object.assign(it, defaultTimesFor(next));
+      }
+      it.pickup = next;
+    }
+    renderMonth();
+  });
   list.querySelectorAll('.loc').forEach(b => b.onclick = () => { selected[b.dataset.key].location = b.dataset.v; renderList(); });
   list.querySelectorAll('.time').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].startTime = inp.value; renderList(); });
   list.querySelectorAll('.etime').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].endTime = inp.value; renderList(); });
@@ -512,7 +568,7 @@ document.getElementById('submitBtn').onclick = () => {
   document.getElementById('reviewBody').innerHTML =
     keys.map(k => {
       const it = selected[k];
-      const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし') + (it.endTime ? '・帰り' + it.endTime : '');
+      const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
       return '<div class="row"><b>' + mdw(k) + '</b>' + detail + '</div>';
     }).join('') +
     dels.map(k => '<div class="row del"><b>' + mdw(k) + '</b>取り消し</div>').join('');
