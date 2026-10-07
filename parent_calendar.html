@@ -153,7 +153,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-f</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-g</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -529,7 +529,7 @@ function renderList(){
         <label>帰りの時刻</label>
         <input type="time" class="etime" data-key="${key}" value="${item.endTime || ''}">
       </div>
-      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。${item.endTime ? '<button class="clear" data-key="' + key + '">いつも通りに戻す</button>' : ''}</div>
+      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。<button class="clear" data-key="${key}" style="display:${item.endTime ? 'inline-block' : 'none'}">いつも通りに戻す</button></div>
     `;
     list.appendChild(card);
   });
@@ -549,8 +549,22 @@ function renderList(){
     renderMonth();
   });
   list.querySelectorAll('.loc').forEach(b => b.onclick = () => { selected[b.dataset.key].location = b.dataset.v; renderList(); });
-  list.querySelectorAll('.time').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].startTime = inp.value; renderList(); });
-  list.querySelectorAll('.etime').forEach(inp => inp.onchange = () => { selected[inp.dataset.key].endTime = inp.value; renderList(); });
+  // 時刻の回転ロールを指で回している途中で、カードを作り直すと、ロールが閉じて「決定」扱いになってしまう。
+  // そのため、時刻を変えても、画面は作り直さない(中身だけ更新する)。ロールは、✓などで本人が閉じるまで開いたままになる。
+  const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty(); };
+  list.querySelectorAll('.time').forEach(inp => {
+    const upd = () => { selected[inp.dataset.key].startTime = inp.value; refreshSubmit(); };
+    inp.addEventListener('input', upd); inp.addEventListener('change', upd);
+  });
+  list.querySelectorAll('.etime').forEach(inp => {
+    const upd = () => {
+      selected[inp.dataset.key].endTime = inp.value;
+      const clr = inp.closest('.card').querySelector('.clear');
+      if (clr) clr.style.display = inp.value ? 'inline-block' : 'none';
+      refreshSubmit();
+    };
+    inp.addEventListener('input', upd); inp.addEventListener('change', upd);
+  });
   list.querySelectorAll('.clear').forEach(b => b.onclick = () => { selected[b.dataset.key].endTime = ''; renderList(); });
 }
 

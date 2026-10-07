@@ -403,7 +403,7 @@ function onTimeChange(d){
   const e=document.getElementById('e-'+d)?.value||'';
   if(!shiftData[d]) return;
   shiftData[d]={start:s,end:e};
-  refresh();
+  renderCal(); // 時間を選んでいる途中で、下の一覧を作り直すと、選択の画面が閉じてしまうため、カレンダーだけ更新する
 }
 
 function renderCal(){
