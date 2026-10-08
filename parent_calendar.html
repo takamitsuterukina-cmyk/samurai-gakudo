@@ -222,7 +222,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-a</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-b</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -793,7 +793,7 @@ function renderList(){
       card.innerHTML = `
         <div class="cardhead">
           <div class="datelabel"><s>${m}/${d}(${dow})</s><span class="cancel-tag">キャンセル</span></div>
-          <button class="undo" data-key="${key}">やっぱりやめる</button>
+          <button class="undo" data-key="${key}">もとにもどす</button>
         </div>
         <div class="cancelmsg">この日は、キャンセルになります。<br>いちばん下の「送信する」を押すと、学童に伝わります。</div>
         <div class="cancelwas">登録していた内容: ${wasTxt}${was.endTime ? '・帰り' + was.endTime : ''}</div>`;
