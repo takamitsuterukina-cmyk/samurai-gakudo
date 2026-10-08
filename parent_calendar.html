@@ -222,7 +222,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-d</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-e</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -708,7 +708,7 @@ function finalMap(child){
 function sameItem(a, b){
   return a.pickup === b.pickup && a.location === b.location && a.startTime === b.startTime && (a.endTime || '') === (b.endTime || '');
 }
-function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).some(n => !ovr[key][n].skip); }
+function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
   return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {}));
 }
@@ -807,21 +807,22 @@ function renderList(){
     let body;
     if (!multi) {
       body = fieldsHtml(key, item, '');
-    } else if (!split && !allSkip) {
+    } else if (!split) {
       // まとめて: 全員、同じ内容。お子さんごとに変えたい時だけ、下のボタンで分ける(お子さんを選んで外す操作は、なし)
       body = fieldsHtml(key, item, '') +
         '<button class="splitbtn" data-key="' + key + '">この日だけ、お子さんごとに内容を変える</button>' +
         '<div class="hint" style="margin-top:0;">片方だけ時刻を変えたい日や、片方だけお休みの日は、こちらから。</div>';
     } else {
+      selectedChildren.forEach(n => { if (!ovr[key][n]) ovr[key][n] = { ...selected[key] }; }); // お休みでない子は、共通の内容を、その子の内容として持つ
       body = selectedChildren.map((n, i) => {
-        const oo = o[n];
+        const oo = ovr[key][n];
         const skip = !!(oo && oo.skip);
         return '<div class="kidblock"><div class="kidhead"><b>' + n + 'さん</b>' +
           (skip ? '' : '<button class="kidtog" data-key="' + key + '" data-n="' + i + '">この日は、お休みにする</button>') + '</div>' +
           (skip
             ? '<div class="cancelmsg" style="margin-bottom:6px;">この日は、お休み(キャンセル)になります。</div><button class="kidtog undoskip" data-key="' + key + '" data-n="' + i + '">お休みを、もとにもどす</button>'
             : fieldsHtml(key, oo, String(i))) + '</div>';
-      }).join('') + (split ? '<button class="unsplit" data-key="' + key + '">全員同じ内容に戻す</button>' : '');
+      }).join('') + '<button class="unsplit" data-key="' + key + '">全員同じ内容に戻す(お休みも、もどします)</button>';
     }
     card.innerHTML = `
       <div class="cardhead">
@@ -842,7 +843,7 @@ function renderList(){
   const tidy = key => { if (ovr[key] && !Object.keys(ovr[key]).length) delete ovr[key]; };
   const toggleKid = (key, name) => {
     const oo = ovr[key] = ovr[key] || {};
-    if (oo[name] && oo[name].skip) { if (isSplit(key)) oo[name] = { ...selected[key] }; else delete oo[name]; }
+    if (oo[name] && oo[name].skip) { if (Object.keys(oo).some(n => n !== name)) oo[name] = { ...selected[key] }; else delete oo[name]; }
     else oo[name] = { skip: true };
     tidy(key); renderMonth();
   };
@@ -853,9 +854,8 @@ function renderList(){
     renderList();
   });
   list.querySelectorAll('.unsplit').forEach(b => b.onclick = () => {
-    const key = b.dataset.key, oo = ovr[key] || {};
-    Object.keys(oo).forEach(n => { if (!oo[n].skip) delete oo[n]; });
-    tidy(key); renderList();
+    delete ovr[b.dataset.key];
+    renderMonth();
   });
   list.querySelectorAll('.pk').forEach(b => b.onclick = () => {
     const it = itemAt(b);
