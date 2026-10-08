@@ -63,6 +63,7 @@
   .day.empty{visibility:hidden;}
   .day.selected{background:var(--accent);color:#fff;font-weight:700;}
   .day.disabled{color:var(--line);cursor:default;}
+  .day.cancelled{background:#fdecea;color:#c53030;font-weight:700;text-decoration:line-through;box-shadow:inset 0 0 0 1.5px #e53e3e;}
   .day .dot{
     position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--amber);
   }
@@ -74,6 +75,12 @@
   .card .cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .card .datelabel{font-weight:700;font-size:14px;}
   .card .remove{color:var(--accent);font-size:12px;font-weight:700;background:none;border:none;padding:4px;text-decoration:underline;} /* 「いつも通りに戻す」と同じ、緑の太字・同じ大きさ */
+  .card.cancelled{background:#fdf3f2;border-color:#e53e3e;}
+  .card.cancelled .datelabel s{color:var(--ink-soft);}
+  .card .cancel-tag{margin-left:8px;font-size:11px;font-weight:700;color:#fff;background:#e53e3e;border-radius:999px;padding:2px 9px;}
+  .card .undo{color:var(--accent);font-size:13px;font-weight:700;background:none;border:1px solid var(--accent);border-radius:8px;padding:5px 12px;}
+  .card .cancelmsg{font-size:13px;color:#c53030;font-weight:700;line-height:1.6;}
+  .card .cancelwas{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.6;}
   .toggle-row{display:flex;gap:8px;margin-bottom:8px;}
   .toggle-row button{
     flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);
@@ -215,7 +222,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/7-u</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-a</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -287,6 +294,7 @@ const PICKUP_LOCATIONS = { genkan: '玄関', classroom: '子ども教室' };
 let userId = null;
 let childInfo = null;
 let viewYear, viewMonth; // viewMonth: 0-11
+const cancelledDays = {}; // いま「キャンセル」にした日(登録済みの日だけ)。{ 'YYYY-MM-DD': {item, ovr} } 画面には、キャンセルしたことが分かるカードで残す
 const ovr = {}; // まとめて登録の時、その日だけお子さんごとに変える内容。{ 'YYYY-MM-DD': { お子さんの名前: {skip:true}(その日はお休み) | {pickup,location,startTime,endTime}(その子だけ別内容) } }
 const selected = {}; // { 'YYYY-MM-DD': {pickup, location, startTime} } - 今日以降の「現在の予定」を常に表す
 let originalReports = {}; // 画面を開いた時点で既に登録されていた内容のスナップショット(変更/取り消しの判定用)
@@ -644,9 +652,9 @@ function renderMonth(){
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
     const dow = new Date(viewYear, viewMonth, d).getDay();
-    const bookable = isBookable(key, dow) || !!selected[key]; // 既に登録済みの日は取り消せるよう押せるままにする
+    const bookable = isBookable(key, dow) || !!selected[key] || !!cancelledDays[key]; // 既に登録済みの日は取り消せるよう押せるままにする
     const btn = document.createElement('button');
-    btn.className = 'day' + (selected[key] ? ' selected' : '') + (bookable ? '' : ' disabled');
+    btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled');
     btn.textContent = d;
     if(bookable){
       btn.onclick = () => toggleDay(key);
@@ -658,9 +666,24 @@ function renderMonth(){
   renderList();
 }
 
+// 日にちを「キャンセル」にする。すでに登録してある日は、消さずに「キャンセルします」のカードとして残す(取り消しも、できる)。
+function cancelDay(key){
+  if(selectedChildren.some(c => (reportsByChild[c] || {})[key])) cancelledDays[key] = { item: selected[key], ovr: ovr[key] };
+  delete selected[key]; delete ovr[key];
+  renderMonth();
+}
+function restoreDay(key){
+  const c = cancelledDays[key];
+  if(!c) return;
+  selected[key] = c.item;
+  if(c.ovr) ovr[key] = c.ovr;
+  delete cancelledDays[key];
+  renderMonth();
+}
 function toggleDay(key){
+  if(cancelledDays[key]){ restoreDay(key); return; }
   if(selected[key]){
-    delete selected[key]; delete ovr[key];
+    cancelDay(key); return;
   } else {
     const pk = effectivePickup();
     selected[key] = Object.assign({
@@ -698,6 +721,7 @@ function isEdited(){ return isDirty(); }
 function loadChildState(){
   Object.keys(selected).forEach(k => delete selected[k]);
   Object.keys(ovr).forEach(k => delete ovr[k]);
+  Object.keys(cancelledDays).forEach(k => delete cancelledDays[k]);
   const maps = selectedChildren.map(c => reportsByChild[c] || {});
   const keys = new Set();
   maps.forEach(m => Object.keys(m).forEach(k => keys.add(k)));
@@ -746,9 +770,10 @@ function changeChildren(list){
 function renderList(){
   const list = document.getElementById('list');
   const monthPrefix = viewYear + '-' + pad(viewMonth+1);
-  const keys = Object.keys(selected).filter(k => k.startsWith(monthPrefix)).sort();
+  const selKeys = Object.keys(selected).filter(k => k.startsWith(monthPrefix));
+  const keys = selKeys.concat(Object.keys(cancelledDays).filter(k => k.startsWith(monthPrefix) && !selected[k])).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
-  document.getElementById('detail-hint').style.display = keys.length ? 'block' : 'none';
+  document.getElementById('detail-hint').style.display = selKeys.length ? 'block' : 'none';
   document.getElementById('applyUsualWrap').style.display = Object.keys(selected).length ? 'block' : 'none'; // 日にちを選んでいない間は、出さない
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
@@ -760,6 +785,21 @@ function renderList(){
     card.className = 'card';
     const [y,m,d] = key.split('-').map(Number);
     const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
+    if (!item && cancelledDays[key]) {
+      // キャンセルにした日: 枠は消さず、キャンセルになることが分かる形で残す
+      const was = cancelledDays[key].item || {};
+      const wasTxt = was.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[was.location] || was.location || '') + (was.startTime ? '・下校' + was.startTime : '') : 'お迎えなし' + (was.startTime ? '・来所' + was.startTime : '');
+      card.className = 'card cancelled';
+      card.innerHTML = `
+        <div class="cardhead">
+          <div class="datelabel"><s>${m}/${d}(${dow})</s><span class="cancel-tag">キャンセル</span></div>
+          <button class="undo" data-key="${key}">やっぱりやめる</button>
+        </div>
+        <div class="cancelmsg">この日は、キャンセルになります。<br>いちばん下の「送信する」を押すと、学童に伝わります。</div>
+        <div class="cancelwas">登録していた内容: ${wasTxt}${was.endTime ? '・帰り' + was.endTime : ''}</div>`;
+      list.appendChild(card);
+      return;
+    }
     const isExisting = !!originalReports[key];
     const o = ovr[key] || {};
     const split = multi && isSplit(key);
@@ -795,7 +835,8 @@ function renderList(){
   const itemAt = el => el.dataset.c === '' ? selected[el.dataset.key] : ovr[el.dataset.key][selectedChildren[Number(el.dataset.c)]];
   list.querySelectorAll('.time').forEach(el => initTimePair(el, itemAt(el).startTime));
   list.querySelectorAll('.etime').forEach(el => initTimePair(el, itemAt(el).endTime));
-  list.querySelectorAll('.remove').forEach(b => b.onclick = () => { delete selected[b.dataset.key]; delete ovr[b.dataset.key]; renderMonth(); });
+  list.querySelectorAll('.remove').forEach(b => b.onclick = () => cancelDay(b.dataset.key));
+  list.querySelectorAll('.undo').forEach(b => b.onclick = () => restoreDay(b.dataset.key));
   const tidy = key => { if (ovr[key] && !Object.keys(ovr[key]).length) delete ovr[key]; };
   const toggleKid = (key, name) => {
     const oo = ovr[key] = ovr[key] || {};
@@ -955,7 +996,8 @@ async function doSubmit(){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }),
     });
-    document.getElementById('submitmsg').textContent = '送信しました。トーク画面に戻ってください。';
+    const nCancel = Object.keys(cancelledDays).length;
+    document.getElementById('submitmsg').textContent = '送信しました。' + (nCancel ? nCancel + '日分のキャンセルも、受け付けました。' : '') + 'トーク画面に戻ってください。';
     selectedChildren.forEach(c => {
       reportsByChild[c] = {};
       perChild[c].days.forEach(it => { const { date, ...rest } = it; reportsByChild[c][date] = rest; });
