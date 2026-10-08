@@ -222,7 +222,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-b</div>
+    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-c</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -824,7 +824,7 @@ function renderList(){
     card.innerHTML = `
       <div class="cardhead">
         <div class="datelabel">${m}/${d}(${dow})${isExisting ? '<span class="existing-tag">登録済み</span>' : ''}</div>
-        <button class="remove" data-key="${key}">キャンセル</button>
+        <button class="remove" data-key="${key}">この日をキャンセル</button>
       </div>
       ${body}
     `;
