@@ -299,7 +299,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-g</div>
+    <div id="verlabel">画面の版: 11/5-h</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -943,8 +943,8 @@ function renderList(){
     const parts = [];
     if (cap && Object.keys(selected).some(k => isBreakDay(k))) {
       parts.push(selectedChildren.some(c => kindOfChild(c) !== 'monthly')
-        ? '人数に限りがあるため、申し込みは学童が確認してから確定します（確定したらLINEでお知らせします）。'
-        : '人数に限りがあるため、満席の日は申し込めません。');
+        ? '申し込みは学童が確認してから確定します（確定したらLINEでお知らせします）。'
+        : '満席の日は申し込めません。');
       parts.push('午前のみのご利用は、受け付けていません。');
     }
     document.getElementById('submitNote').innerHTML = parts.join('<br>');
