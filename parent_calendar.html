@@ -299,7 +299,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-i</div>
+    <div id="verlabel">画面の版: 11/5-j</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -532,7 +532,9 @@ function renderCapNote(){
     dl = dls.length === 1 ? nb('長期休みの登録締切は') + nb('利用日の' + dls[0] + '日前まで。')
       : bs.map(b => b.label + 'の登録締切は利用日の' + (b.deadlineDays || 0) + '日前まで。').join('<br>');
   }
-  note.innerHTML = '<div>' + lines[0] + '</div><div class="capdetail">' + legend + (dl ? '<br>' + dl : '') + '</div>';
+  // 長期休みが月をまたぐ時は、翌月もタップできることを添える
+  const crossMonth = bs.some(b => b.start.slice(0, 7) !== b.end.slice(0, 7));
+  note.innerHTML = '<div>' + lines[0] + '</div>' + (crossMonth ? '<div style="margin-top:4px;">' + '長期休みは翌月もまたいでタップできます。' + '</div>' : '') + '<div class="capdetail">' + legend + (dl ? '<br>' + dl : '') + '</div>';
   note.style.display = 'block';
 }
 /* サーバーから届いた1件の予定を、画面で扱う形にする。長期休みの平日で時間帯が空なら、午後(ふだんの放課後)として扱う。 */
