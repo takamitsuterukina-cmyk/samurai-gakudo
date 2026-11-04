@@ -89,6 +89,7 @@
   .viewcard .pend-tag{font-size:16px;color:#8a5a00;background:#FFF4E0;border:1px solid #E9C98B;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
 
   #list{padding:16px;display:flex;flex-direction:column;gap:10px;}
+  #list .monthdiv{font-size:22.2px;font-weight:700;color:var(--ink);margin:6px 0 -2px;}
   .card{
     background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
   }
@@ -299,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-k</div>
+    <div id="verlabel">画面の版: 11/5-l</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -949,9 +950,15 @@ function changeChildren(list){
 
 function renderList(){
   const list = document.getElementById('list');
+  // 詳細入力は、月をまたいで1つの一覧にする。いま見ている月の日のほか、他の月で新しく選んだ日・内容を変えた日・キャンセルした日も出す
+  // (登録済みで変えていない他の月の日は、出さない)。送信は、この一覧ぜんぶをまとめて1回で送る。
   const monthPrefix = viewYear + '-' + pad(viewMonth+1);
-  const selKeys = Object.keys(selected).filter(k => k.startsWith(monthPrefix));
-  const keys = selKeys.concat(Object.keys(cancelledDays).filter(k => k.startsWith(monthPrefix) && !selected[k])).sort();
+  const changedDay = k => { const o0 = originalReports[k]; return !o0 || !selected[k] || !sameItem(selected[k], o0) || isSplit(k); };
+  const selKeys = Object.keys(selected).filter(k => k.startsWith(monthPrefix) || changedDay(k));
+  const keys = selKeys.concat(Object.keys(cancelledDays).filter(k => !selected[k])).sort();
+  const months = Array.from(new Set(keys.map(k => k.slice(0, 7))));
+  const multiYear = new Set(months.map(m => m.slice(0, 4))).size > 1;
+  let lastYm = '';
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
   document.getElementById('detail-hint').style.display = selKeys.length ? 'block' : 'none';
   document.getElementById('submitGuide').style.display = selKeys.length ? 'block' : 'none';
@@ -973,6 +980,15 @@ function renderList(){
   const multi = selectedChildren.length > 1;
   keys.forEach(key => {
     const item = selected[key];
+    // 月が変わる所に、月の見出しを入れる(月をまたいで選んでいる時だけ)
+    const ym = key.slice(0, 7);
+    if (months.length > 1 && ym !== lastYm) {
+      const dv = document.createElement('div');
+      dv.className = 'monthdiv';
+      dv.textContent = (multiYear ? ym.slice(0, 4) + '年' : '') + Number(ym.slice(5, 7)) + '月';
+      list.appendChild(dv);
+      lastYm = ym;
+    }
     const card = document.createElement('div');
     card.className = 'card';
     const [y,m,d] = key.split('-').map(Number);
