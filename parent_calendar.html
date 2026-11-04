@@ -298,7 +298,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-a</div>
+    <div id="verlabel">画面の版: 11/5-b</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -425,14 +425,14 @@ function applyUsualToNewDays(){
   saveUsualT();
   const keys = Object.keys(selected).filter(k => !originalReports[k]);
   if (!keys.length) return;
-  const applyTo = (it, brk) => {
+  const applyTo = it => {
     const u = it.pickup ? usualT.pk : usualT.np;
-    if (u.start && !brk) it.startTime = u.start; // 長期休みの平日の来所の時刻は、時間帯(1日・午後)で決まるので、いつもの時間では変えない
+    if (u.start) it.startTime = u.start;
     if (u.end) it.endTime = u.end;
   };
   keys.forEach(k => {
-    applyTo(selected[k], isBreakDay(k));
-    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], isBreakDay(k)); });
+    applyTo(selected[k]);
+    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n]); });
   });
   renderList();
 }
@@ -820,10 +820,8 @@ function toggleDay(key){
       location: effectiveLoc(),
     }, defaultTimesFor(pk));
     // 長期休みの平日は、時間帯も選ぶ。まとめて設定してあればその値。月謝のお子さんだけの時は、ふだんどおり「午後」を初めから選んでおく
-    if(isBreakDay(key)){
-      selected[key].slot = slotDefault || (selectedChildren.every(c => kindOfChild(c) === 'monthly') ? 'pm' : '');
-      selected[key].startTime = slotStart(selected[key].slot); // 来所の時刻は、時間帯に合わせる(1日=8:00、午後=13:00)
-    }
+    // 長期休みの平日は、時間帯のボタンはなく、来所・帰りの時刻で決まる。月謝のお子さんだけの時は、ふだんの放課後(午後)として13:00を初めから入れておく
+    if(isBreakDay(key) && !selected[key].startTime && selectedChildren.every(c => kindOfChild(c) === 'monthly')) selected[key].startTime = '13:00';
   }
   renderMonth();
 }
@@ -832,7 +830,14 @@ function toggleDay(key){
 function finalItem(child, key){
   const o = ovr[key] && ovr[key][child];
   if (o && o.skip) return null;
-  return o || selected[key] || null;
+  const it = o || selected[key] || null;
+  if (it && isBreakDay(key)) return { ...it, slot: slotFromTimes(it) }; // 長期休みの平日は、時間帯のボタンは出さず、来所の時刻から決める
+  return it;
+}
+/* 来所の時刻が12時より前なら「1日」(午前をふくむ)、12時以降なら「午後」。時刻が空の時は、今の値のまま */
+function slotFromTimes(it){
+  if (!it.startTime) return it.slot || '';
+  return it.startTime < '12:00' ? 'all' : 'pm';
 }
 function finalMap(child){
   const m = {};
@@ -1054,14 +1059,6 @@ function fieldsHtml(key, item, c){
         <button class="pk ${item.pickup ? 'on':''}"${at} data-v="1">お迎え必要</button>
         <button class="pk ${!item.pickup ? 'on':''}"${at} data-v="0">お迎え不要</button>
       </div>`}
-      ${isBreakDay(key) ? `
-      <div class="detail-row slotrow">
-        <label>時間帯</label>
-        <div class="seg">
-          <button class="slot ${item.slot==='pm'?'on':''}"${at} data-v="pm">午後</button>
-          <button class="slot ${item.slot==='all'?'on':''}"${at} data-v="all">1日</button>
-        </div>
-      </div>${(item.slot==='pm'||item.slot==='all') ? '' : '<div class="hint slotwarn">時間帯を選んでください。</div>'}` : ''}
       ${item.pickup ? `
       <div class="detail-row locrow">
         <label>お迎えの場所</label>
@@ -1074,6 +1071,7 @@ function fieldsHtml(key, item, c){
         <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
         <span class="tp time"${at}></span>
       </div>
+      ${isBreakDay(key) && !item.startTime ? '<div class="hint slotwarn">来所の時刻を選んでください。</div>' : ''}
       <div class="detail-row end">
         <label>帰りの時刻</label>
         <span class="tp etime"${at}></span>
@@ -1122,9 +1120,16 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
     return;
   }
-  const noSlot = Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && !(it.slot==='pm'||it.slot==='all'); })).sort();
-  if (noSlot.length) {
-    document.getElementById('submitmsg').textContent = '時間帯（午後・1日）が選ばれていない日があります（' + noSlot.map(k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10))).join('、') + '）。選んでください。';
+  const md2 = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
+  const brkItems = (pred) => Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && pred(it); })).sort();
+  const noStart = brkItems(it => !it.startTime);
+  if (noStart.length) {
+    document.getElementById('submitmsg').textContent = '来所の時刻が入っていない日があります（' + noStart.map(md2).join('、') + '）。選んでください。';
+    return;
+  }
+  const amOnly = brkItems(it => it.endTime && it.endTime <= '12:00');
+  if (amOnly.length) {
+    document.getElementById('submitmsg').textContent = '午前のみのご利用は、受け付けていません（' + amOnly.map(md2).join('、') + '）。帰りの時刻を、12時より後にしてください。';
     return;
   }
   const groups = planGroups();
