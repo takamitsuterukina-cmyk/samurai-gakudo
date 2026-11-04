@@ -61,6 +61,10 @@
     color:var(--ink);position:relative;
   }
   .day.empty{visibility:hidden;}
+  /* 長期休みの期間の日は、色つきの枠で目立たせる(選んだ日・キャンセルの日は、その色が優先) */
+  .day.brk{background:#FFF0CC;box-shadow:inset 0 0 0 1.5px #E8B84A;}
+  .day.brk.disabled{background:#FBF4E2;box-shadow:inset 0 0 0 1px #EBD8A8;}
+  .brkchip{display:inline-block;padding:0 10px;border-radius:6px;background:#FFF0CC;box-shadow:inset 0 0 0 1.5px #E8B84A;font-weight:700;margin-right:4px;}
   .day.selected{background:var(--accent);color:#fff;font-weight:700;}
   .day.disabled{color:var(--line);cursor:default;}
   .day.cancelled{background:#fdecea;color:#c53030;font-weight:700;text-decoration:line-through;box-shadow:inset 0 0 0 1.5px #e53e3e;}
@@ -237,7 +241,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:11px;color:var(--ink-soft);opacity:.6;">画面の版: 11/4-b</div>
+    <div style="font-size:11px;color:var(--ink-soft);opacity:.6;">画面の版: 11/4-e</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -456,16 +460,25 @@ function addDaysKey(key, n){ const [y,m,d] = key.split('-').map(Number); const t
 function breakOf(key){ return cap ? ((cap.breaks || []).find(b => key >= b.start && key <= b.end) || null) : null; }
 function isBreakDay(key){ const w = dowOfKey(key); return !!breakOf(key) && w >= 1 && w <= 5; } // 長期休み中の平日(月〜金)。土曜はふだんどおり
 function kindOfChild(c){ return (cap && cap.kinds && cap.kinds[c]) || 'spot'; } // monthly(月謝) / spot(地域枠) / staff(スタッフ)
-function showAvail(){ return !!cap && selectedChildren.some(c => kindOfChild(c) !== 'monthly'); }
-/* 月謝以外のお子さんが、その日に申し込めない理由(申し込める時は null)。サーバー側でも同じ確認をします。 */
-function spotReason(key){
+function showAvail(){ return !!cap; }
+/* お子さんが、その日に申し込めない理由(申し込める時は null)。サーバー側でも同じ確認をします。
+   月謝のお子さんは、受付開始日・締切は関係なく、満席の日だけ申し込めません。 */
+function reasonFor(key, kind){
   const b = breakOf(key); if(!b) return null;
-  const today = cap.today || todayKeyG;
-  if(b.openFrom && today < b.openFrom) return { mark:'受付前', text: mdw(b.openFrom) + 'から受付です' };
-  if(today > addDaysKey(key, -(b.deadlineDays || 0))) return { mark:'締切', text:'受付を締め切りました' };
+  if(kind !== 'monthly'){
+    const today = cap.today || todayKeyG;
+    if(b.openFrom && today < b.openFrom) return { mark:'受付前', text: mdw(b.openFrom) + 'から受付です' };
+    if(today > addDaysKey(key, -(b.deadlineDays || 0))) return { mark:'締切', text:'受付を締め切りました' };
+  }
   const a = (cap.avail || {})[key];
   if(a && a.remaining <= 0) return { mark:'満席', text:'満席です' };
   return null;
+}
+/* いま選んでいるお子さん全員が申し込めない日の理由(誰か1人でも申し込めるなら null) */
+function spotReason(key){
+  let first = null;
+  for(const c of selectedChildren){ const r = reasonFor(key, kindOfChild(c)); if(!r) return null; first = first || r; }
+  return first;
 }
 function availMark(key){
   const r = spotReason(key);
@@ -480,16 +493,17 @@ function renderCapNote(){
   const bs = cap ? (cap.breaks || []).filter(b => b.start <= mEnd && b.end >= mStart) : [];
   if(!bs.length){ note.style.display = 'none'; note.innerHTML = ''; return; }
   const names = bs.map(b => b.label).join('・');
-  let html;
-  if(showAvail()){
-    html = '<b>' + names + '</b>は、人数に限りがあります。日にちの下の ◎=空きあり、残N=のこりN席、満席=受付終了 です。' +
-      '平日は、午前・午後・1日の「時間帯」を選んで申し込みます。学童が確認して確定したら、LINEでお知らせします。' +
+  let html = '<div style="margin-bottom:6px;"><span class="brkchip">色つき</span>の日が、<b>' + names + '</b>の期間です。</div>';
+  if(selectedChildren.some(c => kindOfChild(c) !== 'monthly')){
+    html += '人数に限りがあります。日にちの下の ◎=空きあり、残N=のこりN席、満席=受付終了 です。' +
+      '平日は、午後・1日の「時間帯」を選んで申し込みます。学童が確認して確定したら、LINEでお知らせします。' +
       bs.map(b => '<br>' + b.label + '：' + (b.openFrom ? mdw(b.openFrom) + 'から受付' : '') + '／締切は利用日の' + (b.deadlineDays || 0) + '日前まで').join('');
   }else{
-    html = '<b>' + names + '</b>の平日は、午前・午後・1日の「時間帯」を選んでください。';
+    html += '人数に限りがあります。日にちの下の ◎=空きあり、残N=のこりN席、満席=申し込めません です。' +
+      '平日は、午後・1日の「時間帯」を選んでください（午前のみのご利用は、受け付けていません。1日は、午前の料金が別にかかります）。';
   }
   html += '<div class="slotbulk"><span>選んだ日の時間帯を、まとめて：</span>' +
-    ['am','pm','all'].map(v => '<button type="button" data-v="' + v + '" class="' + (slotDefault === v ? 'on' : '') + '">' + SLOT_LABELS[v] + '</button>').join('') + '</div>';
+    ['pm','all'].map(v => '<button type="button" data-v="' + v + '" class="' + (slotDefault === v ? 'on' : '') + '">' + SLOT_LABELS[v] + '</button>').join('') + '</div>';
   note.innerHTML = html;
   note.style.display = 'block';
   note.querySelectorAll('.slotbulk button').forEach(b => b.onclick = () => {
@@ -539,7 +553,7 @@ function setupApp(initData, keepView){
   childInfo = initData.info;
   cap = initData.cap || null;
   try{ slotDefault = localStorage.getItem('samuraiSlot_' + userId) || ''; }catch(e){ slotDefault = ''; }
-  if(['am','pm','all'].indexOf(slotDefault) < 0) slotDefault = '';
+  if(['pm','all'].indexOf(slotDefault) < 0) slotDefault = '';
   children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
   document.getElementById('childname').textContent = children.join('・') + ' さん';
   const now = new Date();
@@ -759,10 +773,10 @@ function renderMonth(){
     let mk = null;
     if(cap && isBreakDay(key) && showAvail() && !(cap.closed || []).includes(key) && !holidaySet.has(key)){
       mk = availMark(key);
-      if(spotReason(key) && selectedChildren.every(c => kindOfChild(c) !== 'monthly') && !selected[key] && !cancelledDays[key]) bookable = false;
+      if(spotReason(key) && !selected[key] && !cancelledDays[key]) bookable = false;
     }
     const btn = document.createElement('button');
-    btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled') + (mk ? ' av' : '');
+    btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled') + (mk ? ' av' : '') + (breakOf(key) ? ' brk' : '');
     if(mk){ btn.innerHTML = d + '<span class="mk ' + mk.cls + '">' + mk.t + '</span>'; } else { btn.textContent = d; }
     if(bookable){
       btn.onclick = () => toggleDay(key);
@@ -799,7 +813,8 @@ function toggleDay(key){
       pickup: pk,
       location: effectiveLoc(),
     }, defaultTimesFor(pk));
-    if(isBreakDay(key)) selected[key].slot = slotDefault; // 長期休みの平日は、時間帯も選ぶ(まとめて設定してあれば、その値)
+    // 長期休みの平日は、時間帯も選ぶ。まとめて設定してあればその値。月謝のお子さんだけの時は、ふだんどおり「午後」を初めから選んでおく
+    if(isBreakDay(key)) selected[key].slot = slotDefault || (selectedChildren.every(c => kindOfChild(c) === 'monthly') ? 'pm' : '');
   }
   renderMonth();
 }
@@ -1020,11 +1035,10 @@ function fieldsHtml(key, item, c){
       <div class="detail-row slotrow">
         <label>時間帯</label>
         <div class="seg">
-          <button class="slot ${item.slot==='am'?'on':''}"${at} data-v="am">午前</button>
           <button class="slot ${item.slot==='pm'?'on':''}"${at} data-v="pm">午後</button>
           <button class="slot ${item.slot==='all'?'on':''}"${at} data-v="all">1日</button>
         </div>
-      </div>${item.slot ? '' : '<div class="hint slotwarn">時間帯を選んでください。</div>'}` : ''}
+      </div>${(item.slot==='pm'||item.slot==='all') ? '' : '<div class="hint slotwarn">時間帯を選んでください。</div>'}` : ''}
       ${item.pickup ? `
       <div class="detail-row locrow">
         <label>お迎えの場所</label>
@@ -1086,9 +1100,9 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
     return;
   }
-  const noSlot = Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && !it.slot; })).sort();
+  const noSlot = Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && !(it.slot==='pm'||it.slot==='all'); })).sort();
   if (noSlot.length) {
-    document.getElementById('submitmsg').textContent = '時間帯（午前・午後・1日）が選ばれていない日があります（' + noSlot.map(k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10))).join('、') + '）。選んでください。';
+    document.getElementById('submitmsg').textContent = '時間帯（午後・1日）が選ばれていない日があります（' + noSlot.map(k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10))).join('、') + '）。選んでください。';
     return;
   }
   const groups = planGroups();
