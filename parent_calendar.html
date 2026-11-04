@@ -275,8 +275,9 @@
     </div>
 
     <div id="capNote"></div>
+    <div id="satNote" style="display:none;margin:10px 16px 0;font-size:16px;line-height:1.6;color:var(--ink-soft);"></div>
     <div id="empty-hint" style="padding:0"></div>
-    <div id="detail-hint"><span class="sn">②</span>日ごとの詳細設定</div>
+    <div id="detail-hint"><span class="sn">②</span>日ごとの詳細入力</div>
     <details class="usual" id="usualBox">
       <summary><span class="uicon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><span class="ut"><span style="display:inline-block;">便利機能　</span><span style="display:inline-block;">いつもの時間を登録</span></span></summary>
       <div class="uexp"><span style="display:inline-block;">お迎え・利用時間を登録しておくと</span><span style="display:inline-block;">日ごとに入力する手間を省けます。</span><br><span style="display:inline-block;">登録後も下の詳細入力で</span><span style="display:inline-block;">日ごとに変更できます。</span></div>
@@ -298,7 +299,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-f</div>
+    <div id="verlabel">画面の版: 11/5-g</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -466,7 +467,20 @@ function isBookable(key, dow){
   if(dow === 0) return false;
   if(holidaySet.has(key)) return false;
   if(cap && (cap.closed || []).indexOf(key) >= 0) return false; // 学童アプリで設定した、お休みの日
+  if(dow === 6 && !satAllowed()) return false; // 土曜日は、土曜日契約のご家庭のみ
   return true;
+}
+/* 土曜日は、土曜日契約のお子さんだけ予約できる(学童アプリの契約から、LINE側が判定)。いま選んでいるお子さん全員が対象の時だけ、土曜日を選べる。 */
+function satAllowed(){
+  if(!(cap && cap.satRule)) return true;
+  return selectedChildren.length > 0 && selectedChildren.every(c => !!(cap.satOk || {})[c]);
+}
+function renderSatNote(){
+  const el = document.getElementById('satNote');
+  if(satAllowed()){ el.style.display = 'none'; el.textContent = ''; return; }
+  const anyOk = children.some(c => !!(cap.satOk || {})[c]);
+  el.textContent = anyOk ? '土曜日は、土曜日契約のお子さんだけを選ぶと予約できます。' : '土曜日は、土曜日契約のご家庭のみ予約できます。';
+  el.style.display = 'block';
 }
 
 /* ===== 長期休み(冬休みなど)の予約 ===== */
@@ -781,6 +795,8 @@ function renderMonth(){
       mk = availMark(key);
       if(spotReason(key) && !selected[key] && !cancelledDays[key]) bookable = false;
     }
+    // 土曜日契約でない時の土曜日は、選べないことが分かる目印を出す
+    if(dow === 6 && !satAllowed() && !selected[key] && !cancelledDays[key] && !holidaySet.has(key) && !(cap && (cap.closed || []).includes(key))) mk = { t:'不可', cls:'off' };
     const btn = document.createElement('button');
     btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled') + (mk ? ' av' : '') + (breakOf(key) ? ' brk' : '');
     if(mk){ btn.innerHTML = d + '<span class="mk ' + mk.cls + '">' + mk.t + '</span>'; } else { btn.textContent = d; }
@@ -792,6 +808,7 @@ function renderMonth(){
     daysEl.appendChild(btn);
   }
   renderCapNote();
+  renderSatNote();
   renderList();
 }
 
