@@ -299,7 +299,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-j</div>
+    <div id="verlabel">画面の版: 11/5-k</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -467,8 +467,15 @@ function isBookable(key, dow){
   if(dow === 0) return false;
   if(holidaySet.has(key)) return false;
   if(cap && (cap.closed || []).indexOf(key) >= 0) return false; // 学童アプリで設定した、お休みの日
+  if(!spotAllowed(key)) return false; // 月謝契約でない人は、長期休みの日だけ
   if(dow === 6 && !satAllowed()) return false; // 土曜日は、土曜日契約のご家庭のみ
   return true;
+}
+/* 月謝契約でない人(スポット専用など)は、長期休みの期間の日しか予約できない(LINE側も同じ確認をする)。いま選んでいるお子さん全員が月謝契約の時は、いつでも選べる。 */
+function spotAllowed(key){
+  if(!(cap && cap.spotRule)) return true;
+  if(breakOf(key)) return true;
+  return selectedChildren.length > 0 && selectedChildren.every(c => !!(cap.contractOk || {})[c]);
 }
 /* 土曜日は、土曜日契約のお子さんだけ予約できる(学童アプリの契約から、LINE側が判定)。いま選んでいるお子さん全員が対象の時だけ、土曜日を選べる。 */
 function satAllowed(){
@@ -477,10 +484,18 @@ function satAllowed(){
 }
 function renderSatNote(){
   const el = document.getElementById('satNote');
-  if(satAllowed()){ el.style.display = 'none'; el.textContent = ''; return; }
-  const anyOk = children.some(c => !!(cap.satOk || {})[c]);
-  el.textContent = anyOk ? '土曜日は、土曜日契約のお子さんだけを選ぶと予約できます。' : '土曜日は、土曜日契約のご家庭のみ予約できます。';
-  el.style.display = 'block';
+  const contractAll = !(cap && cap.spotRule) || (selectedChildren.length > 0 && selectedChildren.every(c => !!(cap.contractOk || {})[c]));
+  let t = '';
+  if(!contractAll){
+    // 月謝契約でない人は、長期休み以外は選べない(土曜日も同じなので、土曜日の案内は出さない)
+    const anyOk = children.some(c => !!(cap.contractOk || {})[c]);
+    t = anyOk ? '長期休み以外は、月謝契約のお子さんだけを選ぶと予約できます。' : '長期休み以外は、月謝契約のご家庭のみ予約できます。';
+  }else if(!satAllowed()){
+    const anyOk = children.some(c => !!(cap.satOk || {})[c]);
+    t = anyOk ? '土曜日は、土曜日契約のお子さんだけを選ぶと予約できます。' : '土曜日は、土曜日契約のご家庭のみ予約できます。';
+  }
+  el.textContent = t;
+  el.style.display = t ? 'block' : 'none';
 }
 
 /* ===== 長期休み(冬休みなど)の予約 ===== */
@@ -532,9 +547,8 @@ function renderCapNote(){
     dl = dls.length === 1 ? nb('長期休みの登録締切は') + nb('利用日の' + dls[0] + '日前まで。')
       : bs.map(b => b.label + 'の登録締切は利用日の' + (b.deadlineDays || 0) + '日前まで。').join('<br>');
   }
-  // 長期休みが月をまたぐ時は、翌月もタップできることを添える
-  const crossMonth = bs.some(b => b.start.slice(0, 7) !== b.end.slice(0, 7));
-  note.innerHTML = '<div>' + lines[0] + '</div>' + (crossMonth ? '<div style="margin-top:4px;">' + '長期休みは翌月もまたいでタップできます。' + '</div>' : '') + '<div class="capdetail">' + legend + (dl ? '<br>' + dl : '') + '</div>';
+  // 長期休みは必ず月をまたぐ(12-1月、3-4月、7-8月)ので、翌月もタップできることを、いつも添える
+  note.innerHTML = '<div>' + lines[0] + '</div><div style="margin-top:4px;">長期休みは翌月もまたいでタップできます。</div><div class="capdetail">' + legend + (dl ? '<br>' + dl : '') + '</div>';
   note.style.display = 'block';
 }
 /* サーバーから届いた1件の予定を、画面で扱う形にする。長期休みの平日で時間帯が空なら、午後(ふだんの放課後)として扱う。 */
@@ -798,7 +812,7 @@ function renderMonth(){
       if(spotReason(key) && !selected[key] && !cancelledDays[key]) bookable = false;
     }
     // 土曜日契約でない時の土曜日は、選べないことが分かる目印を出す
-    if(dow === 6 && !satAllowed() && !selected[key] && !cancelledDays[key] && !holidaySet.has(key) && !(cap && (cap.closed || []).includes(key))) mk = { t:'不可', cls:'off' };
+    if(dow === 6 && spotAllowed(key) && !satAllowed() && !selected[key] && !cancelledDays[key] && !holidaySet.has(key) && !(cap && (cap.closed || []).includes(key))) mk = { t:'不可', cls:'off' };
     const btn = document.createElement('button');
     btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled') + (mk ? ' av' : '') + (breakOf(key) ? ' brk' : '');
     if(mk){ btn.innerHTML = d + '<span class="mk ' + mk.cls + '">' + mk.t + '</span>'; } else { btn.textContent = d; }
