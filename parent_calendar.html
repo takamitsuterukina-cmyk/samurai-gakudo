@@ -32,6 +32,15 @@
   header h1{font-size:19px;margin:2px 0 0;}
   header .guide{font-size:15px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
   #status{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:16px;}
+  /* 使い方の3ステップ(いまやることが分かる) */
+  .steps{display:flex;gap:6px;margin:10px 16px 4px;}
+  .steps .st{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:12px;background:var(--surface);border:1.5px solid var(--line);font-size:14px;line-height:1.3;color:var(--ink-soft);text-align:center;}
+  .steps .st b{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--line);color:#fff;font-size:15px;}
+  .steps .st.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:700;}
+  .steps .st.on b{background:var(--accent);}
+  .steps .st.done b{background:var(--accent);}
+  #verlabel{text-align:center;font-size:11px;color:var(--ink-soft);opacity:.6;padding:18px 0 4px;}
+  #empty-hint .arrow{display:block;font-size:26px;line-height:1;color:var(--accent);margin-bottom:6px;}
 
   .monthbar{
     display:flex;align-items:center;justify-content:space-between;
@@ -144,7 +153,10 @@
   #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:17px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
   details.usual{margin:0 16px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
-  details.usual summary{padding:12px 0;cursor:pointer;}
+  details.usual summary{padding:12px 28px 12px 0;cursor:pointer;list-style:none;position:relative;}
+  details.usual summary::-webkit-details-marker{display:none;}
+  details.usual summary::after{content:'▾';position:absolute;right:2px;top:12px;color:var(--accent);font-size:18px;}
+  details.usual[open] summary::after{content:'▴';}
   details.usual summary .ut{display:block;font-size:16px;font-weight:700;color:var(--accent);}
   details.usual summary .us{display:block;margin-top:4px;font-size:15px;font-weight:400;color:var(--ink-soft);line-height:1.55;}
   details.usual .urow{padding:8px 0;border-top:1px solid var(--line);}
@@ -241,15 +253,15 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:11px;color:var(--ink-soft);opacity:.6;">画面の版: 11/4-e</div>
-    <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
+    <div class="guide" id="pageGuide" style="display:none"></div>
     <div class="switchlink" id="switchLink"></div>
   </header>
 
   <div id="inputPane">
-    <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">「全員まとめて」で日にちを選ぶと、かんたんです。1日だけ違う日は、下に出る、その日のカードで、お休みにしたり、お子さんごとに内容を変えたりできます。</div><div class="pickmsg" id="pickmsg"></div></div>
+    <div class="steps" id="steps"><div class="st" data-n="1"><b>1</b>日にちを<br>タップ</div><div class="st" data-n="2"><b>2</b>内容を<br>たしかめる</div><div class="st" data-n="3"><b>3</b>下の<br>「送信」</div></div>
+    <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">兄弟で内容がちがう日は、日にちを選んだあとのカードで変えられます。</div><div class="pickmsg" id="pickmsg"></div></div>
     <details class="usual" id="usualBox">
-      <summary><span class="ut">便利機能「いつもの時間を設定する」</span><span class="us">日にちを選ぶだけで「いつもの時間」が自動入力されます。<br>そのあとで各日にち個別調整も可能です。</span></summary>
+      <summary><span class="ut">いつもの時間を設定する</span><span class="us">お迎え・時刻を、毎回入れなくてよくなります（なくてもOK）</span></summary>
       <div class="urow">
         <div class="utitle">ふだんのお迎え</div>
         <div class="unote" style="padding:0 0 8px;">基本設定です。必要のない日は、日ごとのカードで変えられます。</div>
@@ -283,8 +295,9 @@
     </div>
 
     <div id="capNote"></div>
-    <div id="empty-hint">通う日をカレンダーからタップして選んでください。複数日を選んでからまとめて送信できます。</div>
-    <div id="detail-hint">↓ 選んだ日ごとに、お迎え・場所・時刻を、下のカードで確認・入力してください。入力したあと、いちばん下の「送信する」を押します。</div>
+    <div id="empty-hint"><span class="arrow">↑</span>通う日を、カレンダーでタップ<br><span style="font-size:13px;">何日でもまとめて選べます</span></div>
+    <div id="detail-hint">↓ 日ごとに、お迎え・時刻をたしかめて、いちばん下の「送信」を押します</div>
+    <div id="verlabel">画面の版: 11/4-f</div>
     <div id="list"></div>
   </div>
 
@@ -560,7 +573,6 @@ function setupApp(initData, keepView){
   if(!keepView){ viewYear = now.getFullYear(); viewMonth = now.getMonth(); }
   todayKeyG = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
   loadUsualT();
-  if (usualFirstVisit) document.getElementById('usualBox').open = true; // 初めて開いた時は、基本設定が目に入るよう、開いておく
   const reports = initData.reports || [];
   reportsByChild = {}; pendingByChild = {};
   children.forEach(c => { reportsByChild[c] = {}; pendingByChild[c] = {}; });
@@ -704,12 +716,12 @@ function switchTab(tab){
 
   if(tab === 'input'){
     title.textContent = '利用予定を登録する';
-    guide.textContent = '登録済みの日もカレンダーに表示されています。内容の変更はカードを直接編集、キャンセルはその日をもう一度タップしてください。最後に1回「送信する」で確定します。';
+    guide.textContent = ''; guide.style.display = 'none'; document.getElementById('steps').style.display = 'flex';
     // 登録中に、間違って「予定を確認する」へ移ってしまわないよう、この画面にはリンクを置かない(確認はメニューから開く)
     link.innerHTML = '';
   } else {
     title.textContent = '予定を確認する';
-    guide.textContent = 'これまでに登録した最新の内容です(表示のみ)。変更や取り消しは「利用予定を登録する」から行ってください。';
+    guide.textContent = '登録した最新の内容です（表示のみ）。変更は「利用予定を登録する」から。'; guide.style.display = 'block'; document.getElementById('steps').style.display = 'none';
     link.innerHTML = ''; // 確認画面にも、登録画面へのリンクは置かない(登録は、メニューの「利用予定を登録する」から開く)
     loadSchedule();
   }
@@ -901,7 +913,13 @@ function renderList(){
   document.getElementById('detail-hint').style.display = selKeys.length ? 'block' : 'none';
   document.getElementById('applyUsualWrap').style.display = Object.keys(selected).length ? 'block' : 'none'; // 日にちを選んでいない間は、出さない
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
-  document.getElementById('submitBtn').textContent = selectedChildren.length > 1 ? '選択した日を、' + selectedChildren.length + '人まとめて送信する' : (children.length > 1 ? '選択した日を、' + selectedChildren[0] + 'さんの分として送信する' : '選択した日を送信する');
+  const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
+  document.getElementById('submitBtn').textContent = !hasSel && !isDirty() ? '↑ 日にちを選んでください' : (selectedChildren.length > 1 ? '送信する（' + selectedChildren.length + '人まとめて）' : (children.length > 1 ? '送信する（' + selectedChildren[0] + 'さん）' : '送信する'));
+  document.querySelectorAll('#steps .st').forEach(e => {
+    const n = Number(e.dataset.n);
+    e.classList.toggle('done', n === 1 && hasSel);
+    e.classList.toggle('on', hasSel ? n === 2 : n === 1);
+  });
   list.innerHTML = '';
   const multi = selectedChildren.length > 1;
   keys.forEach(key => {
