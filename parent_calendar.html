@@ -272,8 +272,7 @@
         <div class="uline"><label>来所の時刻</label><span class="tp" id="u-np-s"></span></div>
         <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-np-e"></span></div>
       </div>
-      <div id="applyUsualWrap" style="padding:0 0 12px;display:none;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:16px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
-      <div class="unote">その日だけ変えたい時は、日にちを選んだあとのカードで変えられます。<br>空欄のままでも大丈夫です。このスマホに覚えます。</div>
+      <div class="unote">日にちを選んだあとでも、ここを変えると、選んだ日に自動で入ります。その日だけ変えたい時は、カードで変えられます。<br>空欄のままでも大丈夫です。このスマホに覚えます。</div>
     </details>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
@@ -290,7 +289,7 @@
     <div id="empty-hint"><span class="arrow">↑</span>通う日を、カレンダーでタップ<br><span style="font-size:13px;">何日でもまとめて選べます</span></div>
     <div id="detail-hint">↓ 日ごとに、お迎え・時刻をたしかめて、いちばん下の「送信」を押します</div>
     <div id="list"></div>
-    <div id="verlabel">画面の版: 11/4-o</div>
+    <div id="verlabel">画面の版: 11/4-p</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -410,11 +409,12 @@ document.getElementById('u-pk-yes').onclick = () => { usualT.pickup = true; save
 document.getElementById('u-pk-no').onclick = () => { usualT.pickup = false; saveUsualT(); };
 document.getElementById('u-loc-g').onclick = () => { usualT.loc = 'genkan'; saveUsualT(); };
 document.getElementById('u-loc-c').onclick = () => { usualT.loc = 'classroom'; saveUsualT(); };
-// いま選んでいる日(登録済みの日も含む)の時刻を、いつもの時間で入れ直す。先に日にちを選んでから、いつもの時間を決めた時のために。
-document.getElementById('applyUsual').onclick = () => {
+// 「いつもの時間」を変えたら、まだ送信していない新しい日(登録済みの日は除く)にも、自動で入れる。
+// (ボタンを押す必要はない。日にちを先に選んでから、いつもの時間を決めても同じ)
+function applyUsualToNewDays(){
   saveUsualT();
-  const keys = Object.keys(selected);
-  // いつもの時間として入っている欄だけを入れ直す(空欄の項目は、今の値のままにする)
+  const keys = Object.keys(selected).filter(k => !originalReports[k]);
+  if (!keys.length) return;
   const applyTo = it => {
     const u = it.pickup ? usualT.pk : usualT.np;
     if (u.start) it.startTime = u.start;
@@ -424,9 +424,9 @@ document.getElementById('applyUsual').onclick = () => {
     applyTo(selected[k]);
     Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n]); });
   });
-  document.getElementById('applyUsualMsg').textContent = keys.length ? keys.length + '日分に、いつもの時間を入れました。下のカードで確認してください。' : 'まだ日にちが選ばれていません。日にちを選ぶと、いつもの時間が自動で入ります。';
-  renderMonth();
-};
+  renderList();
+}
+['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => document.getElementById(id).addEventListener('change', applyUsualToNewDays));
 // 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
 // お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
 function defaultTimesFor(pickup){
@@ -908,7 +908,6 @@ function renderList(){
   const keys = selKeys.concat(Object.keys(cancelledDays).filter(k => k.startsWith(monthPrefix) && !selected[k])).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
   document.getElementById('detail-hint').style.display = selKeys.length ? 'block' : 'none';
-  document.getElementById('applyUsualWrap').style.display = Object.keys(selected).length ? 'block' : 'none'; // 日にちを選んでいない間は、出さない
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
   document.getElementById('submitBtn').textContent = !hasSel && !isDirty() ? '↑ 日にちを選んでください' : (selectedChildren.length > 1 ? '送信する（' + selectedChildren.length + '人まとめて）' : (children.length > 1 ? '送信する（' + selectedChildren[0] + 'さん）' : '送信する'));
