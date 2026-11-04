@@ -28,10 +28,10 @@
     padding:16px 16px 8px;
     text-align:center;
   }
-  header .childname{font-size:13px;color:var(--ink-soft);}
-  header h1{font-size:17px;margin:2px 0 0;}
-  header .guide{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
-  #status{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:14px;}
+  header .childname{font-size:15px;color:var(--ink-soft);}
+  header h1{font-size:19px;margin:2px 0 0;}
+  header .guide{font-size:15px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
+  #status{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:16px;}
 
   .monthbar{
     display:flex;align-items:center;justify-content:space-between;
@@ -39,9 +39,9 @@
   }
   .monthbar button{
     border:none;background:var(--surface);border:1px solid var(--line);
-    border-radius:8px;width:36px;height:36px;font-size:16px;color:var(--accent);
+    border-radius:8px;width:36px;height:36px;font-size:18px;color:var(--accent);
   }
-  .monthbar .label{font-weight:700;font-size:16px;}
+  .monthbar .label{font-weight:700;font-size:18px;}
 
   .cal{
     background:var(--surface);
@@ -50,14 +50,14 @@
   }
   .cal .dow{
     display:grid;grid-template-columns:repeat(7,1fr);
-    font-size:11px;color:var(--ink-soft);text-align:center;margin-bottom:4px;
+    font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:4px;
   }
   .cal .days{
     display:grid;grid-template-columns:repeat(7,1fr);gap:4px;
   }
   .day{
     aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-    border-radius:8px;font-size:14px;background:transparent;border:none;
+    border-radius:8px;font-size:16px;background:transparent;border:none;
     color:var(--ink);position:relative;
   }
   .day.empty{visibility:hidden;}
@@ -73,115 +73,115 @@
     background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
   }
   .card .cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .card .datelabel{font-weight:700;font-size:14px;}
-  .card .remove{color:var(--accent);font-size:12px;font-weight:700;background:none;border:none;padding:4px;text-decoration:underline;} /* 「いつも通りに戻す」と同じ、緑の太字・同じ大きさ */
+  .card .datelabel{font-weight:700;font-size:16px;}
+  .card .remove{color:var(--accent);font-size:15px;font-weight:700;background:none;border:none;padding:4px;text-decoration:underline;} /* 「いつも通りに戻す」と同じ、緑の太字・同じ大きさ */
   .card.cancelled{background:#fdf3f2;border-color:#e53e3e;}
   .card.cancelled .datelabel s{color:var(--ink-soft);}
-  .card .cancel-tag{margin-left:8px;font-size:11px;font-weight:700;color:#fff;background:#e53e3e;border-radius:999px;padding:2px 9px;}
-  .card .undo{color:var(--accent);font-size:13px;font-weight:700;background:none;border:1px solid var(--accent);border-radius:8px;padding:5px 12px;}
-  .card .cancelmsg{font-size:13px;color:#c53030;font-weight:700;line-height:1.6;}
-  .card .cancelwas{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.6;}
+  .card .cancel-tag{margin-left:8px;font-size:13px;font-weight:700;color:#fff;background:#e53e3e;border-radius:999px;padding:2px 9px;}
+  .card .undo{color:var(--accent);font-size:15px;font-weight:700;background:none;border:1px solid var(--accent);border-radius:8px;padding:5px 12px;}
+  .card .cancelmsg{font-size:15px;color:#c53030;font-weight:700;line-height:1.6;}
+  .card .cancelwas{font-size:15px;color:var(--ink-soft);margin-top:4px;line-height:1.6;}
   .toggle-row{display:flex;gap:8px;margin-bottom:8px;}
   .toggle-row button{
     flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);
-    font-size:13px;color:var(--ink);
+    font-size:15px;color:var(--ink);
   }
   .toggle-row button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   .seg{flex:1;display:flex;gap:6px;}
-  .seg button{flex:1;padding:6px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:13px;color:var(--ink-soft);}
+  .seg button{flex:1;padding:6px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:15px;color:var(--ink-soft);}
   .seg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700;}
-  .detail-row{display:flex;gap:8px;align-items:center;font-size:13px;}
+  .detail-row{display:flex;gap:8px;align-items:center;font-size:15px;}
   .detail-row label{color:var(--ink-soft);width:84px;flex:none;}
   .detail-row.locrow{margin-bottom:8px;}
   .detail-row input[type=time]{
-    flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);
+    flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:16px;background:var(--paper);
   }
   /* 時刻は「時」と「分」を、別々のロールにする */
-  .tp{flex:1;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--ink-soft);}
-  .tp select{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 6px;font-size:14px;background:var(--paper);color:var(--ink);}
+  .tp{flex:1;display:flex;align-items:center;gap:4px;font-size:15px;color:var(--ink-soft);}
+  .tp select{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 6px;font-size:16px;background:var(--paper);color:var(--ink);}
   .tp select:disabled{opacity:.5;}
 
   #childpick{margin:0 16px 8px;display:none;}
-  #childpick .pickhead{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  #childpick .pickhead{font-size:15px;color:var(--ink-soft);margin-bottom:6px;}
   #childpick .chips{display:flex;flex-wrap:wrap;gap:8px;}
-  #childpick .chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink);}
+  #childpick .chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:15px;color:var(--ink);}
   #childpick .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
-  #childpick .pickmsg{font-size:11px;color:var(--amber);margin-top:6px;line-height:1.5;}
-  .viewcard .who{font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;}
+  #childpick .pickmsg{font-size:13px;color:var(--amber);margin-top:6px;line-height:1.5;}
+  .viewcard .who{font-size:15px;color:var(--accent);font-weight:700;margin-top:4px;}
 
-  .hint .clear{display:inline-block;margin-left:8px;border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;padding:2px 0;text-decoration:underline;}
+  .hint .clear{display:inline-block;margin-left:8px;border:none;background:none;color:var(--accent);font-size:15px;font-weight:700;padding:2px 0;text-decoration:underline;}
   .detail-row.end{margin-top:8px;}
-  .hint{font-size:11px;color:var(--ink-soft);margin:4px 0 0 92px;line-height:1.4;}
+  .hint{font-size:13px;color:var(--ink-soft);margin:4px 0 0 92px;line-height:1.4;}
 
-  #detail-hint{display:none;margin:12px 16px 0;padding:10px 12px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#6b4a12;font-size:13px;line-height:1.55;font-weight:700;}
+  #detail-hint{display:none;margin:12px 16px 0;padding:10px 12px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#6b4a12;font-size:15px;line-height:1.55;font-weight:700;}
   #review{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
   #review .sheet{background:var(--surface);width:100%;max-width:560px;max-height:86vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
-  #review h2{font-size:16px;margin:0 0 4px;}
-  #review .sub{font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;}
-  #review .row{padding:9px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5;}
+  #review h2{font-size:18px;margin:0 0 4px;}
+  #review .sub{font-size:15px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;}
+  #review .row{padding:9px 0;border-top:1px solid var(--line);font-size:16px;line-height:1.5;}
   #review .row b{display:block;}
   #review .row.del b{color:#a33;}
   #review .btns{display:flex;gap:10px;margin-top:14px;}
-  #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+  #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:17px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
   details.usual{margin:0 16px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
   details.usual summary{padding:12px 0;cursor:pointer;}
-  details.usual summary .ut{display:block;font-size:14px;font-weight:700;color:var(--accent);}
-  details.usual summary .us{display:block;margin-top:4px;font-size:12px;font-weight:400;color:var(--ink-soft);line-height:1.55;}
+  details.usual summary .ut{display:block;font-size:16px;font-weight:700;color:var(--accent);}
+  details.usual summary .us{display:block;margin-top:4px;font-size:15px;font-weight:400;color:var(--ink-soft);line-height:1.55;}
   details.usual .urow{padding:8px 0;border-top:1px solid var(--line);}
-  details.usual .utitle{font-size:13px;font-weight:700;margin-bottom:6px;}
-  details.usual .uline{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
+  details.usual .utitle{font-size:15px;font-weight:700;margin-bottom:6px;}
+  details.usual .uline{display:flex;gap:8px;align-items:center;font-size:15px;margin-bottom:6px;}
   details.usual .uline label{width:84px;flex:none;color:var(--ink-soft);}
-  details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--paper);}
+  details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:16px;background:var(--paper);}
   details.usual .utg{display:flex;gap:8px;}
-  details.usual .utg button{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:14px;color:var(--ink);}
+  details.usual .utg button{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:16px;color:var(--ink);}
   details.usual .utg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
-  details.usual .unote{font-size:11px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
+  details.usual .unote{font-size:13px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
   #regPane{display:none;padding:16px;}
-  #regPane h2{font-size:18px;margin:4px 0 4px;text-align:center;}
-  #regPane .lead{font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.6;margin-bottom:16px;}
+  #regPane h2{font-size:20px;margin:4px 0 4px;text-align:center;}
+  #regPane .lead{font-size:15px;color:var(--ink-soft);text-align:center;line-height:1.6;margin-bottom:16px;}
   #regPane .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
-  #regPane .box h3{font-size:14px;margin:0 0 8px;}
+  #regPane .box h3{font-size:16px;margin:0 0 8px;}
   #regPane .namerow{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
-  #regPane .namerow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:16px;background:var(--paper);}
-  #regPane .namerow button{flex:none;border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;text-decoration:underline;padding:6px;}
-  #regPane .addbtn{width:100%;padding:10px 0;border-radius:10px;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;}
+  #regPane .namerow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:18px;background:var(--paper);}
+  #regPane .namerow button{flex:none;border:none;background:none;color:var(--accent);font-size:15px;font-weight:700;text-decoration:underline;padding:6px;}
+  #regPane .addbtn{width:100%;padding:10px 0;border-radius:10px;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);font-size:16px;font-weight:700;}
   #regPane .tg{display:flex;gap:8px;margin-bottom:8px;}
-  #regPane .tg button{flex:1;padding:11px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:14px;color:var(--ink);}
+  #regPane .tg button{flex:1;padding:11px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:16px;color:var(--ink);}
   #regPane .tg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
-  #regPane .hint2{font-size:11px;color:var(--ink-soft);line-height:1.5;margin-top:4px;}
-  #regPane .go{width:100%;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;}
+  #regPane .hint2{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-top:4px;}
+  #regPane .go{width:100%;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:18px;font-weight:700;}
   #regPane .go:disabled{background:#B9C4B4;}
-  #regPane .err{color:#a33;font-size:13px;margin:8px 0 0;text-align:center;}
+  #regPane .err{color:#a33;font-size:15px;margin:8px 0 0;text-align:center;}
   #regReview{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
   #regReview .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
-  #regReview h2{font-size:16px;margin:0 0 8px;}
-  #regReview .row{padding:9px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5;}
-  #regReview .row b{display:block;font-size:12px;color:var(--ink-soft);font-weight:400;}
+  #regReview h2{font-size:18px;margin:0 0 8px;}
+  #regReview .row{padding:9px 0;border-top:1px solid var(--line);font-size:16px;line-height:1.5;}
+  #regReview .row b{display:block;font-size:15px;color:var(--ink-soft);font-weight:400;}
   #regReview .btns{display:flex;gap:10px;margin-top:14px;}
-  #regReview .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:15px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+  #regReview .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:17px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #regReview .btns button.go2{background:var(--accent);border-color:var(--accent);color:#fff;}
-  #childpick .pickhint{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:8px;}
-  .kidsrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 10px;font-size:12px;color:var(--ink-soft);}
-  .kidsrow .kid{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:13px;color:var(--ink-soft);}
+  #childpick .pickhint{font-size:15px;color:var(--ink-soft);line-height:1.6;margin-top:8px;}
+  .kidsrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 10px;font-size:15px;color:var(--ink-soft);}
+  .kidsrow .kid{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:15px;color:var(--ink-soft);}
   .kidsrow .kid.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   .kidblock{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;}
-  .kidhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;}
-  .kidtog{border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;text-decoration:underline;padding:4px 0;}
-  .kidtog.undoskip{border:1px solid var(--accent);border-radius:8px;padding:5px 12px;text-decoration:none;font-size:13px;}
-  .splitbtn,.unsplit{display:block;margin:10px 0 0;border:none;background:none;color:var(--accent);font-size:12px;font-weight:700;text-decoration:underline;padding:4px 0;}
-  #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
+  .kidhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:16px;}
+  .kidtog{border:none;background:none;color:var(--accent);font-size:15px;font-weight:700;text-decoration:underline;padding:4px 0;}
+  .kidtog.undoskip{border:1px solid var(--accent);border-radius:8px;padding:5px 12px;text-decoration:none;font-size:15px;}
+  .splitbtn,.unsplit{display:block;margin:10px 0 0;border:none;background:none;color:var(--accent);font-size:15px;font-weight:700;text-decoration:underline;padding:4px 0;}
+  #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:15px;}
 
   .switchlink{margin-top:10px;}
-  .switchlink a{color:var(--accent);font-size:13px;font-weight:700;text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px;}
+  .switchlink a{color:var(--accent);font-size:15px;font-weight:700;text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px;}
 
   #viewList{padding:16px;display:flex;flex-direction:column;gap:10px;}
   .viewcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
   .viewcard.past{opacity:0.5;}
-  .viewcard .viewdetail{font-size:13px;color:var(--ink-soft);margin-top:4px;}
-  .loadingmsg{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:13px;}
+  .viewcard .viewdetail{font-size:15px;color:var(--ink-soft);margin-top:4px;}
+  .loadingmsg{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:15px;}
 
-  .card .existing-tag{font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
+  .card .existing-tag{font-size:13px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
 
   footer{
     position:fixed;bottom:0;left:0;right:0;
@@ -190,10 +190,10 @@
   }
   footer button{
     width:100%;padding:13px 0;border:none;border-radius:10px;
-    background:var(--accent);color:#fff;font-size:15px;font-weight:700;
+    background:var(--accent);color:#fff;font-size:17px;font-weight:700;
   }
   footer button:disabled{background:#B9C4B4;}
-  #submitmsg{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  #submitmsg{text-align:center;font-size:15px;color:var(--ink-soft);margin-top:6px;}
 </style>
 </head>
 <body>
@@ -215,14 +215,14 @@
   <h2>この内容で登録します。よろしいですか？</h2>
   <div id="regReviewBody"></div>
   <div class="btns"><button id="regBack">戻って直す</button><button class="go2" id="regGo">登録する</button></div>
-  <div id="regWait" style="display:none;font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:10px;text-align:center;">登録しています。そのままお待ちください。</div>
+  <div id="regWait" style="display:none;font-size:15px;color:var(--ink-soft);line-height:1.6;margin-top:10px;text-align:center;">登録しています。そのままお待ちください。</div>
 </div></div>
 
 <div id="app" style="display:none">
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:10px;color:var(--ink-soft);opacity:.6;">画面の版: 10/8-e</div>
+    <div style="font-size:11px;color:var(--ink-soft);opacity:.6;">画面の版: 11/4-a</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -250,7 +250,7 @@
         <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-np-e"></span></div>
       </div>
       <div class="unote">空欄のままでも大丈夫です。このスマホに覚えます。</div>
-      <div id="applyUsualWrap" style="padding:0 0 12px;display:none;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:14px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
+      <div id="applyUsualWrap" style="padding:0 0 12px;display:none;"><button id="applyUsual" style="width:100%;padding:11px 0;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-size:16px;font-weight:700;">いま選んでいる日にも、この時間を入れる</button><div class="unote" id="applyUsualMsg" style="padding:6px 0 0;"></div></div>
     </details>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
