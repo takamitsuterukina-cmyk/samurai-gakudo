@@ -152,9 +152,11 @@
   #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:20.9px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
   details.usual{margin:12px 16px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
-  details.usual summary{padding:12px 28px 12px 0;cursor:pointer;list-style:none;position:relative;}
+  details.usual summary{padding:12px 32px 12px 0;cursor:pointer;list-style:none;position:relative;display:flex;align-items:center;gap:12px;}
+  details.usual .uicon{flex:none;width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;}
+  details.usual .uexp{padding:0 0 12px;font-size:18.5px;line-height:1.6;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:10px;}
   details.usual summary::-webkit-details-marker{display:none;}
-  details.usual summary::after{content:'▾';position:absolute;right:2px;top:12px;color:var(--accent);font-size:22.2px;}
+  details.usual summary::after{content:'▾';position:absolute;right:2px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:22.2px;}
   details.usual[open] summary::after{content:'▴';}
   details.usual summary .ut{display:block;font-size:19.7px;font-weight:700;color:var(--accent);}
   details.usual summary .us{display:block;margin-top:4px;font-size:18.5px;font-weight:400;color:var(--ink-soft);line-height:1.55;}
@@ -276,7 +278,8 @@
     <div id="empty-hint" style="padding:0"></div>
     <div id="detail-hint"><span class="sn">②</span>日ごとの詳細設定</div>
     <details class="usual" id="usualBox">
-      <summary><span class="ut"><span style="display:inline-block;">便利機能　</span><span style="display:inline-block;">いつもの時間を登録しておく</span></span><span class="us"><span style="display:inline-block;">お迎え・利用時間を登録しておくと</span><span style="display:inline-block;">日ごとに入力する手間を省けます。</span><br><span style="display:inline-block;">登録後も下の詳細カードで</span><span style="display:inline-block;">日ごとに変更できます。</span></span></summary>
+      <summary><span class="uicon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><span class="ut"><span style="display:inline-block;">便利機能　</span><span style="display:inline-block;">いつもの時間を登録</span></span></summary>
+      <div class="uexp"><span style="display:inline-block;">お迎え・利用時間を登録しておくと</span><span style="display:inline-block;">日ごとに入力する手間を省けます。</span><br><span style="display:inline-block;">登録後も下の詳細カードで</span><span style="display:inline-block;">日ごとに変更できます。</span></div>
       <div class="urow">
         <div class="utitle">ふだんのお迎え</div>
         <div class="utg"><button type="button" id="u-pk-yes">お迎え必要</button><button type="button" id="u-pk-no">お迎え不要</button></div>
@@ -295,7 +298,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/4-aa</div>
+    <div id="verlabel">画面の版: 11/4-ab</div>
   </div>
 
   <div id="viewPane" style="display:none">
