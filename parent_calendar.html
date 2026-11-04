@@ -298,7 +298,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-d</div>
+    <div id="verlabel">画面の版: 11/5-e</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -431,8 +431,8 @@ function applyUsualToNewDays(){
     if (u.end) it.endTime = u.end;
   };
   keys.forEach(k => {
-    applyTo(selected[k], isBreakDay(k));
-    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], isBreakDay(k)); });
+    applyTo(selected[k], isBreakDay(k) && selectedChildren.some(n => kindOfChild(n) === 'monthly'));
+    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], isBreakDay(k) && kindOfChild(n) === 'monthly'); });
   });
   renderList();
 }
@@ -821,7 +821,7 @@ function toggleDay(key){
     }, defaultTimesFor(pk));
     // 長期休みの平日は、時間帯のボタンはなく、来所の時刻で決まる(月謝のお子さんは14:00より前なら1日、以降は午後。地域・スタッフは常に1日)。
     // 12時台・13時台の来所はできないので、「いつもの時間」がそこなら空にする。月謝のお子さんだけの時は、ふだんの放課後(午後)として14:00を初めから入れておく
-    if(isBreakDay(key) && noStartZone(selected[key].startTime)) selected[key].startTime = '';
+    if(isBreakDay(key) && selectedChildren.some(c => kindOfChild(c) === 'monthly') && noStartZone(selected[key].startTime)) selected[key].startTime = '';
     if(isBreakDay(key) && !selected[key].startTime && selectedChildren.every(c => kindOfChild(c) === 'monthly')) selected[key].startTime = '14:00';
   }
   renderMonth();
@@ -835,8 +835,11 @@ function finalItem(child, key){
   if (it && isBreakDay(key)) return { ...it, slot: slotFromTimes(it, child) }; // 長期休みの平日は、時間帯のボタンは出さず、来所の時刻から決める(内部の計算用)
   return it;
 }
-/* 長期休みの平日は、12:00〜13:59の来所はできない(午後利用は14:00から。11時台までなら1日利用) */
+/* 長期休みの平日は、月謝のお子さんだけ、12:00〜13:59の来所はできない(午後利用は14:00から。11時台までなら1日利用)。
+   地域・スタッフは一律料金なので、何時に来てもよい。 */
 function noStartZone(t){ return !!t && t >= '12:00' && t < '14:00'; }
+// そのカードの内容が、月謝のお子さんに当たるか(c: まとめては空、その子だけ別内容の時は、お子さんの番号)
+function cardIsMonthly(c){ return c === '' ? selectedChildren.some(n => kindOfChild(n) === 'monthly') : kindOfChild(selectedChildren[Number(c)]) === 'monthly'; }
 /* 午後/1日の区分(内部の計算用。画面には出さない)。
    地域・スタッフのお子さん: 何時に来ても1日。月謝のお子さん: 来所が14:00より前なら1日、14:00以降なら午後(時刻が空の時は、今の値のまま)。 */
 function slotFromTimes(it, child){
@@ -996,7 +999,7 @@ function renderList(){
   // いま押された部品が扱う内容(まとめて=共通の内容 / その子だけ別内容の時は、その子の内容)
   const itemAt = el => el.dataset.c === '' ? selected[el.dataset.key] : ovr[el.dataset.key][selectedChildren[Number(el.dataset.c)]];
   // 長期休みの平日は、12時台・13時台の来所は選べない(午後利用は14:00から)
-  list.querySelectorAll('.time').forEach(el => initTimePair(el, itemAt(el).startTime, isBreakDay(el.dataset.key) ? [12, 13] : null));
+  list.querySelectorAll('.time').forEach(el => initTimePair(el, itemAt(el).startTime, isBreakDay(el.dataset.key) && cardIsMonthly(el.dataset.c) ? [12, 13] : null));
   list.querySelectorAll('.etime').forEach(el => initTimePair(el, itemAt(el).endTime));
   list.querySelectorAll('.remove').forEach(b => b.onclick = () => cancelDay(b.dataset.key));
   list.querySelectorAll('.undo').forEach(b => b.onclick = () => restoreDay(b.dataset.key));
@@ -1077,7 +1080,7 @@ function fieldsHtml(key, item, c){
         <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
         <span class="tp time"${at}></span>
       </div>
-      ${isBreakDay(key) ? '<div class="hint">午後利用は14:00からです。</div>' : ''}
+      ${isBreakDay(key) && cardIsMonthly(c) ? '<div class="hint">午後利用は14:00からです。</div>' : ''}
       ${isBreakDay(key) && !item.startTime && (c === '' ? selectedChildren.some(n => kindOfChild(n) === 'monthly') : kindOfChild(selectedChildren[Number(c)]) === 'monthly') ? '<div class="hint slotwarn">来所の時刻を選んでください。</div>' : ''}
       <div class="detail-row end">
         <label>帰りの時刻</label>
@@ -1134,7 +1137,7 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '来所の時刻が入っていない日があります（' + noStart.map(md2).join('、') + '）。選んでください。';
     return;
   }
-  const badZone = brkItems(it => noStartZone(it.startTime));
+  const badZone = brkItems((it, c) => kindOfChild(c) === 'monthly' && noStartZone(it.startTime));
   if (badZone.length) {
     document.getElementById('submitmsg').textContent = '午後利用は14:00からです（' + badZone.map(md2).join('、') + '）。来所の時刻を、11時台までか14:00以降にしてください。';
     return;
