@@ -67,6 +67,21 @@
   .day .dot{
     position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--amber);
   }
+  /* 長期休みの空き状況の目印(日にちの下に小さく出す) */
+  .day.av{flex-direction:column;line-height:1.15;}
+  .day .mk{display:block;font-size:11px;font-weight:700;margin-top:1px;white-space:nowrap;}
+  .day .mk.ok{color:var(--accent);} .day .mk.few{color:#b7791f;} .day .mk.full{color:#c53030;} .day .mk.off{color:var(--ink-soft);}
+  .day.selected .mk{color:#fff;}
+  #capNote{display:none;margin:10px 16px 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--ink);font-size:15px;line-height:1.6;}
+  #capNote .slotbulk{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  #capNote .slotbulk span{font-weight:700;}
+  #capNote .slotbulk button{padding:6px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--paper);color:var(--accent);font-size:15px;font-weight:700;}
+  #capNote .slotbulk button.on{background:var(--accent);color:#fff;}
+  .card .pend-tag{font-size:13px;color:#8a5a00;background:#FFF4E0;border:1px solid #E9C98B;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
+  .card .capnote2{font-size:14px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+  .card .slotrow{margin-bottom:8px;}
+  .hint.slotwarn{color:#c53030;font-weight:700;margin:-4px 0 8px 92px;}
+  .viewcard .pend-tag{font-size:13px;color:#8a5a00;background:#FFF4E0;border:1px solid #E9C98B;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
 
   #list{padding:16px;display:flex;flex-direction:column;gap:10px;}
   .card{
@@ -222,7 +237,7 @@
   <header>
     <div class="childname" id="childname"></div>
     <h1 id="pageTitle">利用予定を登録する</h1>
-    <div style="font-size:11px;color:var(--ink-soft);opacity:.6;">画面の版: 11/4-a</div>
+    <div style="font-size:11px;color:var(--ink-soft);opacity:.6;">画面の版: 11/4-b</div>
     <div class="guide" id="pageGuide">カレンダーから複数日をまとめてタップして選び、最後に1回「送信する」だけでOKです。</div>
     <div class="switchlink" id="switchLink"></div>
   </header>
@@ -263,6 +278,7 @@
       <div class="days" id="days"></div>
     </div>
 
+    <div id="capNote"></div>
     <div id="empty-hint">通う日をカレンダーからタップして選んでください。複数日を選んでからまとめて送信できます。</div>
     <div id="detail-hint">↓ 選んだ日ごとに、お迎え・場所・時刻を、下のカードで確認・入力してください。入力したあと、いちばん下の「送信する」を押します。</div>
     <div id="list"></div>
@@ -302,6 +318,10 @@ let children = [];            // 登録されているお子さん(きょうだ�
 let selectedChildren = [];    // 今、予定を登録する対象のお子さん(複数ならまとめて登録)
 let reportsByChild = {};      // { お子さん名: { 'YYYY-MM-DD': {pickup, location, startTime} } } 今日以降の登録済みの内容
 let todayKeyG = '';
+let cap = null;               // 長期休み(冬休みなど)の設定と空き状況。設定が無い間は null(今までどおりの画面)
+let pendingByChild = {};      // { お子さん名: { 'YYYY-MM-DD': true } } 学童の確認待ち(申込中)の日
+let slotDefault = '';         // 長期休みの日を新しく選んだ時の、時間帯の初めの値(am/pm/all)
+const SLOT_LABELS = { am:'午前', pm:'午後', all:'1日' };
 // 時刻の選択肢は、8:00〜18:00の間(5分きざみ)に限る。すでに入っている値がその外にある時は、消えないよう、その値も選択肢に加える。
 const TIME_CHOICES = (() => { const a = []; for (let m = 8 * 60; m <= 18 * 60; m += 5) a.push(pad2(Math.floor(m / 60)) + ':' + pad2(m % 60)); return a; })();
 function pad2(n){ return String(n).padStart(2, '0'); }
@@ -426,7 +446,90 @@ async function loadHolidays(){
 function isBookable(key, dow){
   if(dow === 0) return false;
   if(holidaySet.has(key)) return false;
+  if(cap && (cap.closed || []).indexOf(key) >= 0) return false; // 学童アプリで設定した、お休みの日
   return true;
+}
+
+/* ===== 長期休み(冬休みなど)の予約 ===== */
+function dowOfKey(key){ const [y,m,d] = key.split('-').map(Number); return new Date(y, m-1, d).getDay(); }
+function addDaysKey(key, n){ const [y,m,d] = key.split('-').map(Number); const t = new Date(y, m-1, d + n); return dateKey(t.getFullYear(), t.getMonth(), t.getDate()); }
+function breakOf(key){ return cap ? ((cap.breaks || []).find(b => key >= b.start && key <= b.end) || null) : null; }
+function isBreakDay(key){ const w = dowOfKey(key); return !!breakOf(key) && w >= 1 && w <= 5; } // 長期休み中の平日(月〜金)。土曜はふだんどおり
+function kindOfChild(c){ return (cap && cap.kinds && cap.kinds[c]) || 'spot'; } // monthly(月謝) / spot(地域枠) / staff(スタッフ)
+function showAvail(){ return !!cap && selectedChildren.some(c => kindOfChild(c) !== 'monthly'); }
+/* 月謝以外のお子さんが、その日に申し込めない理由(申し込める時は null)。サーバー側でも同じ確認をします。 */
+function spotReason(key){
+  const b = breakOf(key); if(!b) return null;
+  const today = cap.today || todayKeyG;
+  if(b.openFrom && today < b.openFrom) return { mark:'受付前', text: mdw(b.openFrom) + 'から受付です' };
+  if(today > addDaysKey(key, -(b.deadlineDays || 0))) return { mark:'締切', text:'受付を締め切りました' };
+  const a = (cap.avail || {})[key];
+  if(a && a.remaining <= 0) return { mark:'満席', text:'満席です' };
+  return null;
+}
+function availMark(key){
+  const r = spotReason(key);
+  if(r) return { t: r.mark, cls: r.mark === '満席' ? 'full' : 'off' };
+  const a = (cap.avail || {})[key];
+  if(!a) return null;
+  return a.remaining >= 4 ? { t:'◎', cls:'ok' } : { t:'残' + a.remaining, cls:'few' };
+}
+function renderCapNote(){
+  const note = document.getElementById('capNote');
+  const mStart = viewYear + '-' + pad(viewMonth+1) + '-01', mEnd = viewYear + '-' + pad(viewMonth+1) + '-31';
+  const bs = cap ? (cap.breaks || []).filter(b => b.start <= mEnd && b.end >= mStart) : [];
+  if(!bs.length){ note.style.display = 'none'; note.innerHTML = ''; return; }
+  const names = bs.map(b => b.label).join('・');
+  let html;
+  if(showAvail()){
+    html = '<b>' + names + '</b>は、人数に限りがあります。日にちの下の ◎=空きあり、残N=のこりN席、満席=受付終了 です。' +
+      '平日は、午前・午後・1日の「時間帯」を選んで申し込みます。学童が確認して確定したら、LINEでお知らせします。' +
+      bs.map(b => '<br>' + b.label + '：' + (b.openFrom ? mdw(b.openFrom) + 'から受付' : '') + '／締切は利用日の' + (b.deadlineDays || 0) + '日前まで').join('');
+  }else{
+    html = '<b>' + names + '</b>の平日は、午前・午後・1日の「時間帯」を選んでください。';
+  }
+  html += '<div class="slotbulk"><span>選んだ日の時間帯を、まとめて：</span>' +
+    ['am','pm','all'].map(v => '<button type="button" data-v="' + v + '" class="' + (slotDefault === v ? 'on' : '') + '">' + SLOT_LABELS[v] + '</button>').join('') + '</div>';
+  note.innerHTML = html;
+  note.style.display = 'block';
+  note.querySelectorAll('.slotbulk button').forEach(b => b.onclick = () => {
+    slotDefault = b.dataset.v;
+    try{ localStorage.setItem('samuraiSlot_' + userId, slotDefault); }catch(e){}
+    Object.keys(selected).forEach(k => {
+      if(!isBreakDay(k)) return;
+      selected[k].slot = slotDefault;
+      Object.keys(ovr[k] || {}).forEach(n => { if(!ovr[k][n].skip) ovr[k][n].slot = slotDefault; });
+    });
+    renderMonth();
+  });
+}
+/* サーバーから届いた1件の予定を、画面で扱う形にする。長期休みの平日で時間帯が空なら、午後(ふだんの放課後)として扱う。 */
+function reportItem(r){
+  const it = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
+  const sl = r.slot || (isBreakDay(r.date) ? 'pm' : '');
+  if(sl) it.slot = sl;
+  return it;
+}
+function ingestReports(reports, strict){
+  reports.forEach(r => {
+    if(r.date < todayKeyG) return; // 過去の記録は編集対象にしない
+    const name = (r.childName && reportsByChild[r.childName]) ? r.childName : (strict ? null : children[0]);
+    if(!name) return;
+    reportsByChild[name][r.date] = reportItem(r);
+    pendingByChild[name] = pendingByChild[name] || {};
+    if(r.status === 'pending') pendingByChild[name][r.date] = true; else delete pendingByChild[name][r.date];
+  });
+}
+/* 送信のあとなどに、最新の内容を読み直して、画面に反映する */
+async function refreshFromServer(){
+  const res = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
+  const d = await res.json();
+  if(d && d.info && d.info.registered){
+    try{ localStorage.setItem('samuraiInitCache_' + userId, JSON.stringify(d)); }catch(e){}
+    setupApp(d, true);
+    freshLoaded = true;
+    renderList();
+  }
 }
 
 let freshLoaded = false; // 最新の内容をサーバーから読み終えたか(前回の内容を先に表示している間は、送信できないようにする)
@@ -434,6 +537,9 @@ let freshLoaded = false; // 最新の内容をサーバーから読み終えた�
 // 読み込んだ内容(子ども情報と予定)から、登録画面を組み立てる。keepView=true の時は、いま見ている月・タブはそのまま。
 function setupApp(initData, keepView){
   childInfo = initData.info;
+  cap = initData.cap || null;
+  try{ slotDefault = localStorage.getItem('samuraiSlot_' + userId) || ''; }catch(e){ slotDefault = ''; }
+  if(['am','pm','all'].indexOf(slotDefault) < 0) slotDefault = '';
   children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
   document.getElementById('childname').textContent = children.join('・') + ' さん';
   const now = new Date();
@@ -442,14 +548,11 @@ function setupApp(initData, keepView){
   loadUsualT();
   if (usualFirstVisit) document.getElementById('usualBox').open = true; // 初めて開いた時は、基本設定が目に入るよう、開いておく
   const reports = initData.reports || [];
-  reportsByChild = {};
-  children.forEach(c => { reportsByChild[c] = {}; });
-  reports.forEach(r => {
-    if (r.date < todayKeyG) return; // 過去の記録は編集対象にしない
-    const name = (r.childName && reportsByChild[r.childName]) ? r.childName : children[0];
-    reportsByChild[name][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
-  });
-  selectedChildren = children.slice(); // 初期状態は全員まとめて
+  reportsByChild = {}; pendingByChild = {};
+  children.forEach(c => { reportsByChild[c] = {}; pendingByChild[c] = {}; });
+  ingestReports(reports, false);
+  // 初期状態は全員まとめて(送信のあとなどに読み直した時は、いま選んでいるお子さんのまま)
+  selectedChildren = (keepView && selectedChildren.length && selectedChildren.every(c => children.indexOf(c) >= 0)) ? selectedChildren : children.slice();
   loadChildState();
   renderChips();
   document.getElementById('status').style.display = 'none';
@@ -506,10 +609,8 @@ async function boot(){
     }else{
       // すでに触り始めている時は、入力中の内容を消さないよう、登録済みの内容だけ、裏で更新する
       childInfo = initData.info;
-      (initData.reports || []).forEach(r => {
-        if (r.date < todayKeyG || !reportsByChild[r.childName]) return;
-        reportsByChild[r.childName][r.date] = { pickup: !!r.pickup, location: r.location || 'genkan', startTime: r.startTime || (r.pickup ? '15:00' : ''), endTime: r.endTime || '' };
-      });
+      cap = initData.cap || null;
+      ingestReports(initData.reports || [], true);
     }
     freshLoaded = true;
     renderList();
@@ -619,7 +720,8 @@ async function loadSchedule(){
       const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
       const rs = reports.filter(r => r.date === date);
-      const detailOf = r => (r.pickup ? '利用・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : '利用・お迎えなし' + (r.startTime ? '・来所' + r.startTime : '')) + (r.endTime ? '・帰り' + r.endTime : '');
+      const use = r => '利用' + (r.slot && SLOT_LABELS[r.slot] ? '(' + SLOT_LABELS[r.slot] + ')' : '');
+      const detailOf = r => (r.pickup ? use(r) + '・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : use(r) + '・お迎えなし' + (r.startTime ? '・来所' + r.startTime : '')) + (r.endTime ? '・帰り' + r.endTime : '') + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
       // きょうだいで内容が同じなら1行にまとめる
       const groups = [];
       rs.forEach(r => {
@@ -652,10 +754,16 @@ function renderMonth(){
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
     const dow = new Date(viewYear, viewMonth, d).getDay();
-    const bookable = isBookable(key, dow) || !!selected[key] || !!cancelledDays[key]; // 既に登録済みの日は取り消せるよう押せるままにする
+    let bookable = isBookable(key, dow) || !!selected[key] || !!cancelledDays[key]; // 既に登録済みの日は取り消せるよう押せるままにする
+    // 長期休みの平日: 月謝以外のお子さんだけを選んでいる時は、満席・受付前・締切後の日は選べなくする(目印も出す)
+    let mk = null;
+    if(cap && isBreakDay(key) && showAvail() && !(cap.closed || []).includes(key) && !holidaySet.has(key)){
+      mk = availMark(key);
+      if(spotReason(key) && selectedChildren.every(c => kindOfChild(c) !== 'monthly') && !selected[key] && !cancelledDays[key]) bookable = false;
+    }
     const btn = document.createElement('button');
-    btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled');
-    btn.textContent = d;
+    btn.className = 'day' + (selected[key] ? ' selected' : '') + (cancelledDays[key] ? ' cancelled' : '') + (bookable ? '' : ' disabled') + (mk ? ' av' : '');
+    if(mk){ btn.innerHTML = d + '<span class="mk ' + mk.cls + '">' + mk.t + '</span>'; } else { btn.textContent = d; }
     if(bookable){
       btn.onclick = () => toggleDay(key);
     }else{
@@ -663,6 +771,7 @@ function renderMonth(){
     }
     daysEl.appendChild(btn);
   }
+  renderCapNote();
   renderList();
 }
 
@@ -690,6 +799,7 @@ function toggleDay(key){
       pickup: pk,
       location: effectiveLoc(),
     }, defaultTimesFor(pk));
+    if(isBreakDay(key)) selected[key].slot = slotDefault; // 長期休みの平日は、時間帯も選ぶ(まとめて設定してあれば、その値)
   }
   renderMonth();
 }
@@ -706,7 +816,7 @@ function finalMap(child){
   return m;
 }
 function sameItem(a, b){
-  return a.pickup === b.pickup && a.location === b.location && a.startTime === b.startTime && (a.endTime || '') === (b.endTime || '');
+  return a.pickup === b.pickup && a.location === b.location && a.startTime === b.startTime && (a.endTime || '') === (b.endTime || '') && (a.slot || '') === (b.slot || '');
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
@@ -756,7 +866,7 @@ function renderChips(){
 function sameAsReports(a, b){
   const ak = Object.keys(a), bk = Object.keys(b);
   if (ak.length !== bk.length) return false;
-  return ak.every(k => b[k] && a[k].pickup === b[k].pickup && a[k].location === b[k].location && a[k].startTime === b[k].startTime && (a[k].endTime || '') === (b[k].endTime || ''));
+  return ak.every(k => b[k] && a[k].pickup === b[k].pickup && a[k].location === b[k].location && a[k].startTime === b[k].startTime && (a[k].endTime || '') === (b[k].endTime || '') && (a[k].slot || '') === (b[k].slot || ''));
 }
 function changeChildren(list){
   if (list.join('|') === selectedChildren.join('|')) return;
@@ -824,12 +934,15 @@ function renderList(){
             : fieldsHtml(key, oo, String(i))) + '</div>';
       }).join('') + '<button class="unsplit" data-key="' + key + '">全員同じ内容に戻す(お休みも、もどします)</button>';
     }
+    const isPend = isExisting && selectedChildren.some(c => (pendingByChild[c] || {})[key]);
+    const askNote = isBreakDay(key) && selectedChildren.some(c => kindOfChild(c) !== 'monthly')
+      ? '<div class="capnote2">' + (isPend ? '申込中です。学童が確認して確定したら、LINEでお知らせします。' : (isExisting ? '' : 'この日は、学童が確認してから確定します。確定したら、LINEでお知らせします。')) + '</div>' : '';
     card.innerHTML = `
       <div class="cardhead">
-        <div class="datelabel">${m}/${d}(${dow})${isExisting ? '<span class="existing-tag">登録済み</span>' : ''}</div>
+        <div class="datelabel">${m}/${d}(${dow})${isPend ? '<span class="pend-tag">申込中(確認待ち)</span>' : (isExisting ? '<span class="existing-tag">登録済み</span>' : '')}</div>
         <button class="remove" data-key="${key}">この日をキャンセル</button>
       </div>
-      ${body}
+      ${body}${askNote}
     `;
     list.appendChild(card);
   });
@@ -871,6 +984,11 @@ function renderList(){
     renderMonth();
   });
   list.querySelectorAll('.loc').forEach(b => b.onclick = () => { itemAt(b).location = b.dataset.v; renderList(); });
+  list.querySelectorAll('.slot').forEach(b => b.onclick = () => {
+    itemAt(b).slot = b.dataset.v;
+    slotDefault = b.dataset.v; try{ localStorage.setItem('samuraiSlot_' + userId, slotDefault); }catch(e){}
+    renderList();
+  });
   // 時刻の回転ロールを指で回している途中で、カードを作り直すと、ロールが閉じて「決定」扱いになってしまう。
   // そのため、時刻を変えても、画面は作り直さない(中身だけ更新する)。ロールは、✓などで本人が閉じるまで開いたままになる。
   const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; };
@@ -898,6 +1016,15 @@ function fieldsHtml(key, item, c){
         <button class="pk ${item.pickup ? 'on':''}"${at} data-v="1">お迎え必要</button>
         <button class="pk ${!item.pickup ? 'on':''}"${at} data-v="0">お迎え不要</button>
       </div>
+      ${isBreakDay(key) ? `
+      <div class="detail-row slotrow">
+        <label>時間帯</label>
+        <div class="seg">
+          <button class="slot ${item.slot==='am'?'on':''}"${at} data-v="am">午前</button>
+          <button class="slot ${item.slot==='pm'?'on':''}"${at} data-v="pm">午後</button>
+          <button class="slot ${item.slot==='all'?'on':''}"${at} data-v="all">1日</button>
+        </div>
+      </div>${item.slot ? '' : '<div class="hint slotwarn">時間帯を選んでください。</div>'}` : ''}
       ${item.pickup ? `
       <div class="detail-row locrow">
         <label>お迎えの場所</label>
@@ -959,17 +1086,24 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
     return;
   }
+  const noSlot = Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && !it.slot; })).sort();
+  if (noSlot.length) {
+    document.getElementById('submitmsg').textContent = '時間帯（午前・午後・1日）が選ばれていない日があります（' + noSlot.map(k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10))).join('、') + '）。選んでください。';
+    return;
+  }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
-    const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
+    const detail = (it.slot && SLOT_LABELS[it.slot] ? '【' + SLOT_LABELS[it.slot] + '】' : '') + (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   document.getElementById('reviewSub').textContent =
     (groups.length > 1 ? 'お子さんごとに、内容がちがいます。　' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : ''))) +
     '内容がちがう日は、「戻って直す」で、カードの内容を直してください。';
-  document.getElementById('reviewBody').innerHTML = groups.length > 1
+  const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
+  document.getElementById('reviewBody').innerHTML = (groups.length > 1
     ? groups.map(g => '<div class="row" style="background:var(--accent-soft);"><b>対象</b>' + g.children.join('・') + 'さん</div>' + rowsOf(g)).join('')
-    : rowsOf(groups[0]);
+    : rowsOf(groups[0])) +
+    (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします（満席などで受け付けられない日は、送信後にお知らせします）。</div>' : '');
   document.getElementById('review').style.display = 'flex';
 };
 document.getElementById('reviewBack').onclick = () => {
@@ -992,6 +1126,26 @@ async function doSubmit(){
   const first = perChild[selectedChildren[0]];
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitmsg').textContent = '送信中...';
+  const smsg = document.getElementById('submitmsg');
+  if (cap) {
+    // 長期休みの設定がある時は、結果(申込中になった日・受け付けられなかった日)を読み取れるよう、直接送る
+    try{
+      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }) });
+      let j = null; try{ j = await res.json(); }catch(e){}
+      if (j && j.ok === false) throw new Error('ng');
+      const pend = (j && j.pending) || [], rej = (j && j.rejected) || [];
+      try{ await refreshFromServer(); }catch(e){ /* 読み直せなくても、送信は済んでいる */ }
+      let t = j ? '送信しました。' : '送信の結果を確認できませんでした。「予定を確認する」で、登録の状況を確かめてください。';
+      if (pend.length) t += '\n' + new Set(pend.map(x => x.date)).size + '日分は「申込中」です。学童が確認して確定したら、LINEでお知らせします。';
+      if (rej.length) t += '\n\n次の日は、受け付けられませんでした:\n' + rej.map(x => '・' + mdw(x.date) + (selectedChildren.length > 1 ? ' ' + x.child + 'さん' : '') + '　' + x.reason).join('\n');
+      smsg.style.whiteSpace = 'pre-line';
+      smsg.textContent = t + (j ? '\n\nトーク画面に戻ってください。' : '');
+    }catch(err){
+      smsg.textContent = '送信に失敗しました。もう一度お試しください。';
+      document.getElementById('submitBtn').disabled = false;
+    }
+    return;
+  }
   try{
     await fetch(GAS_URL, {
       method:'POST',
