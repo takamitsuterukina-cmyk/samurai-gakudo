@@ -134,10 +134,13 @@
   #childpick .pickmsg{font-size:16px;color:var(--amber);margin-top:6px;line-height:1.5;}
   .viewcard .who{font-size:18.5px;color:var(--accent);font-weight:700;margin-top:4px;}
 
-  .hint .clear{display:inline-block;margin-left:8px;border:none;background:none;color:var(--accent);font-size:18.5px;font-weight:700;padding:2px 0;text-decoration:underline;}
   .detail-row.end{margin-top:8px;}
   .hint{font-size:16px;color:var(--ink-soft);margin:4px 0 0 120px;line-height:1.4;}
 
+  #submitGuide .sh{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;}
+  #submitGuide .sh .sn{display:inline-block;margin-right:6px;color:var(--accent);}
+  #submitGuide{display:none;margin:18px 16px 0;}
+  #submitGuide .snote{margin-top:6px;font-size:16px;line-height:1.6;color:var(--ink-soft);}
   .stephead,#detail-hint{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;}
   .stephead{margin:14px 16px 0;}
   #detail-hint{display:none;margin:16px 16px 0;}
@@ -198,10 +201,12 @@
   .kidsrow .kid{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:18.5px;color:var(--ink-soft);}
   .kidsrow .kid.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   .kidblock{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;}
-  .kidhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:19.7px;}
-  .kidtog{border:none;background:none;color:var(--accent);font-size:18.5px;font-weight:700;text-decoration:underline;padding:4px 0;}
-  .kidtog.undoskip{border:1px solid var(--accent);border-radius:8px;padding:5px 12px;text-decoration:none;font-size:18.5px;}
-  .splitbtn,.unsplit{display:block;margin:10px 0 0;border:none;background:none;color:var(--accent);font-size:18.5px;font-weight:700;text-decoration:underline;padding:4px 0;}
+  .kidhead{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:19.7px;}
+  .kidhead b{white-space:nowrap;}
+  .kidtog{border:none;background:none;color:var(--accent);font-size:16px;font-weight:700;text-decoration:underline;padding:4px 0;white-space:nowrap;}
+  .kidtog.undoskip{border:1px solid var(--accent);border-radius:8px;padding:5px 12px;text-decoration:none;font-size:16px;}
+  .splitbtn,.unsplit{display:block;margin:10px 0 0;border:none;background:none;color:var(--accent);font-size:16px;font-weight:700;text-decoration:underline;padding:4px 0;text-align:left;}
+  .splitbtn{white-space:nowrap;}
   #empty-hint{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:18.5px;}
 
   .switchlink{margin-top:10px;}
@@ -260,7 +265,7 @@
 
   <div id="inputPane">
     <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">兄弟で内容がちがう日は、日にちを選んだあとのカードで変えられます。</div><div class="pickmsg" id="pickmsg"></div></div>
-    <div class="stephead"><span class="sn">①</span>日にちをタップ<span class="ss">（日ごとの詳細はスクロールして②で登録）</span></div>
+    <div class="stephead"><span class="sn">①</span>日にちをタップして選択<span class="ss">（選択後②で詳細登録）</span></div>
     <div class="monthbar">
       <button id="prevMonth">‹</button>
       <div class="label" id="monthLabel"></div>
@@ -296,7 +301,8 @@
     </details>
     <div id="breakTools"></div>
     <div id="list"></div>
-    <div id="verlabel">画面の版: 11/4-y</div>
+    <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
+    <div id="verlabel">画面の版: 11/4-z</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -438,8 +444,8 @@ function applyUsualToNewDays(){
 // お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
 function defaultTimesFor(pickup){
   saveUsualT(); // 入力欄の今の値を、そのまま使う
-  if(pickup) return { startTime: usualT.pk.start || (childInfo && childInfo.defaultTime) || '15:00', endTime: usualT.pk.end || '' };
-  return { startTime: usualT.np.start || '', endTime: usualT.np.end || '' };
+  if(pickup) return { startTime: usualT.pk.start || (childInfo && childInfo.defaultTime) || '15:00', endTime: usualT.pk.end || '18:00' };
+  return { startTime: usualT.np.start || '', endTime: usualT.np.end || '18:00' };
 }
 let holidaySet = new Set(); // 'YYYY-MM-DD' -> 祝日名(内閣府準拠の公開データ)
 
@@ -524,19 +530,19 @@ function renderCapNote(){
       renderMonth();
     });
   }
-  // カレンダーの下: 色の意味と、日にちの下の目印の見方
+  // カレンダーの下: 色の意味・目印の見方・登録の締切
   if(!bs.length){ note.style.display = 'none'; note.innerHTML = ''; return; }
-  const names = bs.map(b => b.label).join('・');
-  let html = '<div><span class="brkchip">色つき</span>の日が、<b>' + names + '</b>の期間です。</div>';
-  let detail;
-  if(selectedChildren.some(c => kindOfChild(c) !== 'monthly')){
-    detail = '日にちの下の ◎=空きあり、残N=のこりN席、満席=受付終了。人数に限りがあるため、申し込みは学童が確認してから確定します（確定したらLINEでお知らせします）。午前のみのご利用は、受け付けていません。' +
-      bs.map(b => '<br>' + b.label + '：' + (b.openFrom ? mdw(b.openFrom) + 'から受付' : '') + '／締切は利用日の' + (b.deadlineDays || 0) + '日前まで').join('');
-  }else{
-    detail = '日にちの下の ◎=空きあり、残N=のこりN席、満席=申し込めません。午前のみのご利用は、受け付けていません。1日は、午前の料金が別にかかります。';
+  const anySpot = selectedChildren.some(c => kindOfChild(c) !== 'monthly');
+  const lines = ['<span class="brkchip">色つき</span>の日が、長期休みの期間です。'];
+  const nb = t => '<span style="display:inline-block;">' + t + '</span>'; // 言葉の途中で改行されないよう、まとまりごとに折り返す
+  const legend = '日にちの下の ' + nb('◎=空きあり、') + nb('残N=のこりN席、') + nb('満席=' + (anySpot ? '受付終了' : '申し込めません') + '。');
+  const dls = Array.from(new Set(bs.map(b => b.deadlineDays || 0)));
+  let dl = '';
+  if(anySpot){
+    dl = dls.length === 1 ? nb('長期休みの登録締切は') + nb('利用日の' + dls[0] + '日前まで。')
+      : bs.map(b => b.label + 'の登録締切は利用日の' + (b.deadlineDays || 0) + '日前まで。').join('<br>');
   }
-  html += '<div class="capdetail">' + detail + '</div>';
-  note.innerHTML = html;
+  note.innerHTML = '<div>' + lines[0] + '</div><div class="capdetail">' + legend + (dl ? '<br>' + dl : '') + '</div>';
   note.style.display = 'block';
 }
 /* サーバーから届いた1件の予定を、画面で扱う形にする。長期休みの平日で時間帯が空なら、午後(ふだんの放課後)として扱う。 */
@@ -923,6 +929,17 @@ function renderList(){
   const keys = selKeys.concat(Object.keys(cancelledDays).filter(k => k.startsWith(monthPrefix) && !selected[k])).sort();
   document.getElementById('empty-hint').style.display = keys.length ? 'none' : 'block';
   document.getElementById('detail-hint').style.display = selKeys.length ? 'block' : 'none';
+  document.getElementById('submitGuide').style.display = selKeys.length ? 'block' : 'none';
+  {
+    const parts = [];
+    if (cap && Object.keys(selected).some(k => isBreakDay(k))) {
+      parts.push(selectedChildren.some(c => kindOfChild(c) !== 'monthly')
+        ? '人数に限りがあるため、申し込みは学童が確認してから確定します（確定したらLINEでお知らせします）。'
+        : '人数に限りがあるため、満席の日は申し込めません。');
+      parts.push('午前のみのご利用は、受け付けていません。');
+    }
+    document.getElementById('submitNote').innerHTML = parts.join('<br>');
+  }
   document.getElementById('usualBox').style.display = selKeys.length ? 'block' : 'none'; // ②が出ている間だけ(日にちを選ぶ前は出さない)
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
@@ -961,7 +978,7 @@ function renderList(){
       // まとめて: 全員、同じ内容。お子さんごとに変えたい時だけ、下のボタンで分ける(お子さんを選んで外す操作は、なし)
       body = fieldsHtml(key, item, '') +
         '<button class="splitbtn" data-key="' + key + '">この日だけ、お子さんごとに内容を変える</button>' +
-        '<div class="hint" style="margin-top:0;">片方だけ時刻を変えたい日や、片方だけお休みの日は、こちらから。</div>';
+        '<div class="hint" style="margin:0;">片方だけ時刻を変えたい日や、片方だけお休みの日は、こちらから。</div>';
     } else {
       selectedChildren.forEach(n => { if (!ovr[key][n]) ovr[key][n] = { ...selected[key] }; }); // お休みでない子は、共通の内容を、その子の内容として持つ
       body = selectedChildren.map((n, i) => {
@@ -976,7 +993,7 @@ function renderList(){
     }
     const isPend = isExisting && selectedChildren.some(c => (pendingByChild[c] || {})[key]);
     const askNote = isBreakDay(key) && selectedChildren.some(c => kindOfChild(c) !== 'monthly')
-      ? '<div class="capnote2">' + (isPend ? '申込中です。学童が確認して確定したら、LINEでお知らせします。' : (isExisting ? '' : 'この日は、学童が確認してから確定します。確定したら、LINEでお知らせします。')) + '</div>' : '';
+      ? '<div class="capnote2">' + (isPend ? '申込中です。学童が確認して確定したら、LINEでお知らせします。' : '') + '</div>' : '';
     card.innerHTML = `
       <div class="cardhead">
         <div class="datelabel">${m}/${d}(${dow})${isPend ? '<span class="pend-tag">申込中(確認待ち)</span>' : (isExisting ? '<span class="existing-tag">登録済み</span>' : '')}</div>
@@ -1045,7 +1062,6 @@ function renderList(){
     };
     inp.addEventListener('input', upd); inp.addEventListener('change', upd);
   });
-  list.querySelectorAll('.clear').forEach(b => b.onclick = () => { itemAt(b).endTime = ''; renderList(); });
 }
 
 // 1日分の入力欄(お迎えの要否・場所・時刻)。c は、まとめての時は空、その子だけ別内容の時は、お子さんの番号。
@@ -1080,7 +1096,6 @@ function fieldsHtml(key, item, c){
         <label>帰りの時刻</label>
         <span class="tp etime"${at}></span>
       </div>
-      <div class="hint">早く帰る日などに入力してください。空欄なら、いつも通りです。<button class="clear"${at} style="display:${item.endTime ? 'inline-block' : 'none'}">帰りの時刻を空にする</button></div>
   `;
 }
 
