@@ -298,7 +298,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-b</div>
+    <div id="verlabel">画面の版: 11/5-c</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -740,7 +740,7 @@ async function loadSchedule(){
       const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
       const rs = reports.filter(r => r.date === date);
-      const use = r => '利用' + (r.slot && SLOT_LABELS[r.slot] ? '(' + SLOT_LABELS[r.slot] + ')' : '');
+      const use = r => '利用'; // 午後/1日の区分は内部の計算用。画面には出さない
       const detailOf = r => (r.pickup ? use(r) + '・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : use(r) + '・お迎えなし' + (r.startTime ? '・来所' + r.startTime : '')) + (r.endTime ? '・帰り' + r.endTime : '') + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
       // きょうだいで内容が同じなら1行にまとめる
       const groups = [];
@@ -820,8 +820,9 @@ function toggleDay(key){
       location: effectiveLoc(),
     }, defaultTimesFor(pk));
     // 長期休みの平日は、時間帯も選ぶ。まとめて設定してあればその値。月謝のお子さんだけの時は、ふだんどおり「午後」を初めから選んでおく
-    // 長期休みの平日は、時間帯のボタンはなく、来所・帰りの時刻で決まる。月謝のお子さんだけの時は、ふだんの放課後(午後)として13:00を初めから入れておく
-    if(isBreakDay(key) && !selected[key].startTime && selectedChildren.every(c => kindOfChild(c) === 'monthly')) selected[key].startTime = '13:00';
+    // 長期休みの平日は、時間帯のボタンはなく、来所の時刻で決まる(月謝のお子さんは14:00より前なら1日、以降は午後。地域・スタッフは常に1日)。
+    // 月謝のお子さんだけの時は、ふだんの放課後(午後)として14:00を初めから入れておく
+    if(isBreakDay(key) && !selected[key].startTime && selectedChildren.every(c => kindOfChild(c) === 'monthly')) selected[key].startTime = '14:00';
   }
   renderMonth();
 }
@@ -831,13 +832,15 @@ function finalItem(child, key){
   const o = ovr[key] && ovr[key][child];
   if (o && o.skip) return null;
   const it = o || selected[key] || null;
-  if (it && isBreakDay(key)) return { ...it, slot: slotFromTimes(it) }; // 長期休みの平日は、時間帯のボタンは出さず、来所の時刻から決める
+  if (it && isBreakDay(key)) return { ...it, slot: slotFromTimes(it, child) }; // 長期休みの平日は、時間帯のボタンは出さず、来所の時刻から決める(内部の計算用)
   return it;
 }
-/* 来所の時刻が12時より前なら「1日」(午前をふくむ)、12時以降なら「午後」。時刻が空の時は、今の値のまま */
-function slotFromTimes(it){
+/* 午後/1日の区分(内部の計算用。画面には出さない)。
+   地域・スタッフのお子さん: 何時に来ても1日。月謝のお子さん: 来所が14:00より前なら1日、14:00以降なら午後(時刻が空の時は、今の値のまま)。 */
+function slotFromTimes(it, child){
+  if (kindOfChild(child) !== 'monthly') return 'all';
   if (!it.startTime) return it.slot || '';
-  return it.startTime < '12:00' ? 'all' : 'pm';
+  return it.startTime < '14:00' ? 'all' : 'pm';
 }
 function finalMap(child){
   const m = {};
@@ -1071,7 +1074,7 @@ function fieldsHtml(key, item, c){
         <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
         <span class="tp time"${at}></span>
       </div>
-      ${isBreakDay(key) && !item.startTime ? '<div class="hint slotwarn">来所の時刻を選んでください。</div>' : ''}
+      ${isBreakDay(key) && !item.startTime && (c === '' ? selectedChildren.some(n => kindOfChild(n) === 'monthly') : kindOfChild(selectedChildren[Number(c)]) === 'monthly') ? '<div class="hint slotwarn">来所の時刻を選んでください。</div>' : ''}
       <div class="detail-row end">
         <label>帰りの時刻</label>
         <span class="tp etime"${at}></span>
@@ -1104,7 +1107,7 @@ function planGroups(){
     const m = finalMap(c);
     const days = Object.keys(m).sort().map(k => ({ date: k, ...m[k] }));
     const deletes = Object.keys(reportsByChild[c] || {}).filter(k => !m[k]).sort();
-    const sig = JSON.stringify([days, deletes]);
+    const sig = JSON.stringify([days.map(({ slot, ...rest }) => rest), deletes]); // 午後/1日の区分は画面に出さないので、グループ分けには使わない
     const g = groups.find(x => x.sig === sig);
     if (g) g.children.push(c); else groups.push({ sig, children: [c], days, deletes });
   });
@@ -1121,8 +1124,8 @@ document.getElementById('submitBtn').onclick = () => {
     return;
   }
   const md2 = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
-  const brkItems = (pred) => Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && pred(it); })).sort();
-  const noStart = brkItems(it => !it.startTime);
+  const brkItems = (pred) => Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && pred(it, c); })).sort();
+  const noStart = brkItems((it, c) => !it.startTime && kindOfChild(c) === 'monthly'); // 来所の時刻が必要なのは、午後/1日を時刻で分ける月謝のお子さんだけ
   if (noStart.length) {
     document.getElementById('submitmsg').textContent = '来所の時刻が入っていない日があります（' + noStart.map(md2).join('、') + '）。選んでください。';
     return;
@@ -1134,7 +1137,7 @@ document.getElementById('submitBtn').onclick = () => {
   }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
-    const detail = (it.slot && SLOT_LABELS[it.slot] ? '【' + SLOT_LABELS[it.slot] + '】' : '') + (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
+    const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   document.getElementById('reviewSub').textContent =
