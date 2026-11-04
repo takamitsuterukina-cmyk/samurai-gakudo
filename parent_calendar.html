@@ -299,7 +299,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-h</div>
+    <div id="verlabel">画面の版: 11/5-i</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -986,8 +986,7 @@ function renderList(){
     } else if (!split) {
       // まとめて: 全員、同じ内容。お子さんごとに変えたい時だけ、下のボタンで分ける(お子さんを選んで外す操作は、なし)
       body = fieldsHtml(key, item, '') +
-        '<button class="splitbtn" data-key="' + key + '">この日だけ、お子さんごとに内容を変える</button>' +
-        '<div class="hint" style="margin:0;">片方だけ時刻を変えたい日や、片方だけお休みの日は、こちらから。</div>';
+        '<button class="splitbtn" data-key="' + key + '">この日だけ、お子さんごとに内容を変える</button>';
     } else {
       selectedChildren.forEach(n => { if (!ovr[key][n]) ovr[key][n] = { ...selected[key] }; }); // お休みでない子は、共通の内容を、その子の内容として持つ
       body = selectedChildren.map((n, i) => {
