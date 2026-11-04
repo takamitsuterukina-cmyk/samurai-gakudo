@@ -298,7 +298,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/4-ac</div>
+    <div id="verlabel">画面の版: 11/5-a</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -339,6 +339,7 @@ let cap = null;               // 長期休み(冬休みなど)の設定と空き
 let pendingByChild = {};      // { お子さん名: { 'YYYY-MM-DD': true } } 学童の確認待ち(申込中)の日
 let slotDefault = '';         // 長期休みの日を新しく選んだ時の、時間帯の初めの値(am/pm/all)
 const SLOT_LABELS = { am:'午前', pm:'午後', all:'1日' };
+function slotStart(s){ return s === 'all' ? '08:00' : (s === 'pm' ? '13:00' : ''); } // 長期休みの料金表どおり: 1日=8:00〜、午後=13:00〜
 // 時刻の選択肢は、8:00〜18:00の間(5分きざみ)に限る。すでに入っている値がその外にある時は、消えないよう、その値も選択肢に加える。
 const TIME_CHOICES = (() => { const a = []; for (let m = 8 * 60; m <= 18 * 60; m += 5) a.push(pad2(Math.floor(m / 60)) + ':' + pad2(m % 60)); return a; })();
 function pad2(n){ return String(n).padStart(2, '0'); }
@@ -424,14 +425,14 @@ function applyUsualToNewDays(){
   saveUsualT();
   const keys = Object.keys(selected).filter(k => !originalReports[k]);
   if (!keys.length) return;
-  const applyTo = it => {
+  const applyTo = (it, brk) => {
     const u = it.pickup ? usualT.pk : usualT.np;
-    if (u.start) it.startTime = u.start;
+    if (u.start && !brk) it.startTime = u.start; // 長期休みの平日の来所の時刻は、時間帯(1日・午後)で決まるので、いつもの時間では変えない
     if (u.end) it.endTime = u.end;
   };
   keys.forEach(k => {
-    applyTo(selected[k]);
-    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n]); });
+    applyTo(selected[k], isBreakDay(k));
+    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], isBreakDay(k)); });
   });
   renderList();
 }
@@ -819,7 +820,10 @@ function toggleDay(key){
       location: effectiveLoc(),
     }, defaultTimesFor(pk));
     // 長期休みの平日は、時間帯も選ぶ。まとめて設定してあればその値。月謝のお子さんだけの時は、ふだんどおり「午後」を初めから選んでおく
-    if(isBreakDay(key)) selected[key].slot = slotDefault || (selectedChildren.every(c => kindOfChild(c) === 'monthly') ? 'pm' : '');
+    if(isBreakDay(key)){
+      selected[key].slot = slotDefault || (selectedChildren.every(c => kindOfChild(c) === 'monthly') ? 'pm' : '');
+      selected[key].startTime = slotStart(selected[key].slot); // 来所の時刻は、時間帯に合わせる(1日=8:00、午後=13:00)
+    }
   }
   renderMonth();
 }
@@ -1017,7 +1021,10 @@ function renderList(){
   });
   list.querySelectorAll('.loc').forEach(b => b.onclick = () => { itemAt(b).location = b.dataset.v; renderList(); });
   list.querySelectorAll('.slot').forEach(b => b.onclick = () => {
-    itemAt(b).slot = b.dataset.v;
+    const it = itemAt(b), prev = it.slot;
+    it.slot = b.dataset.v;
+    // 来所の時刻が空、または前の時間帯の初めの時刻のままなら、選んだ時間帯の時刻に合わせる(自分で変えた時刻は、そのまま)
+    if(!it.startTime || it.startTime === slotStart(prev)) it.startTime = slotStart(it.slot);
     slotDefault = b.dataset.v; try{ localStorage.setItem('samuraiSlot_' + userId, slotDefault); }catch(e){}
     renderList();
   });
