@@ -320,8 +320,8 @@
       </div>
     </details>
     <div id="list"></div>
-    <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zn</div>
+    <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="sendSummary" style="color:var(--ink);"></div><div class="snote" id="submitNote"></div></div>
+    <div id="verlabel">画面の版: 11/5-zo</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -987,6 +987,40 @@ function sameTag(c, date){
   const label = (pendingByChild[c] || {})[date] ? '申込中' : (isBreakDay(date) && kindOfChild(c) !== 'monthly' ? '確定済み' : '登録済み');
   return ' <span style="color:var(--ink-soft);white-space:nowrap;">（' + label + '・変更なし）</span>';
 }
+/* 今回の送信で、日ごとに何が起きるか: new=新しい日 / changed=変更した日 / cancel=キャンセル / same=登録済みでそのまま(送らない) / none=関係なし */
+function dayStatus(key){
+  let st = 'none';
+  const rank = { none: 0, same: 1, cancel: 2, changed: 3, new: 4 };
+  const up = v => { if (rank[v] > rank[st]) st = v; };
+  selectedChildren.forEach(c => {
+    const ex = (reportsByChild[c] || {})[key];
+    const fin = finalItem(c, key);
+    if (fin && !ex) up('new');
+    else if (fin && ex) up(sameItem(ex, fin) ? 'same' : 'changed');
+    else if (!fin && ex) up('cancel');
+  });
+  return st;
+}
+/* 「今回送るのは…」の案内と、各日のカードの「変更なし」の表示を、いまの内容に合わせる(時刻を変えた時も呼ぶ) */
+function updateSendSummary(){
+  const el = document.getElementById('sendSummary');
+  const dates = new Set(Object.keys(selected).concat(Object.keys(cancelledDays)));
+  selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => dates.add(k)));
+  const n = { new: 0, changed: 0, cancel: 0, same: 0 };
+  dates.forEach(k => { const st = dayStatus(k); if (n[st] !== undefined) n[st]++; });
+  document.querySelectorAll('#list .samenote').forEach(e => { e.style.display = dayStatus(e.dataset.key) === 'same' ? 'block' : 'none'; });
+  if (!el) return;
+  const nb = t => '<span style="white-space:nowrap;">' + t + '</span>';
+  const parts = [];
+  if (n.new) parts.push(nb('新しい日 ' + n.new + '日'));
+  if (n.changed) parts.push(nb('変更した日 ' + n.changed + '日'));
+  if (n.cancel) parts.push(nb('キャンセル ' + n.cancel + '日'));
+  let h = parts.length
+    ? '<b>' + nb('今回送るのは、') + parts.join('・') + nb('です。') + '</b>'
+    : '<b>' + nb('変更はありません。') + '</b>';
+  if (n.same) h += '<br>' + nb('登録済みで、そのままの日（' + n.same + '日）は、') + nb('送りません。') + nb('そのまま残ります。');
+  el.innerHTML = h;
+}
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
   return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {}));
@@ -1156,6 +1190,7 @@ function renderList(){
         <div class="datelabel">${m}/${d}(${dow})${isPend ? '<span class="pend-tag">申込中(確認待ち)</span>' : (isExisting ? '<span class="existing-tag">登録済み</span>' : '')}</div>
         <button class="remove" data-key="${key}">この日をキャンセル</button>
       </div>
+      <div class="samenote" data-key="${key}" style="display:none;margin:0 0 8px;color:var(--ink-soft);font-weight:700;">変更なし。この日は、送りません（そのまま残ります）。</div>
       ${body}${askNote}
     `;
     list.appendChild(card);
@@ -1215,7 +1250,8 @@ function renderList(){
   });
   // 時刻の回転ロールを指で回している途中で、カードを作り直すと、ロールが閉じて「決定」扱いになってしまう。
   // そのため、時刻を変えても、画面は作り直さない(中身だけ更新する)。ロールは、✓などで本人が閉じるまで開いたままになる。
-  const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; };
+  const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; updateSendSummary(); };
+  updateSendSummary();
   list.querySelectorAll('.time').forEach(inp => {
     const upd = () => { itemAt(inp).startTime = inp.value; syncLinked(inp, '.time'); refreshSubmit(); };
     inp.addEventListener('input', upd); inp.addEventListener('change', upd);
