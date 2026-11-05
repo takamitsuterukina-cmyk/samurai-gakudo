@@ -192,6 +192,8 @@
   #regPane .lead{font-size:18.5px;color:var(--ink-soft);text-align:center;line-height:1.6;margin-bottom:16px;}
   #regPane .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
   #regPane .box h3{font-size:19.7px;margin:0 0 8px;}
+  #regPane .invn{font-size:22.2px;font-weight:700;padding:12px 10px;margin-bottom:8px;background:var(--paper);border:1px solid var(--line);border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #regPane .go:disabled{background:#B9C4B4;}
   #regPane .namerow{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
   #regPane .namerow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:22.2px;background:var(--paper);}
   #regPane .namerow button.ph{visibility:hidden;}
@@ -276,6 +278,24 @@
 
 <div id="regPane">
   <h2>お子さんの登録</h2>
+  <div class="err" id="regNotice" style="display:none;margin:0 0 12px;"></div>
+  <div id="regInvite" style="display:none">
+    <div class="lead">下のお名前で、<br>登録します。</div>
+    <div class="box">
+      <h3>お子さんのお名前</h3>
+      <div id="invNames"></div>
+    </div>
+    <div class="box" id="invFriend" style="display:none">
+      <h3>先に、友だち追加をお願いします</h3>
+      <div class="hint2" style="font-size:19.7px;line-height:1.6;margin:0 0 10px;">登録のお知らせを、<br>LINEでお届けするためです。</div>
+      <button type="button" class="addbtn" id="invAddFriend">友だち追加する</button>
+      <button type="button" class="addbtn" id="invFriendDone" style="margin-top:8px;">追加しました</button>
+    </div>
+    <button class="go" id="invGo">登録する</button>
+    <div class="err" id="invErr"></div>
+    <div id="invWait" style="display:none;font-size:18.5px;color:var(--ink-soft);line-height:1.6;margin-top:10px;text-align:center;">登録しています。<br>そのままお待ちください。</div>
+  </div>
+  <div id="regManual">
   <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。<br>お迎えの設定や時刻は、<br>このあと、予定の登録画面で<br>決められます。</div>
   <div class="box">
     <h3>① お子さんのお名前(フルネーム)</h3>
@@ -284,6 +304,7 @@
   </div>
   <button class="go" id="regSubmit">登録する</button>
   <div class="err" id="regErr"></div>
+  </div>
 </div>
 <div id="regReview"><div class="sheet">
   <h2>この内容で登録します。よろしいですか？</h2>
@@ -350,7 +371,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzg</div>
+    <div id="verlabel">画面の版: 11/5-zzh</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -784,6 +805,8 @@ async function boot(){
     if(!initData.info.registered){
       try{ localStorage.removeItem(cacheKey); }catch(e){}
       document.getElementById('app').style.display = 'none';
+      const tk = inviteToken();
+      if(tk && await showInvite(tk)) return; // 招待リンクで開いた時は、名簿の名前が入った登録画面
       showRegForm(); // まだ登録していない人には、登録フォームを出す(最初の1回だけ)
       return;
     }
@@ -803,6 +826,80 @@ async function boot(){
   }catch(err){
     document.getElementById('status').textContent = '読み込みに失敗しました。時間を置いてもう一度開いてください。';
   }
+}
+
+// ===== 招待リンクでの登録(学童が名簿の名前を先に登録した家庭に渡すリンク) =====
+function inviteToken(){
+  const p = new URLSearchParams(location.search);
+  let t = p.get('i');
+  if(!t){
+    const st = p.get('liff.state'); // LINEのアプリ内で開いた時は、リンクの内容が liff.state に入って来ることがある
+    if(st){ try{ t = new URLSearchParams(st.replace(/^[^?]*\?/, '')).get('i'); }catch(e){} }
+  }
+  return /^[0-9a-f]{20}$/.test(t || '') ? t : '';
+}
+async function showInvite(token){
+  let info = null;
+  try{
+    const res = await fetch(GAS_DIRECT_URL + '?action=inviteInfo&token=' + encodeURIComponent(token) + '&userId=' + encodeURIComponent(userId));
+    info = await res.json();
+  }catch(e){ info = null; }
+  document.getElementById('status').style.display = 'none';
+  document.getElementById('regPane').style.display = 'block';
+  if(!info || !info.ok || !info.names || !info.names.length){
+    // 使われているか、無効なリンク。名前を入れて登録する画面に切り替え、理由を伝える
+    const n = document.getElementById('regNotice');
+    n.textContent = (info && info.error === 'used') ? 'このリンクは、すでに使われています。お名前を入れて登録するか、施設にご連絡ください。' : (info ? 'このリンクは、使えません。お名前を入れて登録するか、施設にご連絡ください。' : '読み込めませんでした。時間を置いて、もう一度開いてください。');
+    n.style.display = 'block';
+    return false;
+  }
+  document.getElementById('regManual').style.display = 'none';
+  document.getElementById('regInvite').style.display = 'block';
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  document.getElementById('invNames').innerHTML = info.names.map(n => '<div class="invn">' + esc(n) + '</div>').join('');
+  const goBtn = document.getElementById('invGo');
+  // 友だちになっていない時は、先に友だち追加をしてもらう(登録のお知らせが届かないため)。確認できない時は、そのまま進める
+  const checkFriend = async () => {
+    try{ const f = await liff.getFriendship(); return !!f.friendFlag; }catch(e){ return true; }
+  };
+  const applyFriend = (ok) => {
+    document.getElementById('invFriend').style.display = ok ? 'none' : 'block';
+    goBtn.disabled = !ok;
+  };
+  applyFriend(await checkFriend());
+  document.getElementById('invAddFriend').onclick = () => {
+    const id = info.oaId || '';
+    if(!id){ document.getElementById('invErr').textContent = 'LINEのトークに戻って、このアカウントを友だち追加してください。'; return; }
+    const url = 'https://line.me/R/ti/p/' + encodeURIComponent(id);
+    try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
+  };
+  document.getElementById('invFriendDone').onclick = async () => {
+    const ok = await checkFriend();
+    applyFriend(ok);
+    document.getElementById('invErr').textContent = ok ? '' : 'まだ、友だち追加が確認できません。追加してから、もう一度押してください。';
+  };
+  goBtn.onclick = async () => {
+    const err = document.getElementById('invErr'); err.textContent = '';
+    goBtn.disabled = true; goBtn.textContent = '登録中...';
+    document.getElementById('invWait').style.display = 'block';
+    let j = null;
+    try{
+      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'registerForm', userId, token }) });
+      j = await res.json();
+    }catch(e){ j = null; }
+    if (j && (j.ok || j.error === 'already')) { location.reload(); return; }
+    if (!j) { // 結果が読み取れなくても、実際には登録できていることがあるので、サーバーに確かめる
+      try{
+        const r2 = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
+        const d2 = await r2.json();
+        if (d2 && d2.info && d2.info.registered) { location.reload(); return; }
+      }catch(e){}
+    }
+    document.getElementById('invWait').style.display = 'none';
+    err.textContent = (j && j.message) || '登録できませんでした。もう一度お試しください。';
+    goBtn.disabled = false; goBtn.textContent = '登録する';
+  };
+  return true;
 }
 
 // ===== 新規登録フォーム =====
