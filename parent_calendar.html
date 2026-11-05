@@ -249,6 +249,8 @@
   #done .note{margin-top:12px;font-size:18.5px;line-height:1.7;color:var(--ink-soft);}
   #done .note span{white-space:nowrap;}
   #done .back{display:block;width:100%;margin-top:14px;padding:12px 0;border-radius:10px;font-size:19.7px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+  #sendSummary{display:none;text-align:center;font-size:17px;line-height:1.6;color:var(--ink);margin-bottom:8px;}
+  #sendSummary .sub2{color:var(--ink-soft);}
   #submitmsg{text-align:center;font-size:18.5px;color:var(--ink-soft);margin-top:6px;}
 </style>
 </head>
@@ -320,8 +322,8 @@
       </div>
     </details>
     <div id="list"></div>
-    <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="sendSummary" style="color:var(--ink);"></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zo</div>
+    <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
+    <div id="verlabel">画面の版: 11/5-zp</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -341,6 +343,7 @@
   </div></div>
 
   <footer id="inputFooter">
+    <div id="sendSummary"></div>
     <button id="submitBtn" disabled>選択した日を送信する</button>
     <div id="submitmsg"></div>
   </footer>
@@ -1015,10 +1018,12 @@ function updateSendSummary(){
   if (n.new) parts.push(nb('新しい日 ' + n.new + '日'));
   if (n.changed) parts.push(nb('変更した日 ' + n.changed + '日'));
   if (n.cancel) parts.push(nb('キャンセル ' + n.cancel + '日'));
+  const any = parts.length + n.same > 0;
+  el.style.display = any ? 'block' : 'none';
   let h = parts.length
-    ? '<b>' + nb('今回送るのは、') + parts.join('・') + nb('です。') + '</b>'
+    ? '<b>' + nb('送るのは、') + parts.join('・') + nb('だけです。') + '</b>'
     : '<b>' + nb('変更はありません。') + '</b>';
-  if (n.same) h += '<br>' + nb('登録済みで、そのままの日（' + n.same + '日）は、') + nb('送りません。') + nb('そのまま残ります。');
+  if (n.same) h += '<br><span class="sub2">' + nb('登録済みの' + n.same + '日は、') + nb('そのままです。') + nb('（送りません）') + '</span>';
   el.innerHTML = h;
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
