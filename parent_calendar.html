@@ -234,6 +234,18 @@
     background:var(--accent);color:#fff;font-size:20.9px;font-weight:700;
   }
   footer button:disabled{background:#B9C4B4;}
+  #done{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
+  #done .sheet{background:var(--surface);width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
+  #done h2{font-size:24px;margin:0 0 12px;color:var(--accent);}
+  #done .box{border-radius:12px;padding:12px 14px;margin-top:10px;font-size:19.7px;line-height:1.6;}
+  #done .box b{display:block;margin-bottom:2px;}
+  #done .box.close{background:var(--accent);color:#fff;font-size:20.9px;}
+  #done .box.pend{background:#FFF4E0;border:1px solid #E8C48A;}
+  #done .box.rej{background:#FDECEC;border:1px solid #E5A3A3;color:#8a2a2a;}
+  #done .box.rej .ln{margin-top:4px;}
+  #done .note{margin-top:12px;font-size:18.5px;line-height:1.7;color:var(--ink-soft);}
+  #done .note span{white-space:nowrap;}
+  #done .back{display:block;width:100%;margin-top:14px;padding:12px 0;border-radius:10px;font-size:19.7px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #submitmsg{text-align:center;font-size:18.5px;color:var(--ink-soft);margin-top:6px;}
 </style>
 </head>
@@ -306,7 +318,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-ze</div>
+    <div id="verlabel">画面の版: 11/5-zf</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -318,6 +330,12 @@
     <div class="sub" id="reviewSub"></div>
     <div id="reviewBody"></div>
     <div class="btns"><button id="reviewBack">戻って直す</button><button class="go" id="reviewGo">この内容で送信する</button></div>
+  </div></div>
+
+  <div id="done"><div class="sheet">
+    <h2>✓ 送信しました</h2>
+    <div id="doneBody"></div>
+    <button class="back" id="doneBack">この画面にもどる</button>
   </div></div>
 
   <footer id="inputFooter">
@@ -1329,6 +1347,28 @@ document.getElementById('reviewGo').onclick = () => {
   doSubmit();
 };
 
+// 送信が終わった時の案内(ひと枠にまとめて見せる)。
+// info: { unknown: 結果を読み取れなかった, pend: 申込中の日数, rej: [{date, child, reason}], nCancel: キャンセルした日数 }
+function showDone(info){
+  const nb = t => '<span>' + t + '</span>';
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+  let h = '';
+  if (info.unknown) {
+    h += '<div class="box rej"><b>送信の結果を確認できませんでした。</b>メニューの「予定を確認する」で、登録の状況を確かめてください。</div>';
+  } else {
+    h += '<div class="box close">右上の ×（バツ）を押して、<br>トーク画面に戻って下さい。</div>';
+    if (info.pend) h += '<div class="box pend"><b>' + info.pend + '日分は「申込中」です。</b>学童が確認して確定したら、LINEでお知らせします。</div>';
+    if (info.nCancel) h += '<div class="box pend"><b>' + info.nCancel + '日分のキャンセルを、受け付けました。</b></div>';
+    if (info.rej && info.rej.length) h += '<div class="box rej"><b>次の日は、受け付けられませんでした。</b>' +
+      info.rej.map(x => '<div class="ln">・' + mdw(x.date) + (selectedChildren.length > 1 ? ' ' + esc(x.child) + 'さん' : '') + '　' + esc(x.reason) + '</div>').join('') + '</div>';
+    h += '<div class="note">' + nb('申し込みの状況は、') + nb('メニューの「予定を確認する」で') + nb('見られます。') + '<br>' +
+      nb('※諸事情でお断りする場合も、') + nb('LINEでお知らせします。') + '</div>';
+  }
+  document.getElementById('doneBody').innerHTML = h;
+  document.getElementById('done').style.display = 'flex';
+}
+document.getElementById('doneBack').onclick = () => { document.getElementById('done').style.display = 'none'; };
+
 async function doSubmit(){
   // お子さんごとの内容(まとめて登録でも、その日だけお休み・別内容の子は、その内容で)
   const perChild = {};
@@ -1348,11 +1388,8 @@ async function doSubmit(){
       if (j && j.ok === false) throw new Error('ng');
       const pend = (j && j.pending) || [], rej = (j && j.rejected) || [];
       try{ await refreshFromServer(); }catch(e){ /* 読み直せなくても、送信は済んでいる */ }
-      let t = j ? '送信しました。右上×を押してトーク画面に戻って下さい。' : '送信の結果を確認できませんでした。「予定を確認する」で、登録の状況を確かめてください。';
-      if (pend.length) t += '\n' + new Set(pend.map(x => x.date)).size + '日分は「申込中」です。学童が確認して確定したら、LINEでお知らせします。';
-      if (rej.length) t += '\n\n次の日は、受け付けられませんでした:\n' + rej.map(x => '・' + mdw(x.date) + (selectedChildren.length > 1 ? ' ' + x.child + 'さん' : '') + '　' + x.reason).join('\n');
-      smsg.style.whiteSpace = 'pre-line';
-      smsg.textContent = t;
+      smsg.textContent = '';
+      showDone({ unknown: !j, pend: new Set(pend.map(x => x.date)).size, rej, nCancel: 0 });
     }catch(err){
       smsg.textContent = '送信に失敗しました。もう一度お試しください。';
       document.getElementById('submitBtn').disabled = false;
@@ -1366,8 +1403,8 @@ async function doSubmit(){
       body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }),
     });
     const nCancel = Object.keys(cancelledDays).length;
-    document.getElementById('submitmsg').style.whiteSpace = 'pre-line';
-    document.getElementById('submitmsg').textContent ='送信しました。右上×を押してトーク画面に戻って下さい。' + (nCancel ? '\n' + nCancel + '日分のキャンセルも、受け付けました。' : '');
+    document.getElementById('submitmsg').textContent = '';
+    showDone({ nCancel });
     selectedChildren.forEach(c => {
       reportsByChild[c] = {};
       perChild[c].days.forEach(it => { const { date, ...rest } = it; reportsByChild[c][date] = rest; });
