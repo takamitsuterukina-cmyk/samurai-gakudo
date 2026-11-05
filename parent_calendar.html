@@ -323,7 +323,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zs</div>
+    <div id="verlabel">画面の版: 11/5-zt</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1489,6 +1489,16 @@ async function doSubmit(){
     document.getElementById('submitBtn').disabled = false;
   }
 }
+
+// 画面下に固定した送信ボタンの高さ(案内の文が増えると高くなる)に合わせて、ページの下の余白を取る。
+// 余白が足りないと、いちばん下の案内文が、ボタンの裏に隠れて、スクロールしても見えなくなる。
+(function(){
+  const f = document.getElementById('inputFooter');
+  const apply = () => { document.body.style.paddingBottom = (f.style.display === 'none' ? 24 : f.offsetHeight + 28) + 'px'; };
+  if (window.ResizeObserver) new ResizeObserver(apply).observe(f);
+  window.addEventListener('resize', apply);
+  apply();
+})();
 
 boot();
 </script>
