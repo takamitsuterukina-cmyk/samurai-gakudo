@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-w</div>
+    <div id="verlabel">画面の版: 11/5-x</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1071,21 +1071,14 @@ function renderList(){
       return;
     }
     const isExisting = !!originalReports[key];
+    // まとめて選んだ時は、最初から、お子さんごとの入力欄を並べる(それぞれ別々に直せる。初めは、同じ内容が入っている)
+    if (multi && !isSplit(key)) { ovr[key] = {}; selectedChildren.forEach(n => { ovr[key][n] = { ...selected[key] }; }); }
     const o = ovr[key] || {};
     const split = multi && isSplit(key);
     const allSkip = multi && selectedChildren.every(n => o[n] && o[n].skip);
     let body;
     if (!multi) {
       body = fieldsHtml(key, item, '');
-    } else if (!split) {
-      // まとめて: お子さんごとの入力欄を、最初から全員分、並べて見せる(1人分に見えて、不安にならないように)。
-      // 入力は連動していて、どれか1人に入れると、全員に同じ内容が入る。お子さんごとに変えたい時だけ、下のボタンで別々にする。
-      body = selectedChildren.map((n, i) =>
-        '<div class="kidblock"><div class="kidhead"><b>' + n + 'さん</b>' +
-        '<button class="kidtog" data-key="' + key + '" data-n="' + i + '">この日は、お休みにする</button></div>' +
-        fieldsHtml(key, item, String(i)) + '</div>').join('') +
-        '<div class="hint" style="margin:8px 0 0;">入力は、全員に同じ内容が入ります。</div>' +
-        '<button class="splitbtn" data-key="' + key + '">この日だけ、お子さんごとに内容を変える</button>';
     } else {
       selectedChildren.forEach(n => { if (!ovr[key][n]) ovr[key][n] = { ...selected[key] }; }); // お休みでない子は、共通の内容を、その子の内容として持つ
       body = selectedChildren.map((n, i) => {
@@ -1100,7 +1093,7 @@ function renderList(){
               // もともと、この日は登録していない(ほかのお子さんだけ登録済み)。キャンセルではない
               : '<div style="margin-bottom:6px;font-weight:700;color:var(--ink-soft);">この日は、まだ登録していません。</div><button class="kidtog undoskip" data-key="' + key + '" data-n="' + i + '">' + n + 'さんも登録する</button>')
             : fieldsHtml(key, oo, String(i))) + '</div>';
-      }).join('') + '<button class="unsplit" data-key="' + key + '">全員同じ内容に戻す(お休みも、もどします)</button>';
+      }).join('');
     }
     const isPend = isExisting && selectedChildren.some(c => (pendingByChild[c] || {})[key]);
     const askNote = isBreakDay(key) && selectedChildren.some(c => kindOfChild(c) !== 'monthly')
