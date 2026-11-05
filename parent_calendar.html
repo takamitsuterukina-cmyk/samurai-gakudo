@@ -223,6 +223,10 @@
   .viewcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
   .viewcard.past{opacity:0.5;}
   .viewcard .viewdetail{font-size:18.5px;color:var(--ink-soft);margin-top:4px;}
+  .viewcard .vtab{display:grid;grid-template-columns:var(--vnmw,9em) minmax(0,1fr);column-gap:12px;font-size:18.5px;line-height:1.6;margin-top:4px;}
+  .viewcard .vnm{color:var(--accent);font-weight:700;padding:2px 0;}
+  .viewcard .vtx{color:var(--ink);padding:2px 0;}
+  .viewcard .vtx.one{grid-column:1 / -1;}
   .loadingmsg{padding:40px 16px;text-align:center;color:var(--ink-soft);font-size:18.5px;}
 
   .card .existing-tag{font-size:16px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
@@ -323,7 +327,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zu</div>
+    <div id="verlabel">画面の版: 11/5-zv</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -819,24 +823,18 @@ async function loadSchedule(){
     listEl.innerHTML = '';
     const multi = children.length > 1;
     const dates = Array.from(new Set(reports.map(r => r.date))).sort();
+    listEl.style.setProperty('--vnmw', (Math.max(0, ...reports.map(r => String(r.childName || '').length)) + 1.3) + 'em');
     dates.forEach(date => {
       const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
-      const rs = reports.filter(r => r.date === date).sort((a, b) => (a.status === 'cancelled') - (b.status === 'cancelled')); // 利用する日を先に、キャンセルは後に
-      const use = r => '利用'; // 午後/1日の区分は内部の計算用。画面には出さない
-      const detailOf = r => r.status === 'cancelled'
-        ? '<span style="color:#a33;font-weight:700;">キャンセル済み</span>' // 取り消した日も、記録として残して見せる
-        : usageText(r, [r.childName], true) + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
-      // きょうだいで内容が同じなら1行にまとめる
-      const groups = [];
-      rs.forEach(r => {
-        const dt = detailOf(r);
-        const g = groups.find(x => x.dt === dt);
-        if (g) g.names.push(r.childName); else groups.push({ dt, names: [r.childName] });
-      });
-      const body = groups.map(g => multi
-        ? '<div class="who">' + g.names.join('・') + 'さん</div><div class="viewdetail">' + g.dt + '</div>'
-        : '<div class="viewdetail">' + g.dt + '</div>').join('');
+      // きょうだいは、登録した順に上下に並べる(内容が同じでも、まとめずに1人ずつ。離れないように)
+      const order = n => { const i = children.indexOf(n); return i < 0 ? 999 : i; };
+      const rs = reports.filter(r => r.date === date).sort((a, b) => order(a.childName) - order(b.childName));
+      const nbParts = t => t.split('・').map(x => '<span style="white-space:nowrap;">' + x + '</span>').join('・'); // 項目の途中では折り返さない
+      const cellOf = r => r.status === 'cancelled'
+        ? '<span style="color:#a33;font-weight:700;white-space:nowrap;">キャンセル済み</span>' // 取り消した日も、記録として残して見せる
+        : nbParts(tableText({ ...r, date }, r.childName)) + (r.status === 'pending' ? '<span class="pend-tag" style="white-space:nowrap;">申込中</span>' : '');
+      const body = '<div class="vtab">' + rs.map(r => (multi ? '<div class="vnm">' + r.childName + 'さん</div>' : '') + '<div class="vtx' + (multi ? '' : ' one') + '">' + cellOf(r) + '</div>').join('') + '</div>';
       const card = document.createElement('div');
       card.className = 'viewcard' + (date < today ? ' past' : '');
       card.innerHTML = '<div class="datelabel">' + y + '/' + m + '/' + d + '(' + dow + ')</div>' + body;
