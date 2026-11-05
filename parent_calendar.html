@@ -323,7 +323,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zq</div>
+    <div id="verlabel">画面の版: 11/5-zr</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1032,7 +1032,7 @@ function updateSendSummary(){
   let h = parts.length
     ? '<b>' + nb('送るのは、') + parts.join('・') + nb('だけです。') + '</b>'
     : '<b>' + nb('変更はありません。') + '</b>';
-  if (n.same) h += '<br><span class="sub2">' + nb('登録済みの' + n.same + '日は、') + nb('変更なし。') + nb('引き続き' + keepWord(sameLabels) + 'の状態が保たれます。') + '</span>';
+  if (n.same) h += '<br><span class="sub2">' + nb('登録済みの' + n.same + '日は、') + nb('引き続き' + keepWord(sameLabels) + 'の状態が保たれます。') + '</span>';
   el.innerHTML = h;
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
