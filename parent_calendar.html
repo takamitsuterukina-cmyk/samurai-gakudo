@@ -287,7 +287,7 @@
     </div>
     <div class="box" id="invFriend" style="display:none">
       <h3>先に、友だち追加をお願いします</h3>
-      <div class="hint2" style="font-size:19.7px;line-height:1.6;margin:0 0 10px;">登録のお知らせを、<br>LINEでお届けするためです。</div>
+      <div class="hint2" style="font-size:19.7px;line-height:1.6;margin:0 0 10px;">追加すると、<br>保護者連絡のトークに、<br>登録のご案内が届きます。</div>
       <button type="button" class="addbtn" id="invAddFriend">友だち追加する</button>
       <button type="button" class="addbtn" id="invFriendDone" style="margin-top:8px;">追加しました</button>
     </div>
@@ -371,7 +371,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzh</div>
+    <div id="verlabel">画面の版: 11/5-zzi</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -860,13 +860,18 @@ async function showInvite(token){
   const goBtn = document.getElementById('invGo');
   // 友だちになっていない時は、先に友だち追加をしてもらう(登録のお知らせが届かないため)。確認できない時は、そのまま進める
   const checkFriend = async () => {
+    try{ // サーバーが、LINEに確かめた結果(LIFFの設定に関係なく確実)
+      const r = await fetch(GAS_DIRECT_URL + '?action=inviteInfo&token=' + encodeURIComponent(token) + '&userId=' + encodeURIComponent(userId));
+      const j = await r.json();
+      if(j && j.ok && j.friend !== undefined) return !!j.friend;
+    }catch(e){}
     try{ const f = await liff.getFriendship(); return !!f.friendFlag; }catch(e){ return true; }
   };
   const applyFriend = (ok) => {
     document.getElementById('invFriend').style.display = ok ? 'none' : 'block';
     goBtn.disabled = !ok;
   };
-  applyFriend(await checkFriend());
+  applyFriend(info.friend !== undefined ? !!info.friend : await checkFriend());
   document.getElementById('invAddFriend').onclick = () => {
     const id = info.oaId || '';
     if(!id){ document.getElementById('invErr').textContent = 'LINEのトークに戻って、このアカウントを友だち追加してください。'; return; }
@@ -896,6 +901,7 @@ async function showInvite(token){
       }catch(e){}
     }
     document.getElementById('invWait').style.display = 'none';
+    if (j && j.error === 'notfriend') { applyFriend(false); err.textContent = ''; goBtn.textContent = '登録する'; return; }
     err.textContent = (j && j.message) || '登録できませんでした。もう一度お試しください。';
     goBtn.disabled = false; goBtn.textContent = '登録する';
   };
