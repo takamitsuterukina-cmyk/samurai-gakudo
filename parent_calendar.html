@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-n</div>
+    <div id="verlabel">画面の版: 11/5-o</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -417,7 +417,12 @@ function effectivePickup(){
 }
 /* 送迎(お迎え)サービスは、月謝契約のお子さんだけ。月謝契約でない人(スポット専用など)には、お迎えの項目を出さない。 */
 function hasPickupService(child){ return !(cap && cap.spotRule) || !!(cap.contractOk || {})[child]; }
-function anyPickupService(){ return !(cap && cap.spotRule) || children.some(hasPickupService); }
+// いま選んでいるお子さん(選んでいなければ全員)の中に、送迎サービスがあるお子さんがいるか
+function anyPickupService(){
+  if(!(cap && cap.spotRule)) return true;
+  const list = selectedChildren.length ? selectedChildren : children;
+  return list.some(hasPickupService);
+}
 // そのカードの内容に、お迎えの項目が要るか(c: まとめては空、その子だけ別内容の時は、お子さんの番号)
 function cardHasPickup(c){ return c === '' ? selectedChildren.some(hasPickupService) : hasPickupService(selectedChildren[Number(c)]); }
 function effectiveLoc(){ return usualT.loc || (childInfo && childInfo.defaultLocation) || 'genkan'; }
@@ -810,6 +815,7 @@ async function loadSchedule(){
 }
 
 function renderMonth(){
+  syncUsualButtons(); // お子さんの選び方で、「いつもの時間」のお迎えの項目が出る・消える
   document.getElementById('monthLabel').textContent = viewYear + '年' + (viewMonth+1) + '月';
   const daysEl = document.getElementById('days');
   daysEl.innerHTML = '';
