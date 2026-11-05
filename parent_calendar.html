@@ -321,7 +321,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zm</div>
+    <div id="verlabel">画面の版: 11/5-zn</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -900,12 +900,12 @@ function showRegisteredDay(key){
   if(el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
   let t = document.getElementById('daytoast');
   if(!t){ t = document.createElement('div'); t.id = 'daytoast'; document.body.appendChild(t); }
-  t.innerHTML = '<b style="display:block;margin-bottom:2px;">登録済みの日です。</b>' +
-    '<span style="white-space:nowrap;">変更・取り消しは、</span><span style="white-space:nowrap;">日ごとのカードで。</span>' +
-    '<div style="margin-top:6px;font-size:16px;opacity:.8;">（ここをタップすると、閉じます）</div>';
+  // 自動では消さない(読む前に消えてしまうことがあるため)。右の「×」で、自分で閉じる。
+  t.innerHTML = '<button id="daytoastX" aria-label="閉じる" style="position:absolute;top:4px;right:4px;width:48px;height:48px;border:none;background:none;color:#fff;font-size:32px;line-height:1;">×</button>' +
+    '<div style="padding-right:44px;"><b style="display:block;margin-bottom:2px;">登録済みの日です。</b>' +
+    '<span style="white-space:nowrap;">変更・取り消しは、</span><span style="white-space:nowrap;">日ごとのカードで。</span></div>';
   t.style.display = 'block';
-  t.onclick = () => { t.style.display = 'none'; };
-  clearTimeout(t._tm); t._tm = setTimeout(() => { t.style.display = 'none'; }, 12000); // 読む前に消えないよう、長めに出す
+  document.getElementById('daytoastX').onclick = () => { t.style.display = 'none'; };
 }
 function toggleDay(key){
   if(cancelledDays[key]){ restoreDay(key); return; }
