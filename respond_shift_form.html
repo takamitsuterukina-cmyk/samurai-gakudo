@@ -6,30 +6,38 @@
 <title>さむらい学童 シフト回答</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f5f5;color:#1a202c;min-height:100vh;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f5f5;color:#1a202c;min-height:100vh;font-size:16px;}
 .header{background:#1c1a16;color:#fff;padding:16px;text-align:center;}
-.header h1{font-size:18px;font-weight:700;}
-.header p{font-size:12px;opacity:.7;margin-top:4px;}
-.container{max-width:480px;margin:0 auto;padding:16px;}
-.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
-.day-row{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #eee;}
+.header h1{font-size:20px;font-weight:700;}
+.header p{font-size:16px;opacity:.85;margin-top:6px;line-height:1.6;text-align:left;}
+.container{max-width:480px;margin:0 auto;padding:12px;}
+.card{background:#fff;border-radius:12px;padding:12px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.day-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 4px;border-bottom:1px solid #eee;}
 .day-row:last-child{border-bottom:none;}
-.day-label{font-size:15px;font-weight:600;}
-.day-time{font-size:12px;color:#888;margin-top:2px;}
-.toggle{display:flex;gap:6px;}
-.toggle-btn{width:44px;height:40px;border-radius:8px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+.day-label{font-size:18px;font-weight:700;white-space:nowrap;}
+.day-time{font-size:16px;color:#666;margin-top:2px;line-height:1.5;}
+.toggle{display:flex;gap:6px;flex-shrink:0;}
+.toggle-btn{min-width:52px;height:48px;padding:0 8px;border-radius:8px;border:2px solid #ccc;background:#fff;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .toggle-btn.ok.sel{background:#ebf8ff;border-color:#2b6cb0;color:#2b6cb0;}
 .toggle-btn.ng.sel{background:#fff5f5;border-color:#e53e3e;color:#e53e3e;}
-.submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
+.time-pick{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:16px;}
+.time-pick select{flex:1;min-width:0;height:44px;padding:0 6px;border:1px solid #ccc;border-radius:8px;font-size:17px;background:#fff;}
+.submit-btn{width:100%;padding:18px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:19px;font-weight:700;cursor:pointer;margin-top:8px;}
 .submit-btn:active{opacity:.85;}
-.result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
-.result-box.err{background:#fed7d7;color:#c53030;}
+.result-box{display:none;margin-top:14px;border-radius:12px;padding:16px;font-size:17px;line-height:1.6;background:#c6f6d5;color:#22543d;border:2px solid #38a169;}
+.result-box .ok-title{font-size:26px;font-weight:800;margin-bottom:8px;}
+.result-box .next{margin-top:12px;padding-top:12px;border-top:1px solid #9ae6b4;}
+.close-btn{width:100%;padding:16px;margin-top:12px;background:#276749;color:#fff;border:none;border-radius:12px;font-size:19px;font-weight:700;cursor:pointer;}
+.close-btn:active{opacity:.85;}
+.close-guide{display:none;margin-top:10px;font-size:17px;font-weight:700;line-height:1.6;}
+.result-box.err{background:#fed7d7;color:#9b2c2c;border-color:#e53e3e;}
+.result-box.err .ok-title{font-size:22px;}
 </style>
 </head>
 <body>
 <div class="header">
   <h1>📅 さむらい学童 シフト回答</h1>
-  <p>日ごとに回答してください(入れる日は○、入れない日は×。「お休みにしてもいいですか？」の日は、OKか、入るかを選びます)</p>
+  <p>日ごとに回答してください。<br>入れる日は「○」、入れない日は「×」を押します。<br>「お休みにしてもいいですか？」の日は、「OK」か「入る」を選びます。</p>
 </div>
 <div class="container">
   <div class="card" id="day-card"></div>
@@ -87,10 +95,10 @@ function render(){
         <div class="day-label">${m}/${day}(${dow})</div>
         ${start&&end
           ?`<div class="day-time">${start}〜${end}</div>`
-          :`<div class="day-time" style="font-size:13px;color:#4a5568;">入れる時間を選んでください</div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
-              <select id="ts-${day}" style="padding:6px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px;">${timeOpts('開始')}</select>〜
-              <select id="te-${day}" style="padding:6px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px;">${timeOpts('終了')}</select>
+          :`<div class="day-time" style="color:#4a5568;">入れる時間を選んでください</div>
+            <div class="time-pick">
+              <select id="ts-${day}">${timeOpts('開始')}</select>〜
+              <select id="te-${day}">${timeOpts('終了')}</select>
             </div>`}
       </div>
       <div class="toggle">
@@ -99,9 +107,23 @@ function render(){
       </div>
     </div>`;
   }).join('');
-  document.getElementById('day-card').innerHTML=html||'<p style="font-size:13px;color:#888;">日程情報が読み取れませんでした。リンクを確認してください。</p>';
+  document.getElementById('day-card').innerHTML=html||'<p style="font-size:16px;color:#666;">日程情報が読み取れませんでした。リンクを確認してください。</p>';
 }
 
+// 結果を、必ず画面の中に見えるようにする
+function showResult(){
+  const rb=document.getElementById('result-box');
+  rb.style.display='block';
+  if(rb.scrollIntoView) rb.scrollIntoView({behavior:'smooth',block:'center'});
+}
+// LINEの中で開いている画面は、スクリプトから閉じられない場合がある。閉じなかった時は、✕を押す案内を出す。
+function closeForm(){
+  try{window.close();}catch(e){}
+  setTimeout(function(){
+    const g=document.getElementById('close-guide');
+    if(g) g.style.display='block';
+  },400);
+}
 function toMin(t){const [h,mm]=t.split(':').map(Number);return h*60+mm;}
 function setAnswer(day,val){
   answers[day]=val;
@@ -144,8 +166,8 @@ async function sendAnswer(){
   rb.className='result-box';
   if(!staff||!ym||Object.keys(answers).length===0){
     rb.className='result-box err';
-    rb.style.display='block';
-    rb.innerHTML='⚠ リンクが正しくないようです。届いたメッセージからもう一度開いてください。';
+    rb.innerHTML='<div class="ok-title">⚠ 送れません</div><div>リンクが正しくないようです。届いたメッセージからもう一度開いてください。</div>';
+    showResult();
     return;
   }
   const days=parseDays();
@@ -162,27 +184,32 @@ async function sendAnswer(){
   });
   if(missing.length){
     rb.className='result-box err';
-    rb.style.display='block';
-    rb.innerHTML='⚠ '+missing.map(d=>d+'日').join('、')+'は、○にする場合は、入れる時間(開始と終了)を選んでください。入れない日は×にしてください。';
+    rb.innerHTML='<div class="ok-title">⚠ 時間を選んでください</div><div>'+missing.map(d=>d+'日').join('、')+'は、○にする場合は、入れる時間（開始と終了）を選んでください。入れない日は「×」にしてください。</div>';
+    showResult();
     return;
   }
   const btn=document.getElementById('send-btn');
   sending=true;
   btn.disabled=true;btn.style.opacity='.6';
   rb.style.display='block';
-  rb.innerHTML='送信中…';
+  rb.innerHTML='<div class="ok-title" style="font-size:20px">送信中…</div><div>そのまま、少しお待ちください。</div>';
   try{
     const r=await postOnce({respondShift:true,staff,ym,answers:answersPayload},JSON.stringify([staff,ym,answersPayload]),n=>{rb.innerHTML='通信を再試行しています…（'+n+'/2）';});
     if(r.ok){
-      rb.innerHTML=r.duplicate
-        ?'✓ 回答はすでに届いています（同じ内容は二重には送られません）。'
-        :'✓ 回答を送りました。ありがとうございます。';
+      rb.innerHTML=`<div class="ok-title">✓ 送信しました</div>
+        <div>${r.duplicate?'回答は、すでに届いています（同じ内容は二重には送られません）。':'回答が、照喜名さんに届きました。ありがとうございます。'}</div>
+        <div class="next"><b>これで完了です。</b><br>回答を直したいときは、もう一度「回答を送る」を押してください。</div>
+        <button class="close-btn" onclick="closeForm()">画面を閉じる</button>
+        <div class="close-guide" id="close-guide">画面の右上の「✕」を押すと、LINEのトークに戻れます。</div>`;
+      showResult();
     }else if(r.network){
       rb.className='result-box err';
-      rb.innerHTML='⚠ 通信が不安定で、届いたか確認できませんでした。もう一度「回答を送る」を押してください。すでに届いていても、二重には送られません。';
+      rb.innerHTML='<div class="ok-title">⚠ 届いたか確認できません</div><div>通信が不安定でした。<b>もう一度「回答を送る」を押してください。</b>すでに届いていても、二重には送られません。</div>';
+      showResult();
     }else{
       rb.className='result-box err';
-      rb.innerHTML=`⚠ 送信できませんでした（${r.error}）`;
+      rb.innerHTML=`<div class="ok-title">⚠ 送信できませんでした</div><div>${r.error}</div>`;
+      showResult();
     }
   }finally{
     sending=false;

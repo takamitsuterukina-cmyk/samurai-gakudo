@@ -6,70 +6,80 @@
 <title>さむらい学童 シフト入力</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f5f5;color:#1a202c;min-height:100vh;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f5f5f5;color:#1a202c;min-height:100vh;font-size:16px;}
 .header{background:#1c1a16;color:#fff;padding:16px;text-align:center;}
-.header h1{font-size:18px;font-weight:700;}
-.header p{font-size:12px;opacity:.7;margin-top:4px;}
-.container{max-width:480px;margin:0 auto;padding:16px;}
-.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
-.card h2{font-size:15px;font-weight:600;margin-bottom:12px;color:#2b6cb0;}
-.hint{font-size:12px;color:#888;margin-bottom:12px;line-height:1.6;}
+.header h1{font-size:20px;font-weight:700;}
+.header p{font-size:16px;opacity:.85;margin-top:6px;line-height:1.5;}
+.container{max-width:480px;margin:0 auto;padding:12px;}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.card h2{font-size:18px;font-weight:700;margin-bottom:12px;color:#2b6cb0;}
+.hint{font-size:16px;color:#666;margin-bottom:12px;line-height:1.6;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500;}
-.field select,.field input[type=text],.field input[type=month]{width:100%;max-width:100%;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:15px;background:#fff;color:#1a202c;-webkit-appearance:none;appearance:none;box-sizing:border-box;}
-.month-disp{text-align:center;font-size:20px;font-weight:700;color:#2b6cb0;padding:8px 0;}
-.staff-name-disp{font-size:18px;font-weight:700;color:#1c1a16;text-align:center;padding:4px 0;}
+.field label{display:block;font-size:16px;color:#444;margin-bottom:6px;font-weight:600;}
+.field select,.field input[type=text],.field input[type=month]{width:100%;max-width:100%;height:48px;border:1px solid #ccc;border-radius:8px;padding:0 12px;font-size:17px;background:#fff;color:#1a202c;-webkit-appearance:none;appearance:none;box-sizing:border-box;}
+.month-disp{text-align:center;font-size:22px;font-weight:700;color:#2b6cb0;padding:8px 0;}
+.staff-name-disp{font-size:20px;font-weight:700;color:#1c1a16;text-align:center;padding:4px 0;}
 
 /* いつもの時間 */
-.usual-row{margin-bottom:12px;}
+.usual-row{margin-bottom:14px;}
 .usual-row:last-child{margin-bottom:0;}
-.usual-label{font-size:13px;font-weight:600;margin-bottom:6px;}
+.usual-label{font-size:16px;font-weight:700;margin-bottom:6px;line-height:1.5;}
 .usual-row.need .usual-label{color:#e53e3e;}
-.time-row{display:flex;gap:8px;align-items:center;}
-.time-row select{flex:1;height:44px;border:1px solid #ddd;border-radius:8px;padding:0 8px;font-size:15px;background:#fff;}
-.time-sep{font-size:14px;color:#888;flex-shrink:0;}
+.time-row{display:flex;gap:6px;align-items:center;}
+.time-row select{flex:1;min-width:0;height:48px;border:1px solid #ccc;border-radius:8px;padding:0 8px;font-size:17px;background:#fff;}
+.time-sep{font-size:16px;color:#888;flex-shrink:0;}
 
 /* カレンダー */
 .bulk-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
-.bulk-btn{padding:7px 10px;border:1px solid #cbd5e0;border-radius:8px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;}
+.bulk-btn{padding:9px 8px;border:1px solid #cbd5e0;border-radius:8px;background:#fff;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .bulk-btn:active{transform:scale(.96);}
 .bulk-btn.danger{border-color:#fc8181;color:#e53e3e;margin-left:auto;}
-.cal-msg{display:none;background:#fff5f5;border:1px solid #feb2b2;color:#c53030;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-.cal-h{text-align:center;font-size:12px;color:#666;padding:2px 0;font-weight:600;}
+.cal-msg{display:none;background:#fff5f5;border:1px solid #feb2b2;color:#c53030;border-radius:8px;padding:10px 12px;font-size:16px;line-height:1.5;margin-bottom:10px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
+.cal-h{text-align:center;font-size:16px;color:#666;padding:2px 0;font-weight:600;}
 .cal-h.sat{color:#2b6cb0;}
 .cal-h.sun{color:#e53e3e;}
-.cal-cell{min-height:58px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:16px;font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+.cal-cell{min-height:84px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:18px;font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden;}
 .cal-cell:active{transform:scale(.95);}
-.cal-cell .t{font-size:9px;font-weight:500;line-height:1.25;color:#4a5568;text-align:center;}
+/* 日付のマスの時刻は、画面が狭くても1行に収まるよう、16px以下には縮めない範囲で幅に合わせる */
+.cal-cell .t{font-size:min(16px,4.3vw);font-weight:500;line-height:1.25;color:#4a5568;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .cal-cell.sat .n{color:#2b6cb0;}
 .cal-cell.on{background:#2b6cb0;border-color:#2b6cb0;color:#fff;}
 .cal-cell.on .n{color:#fff;}
 .cal-cell.on .t{color:#e2e8f0;}
 .cal-cell.off{background:#f1f1f1;color:#aaa;cursor:default;}
+.cal-cell.off .t{color:#aaa;}
 .cal-cell.off:active{transform:none;}
 
 /* 選んだ日の一覧 */
-.sel-row{background:#ebf8ff;border:1px solid #90cdf4;border-radius:10px;padding:10px;margin-bottom:8px;}
+.sel-row{background:#ebf8ff;border:1px solid #90cdf4;border-radius:10px;padding:10px;margin-bottom:10px;}
 .sel-row.diff{background:#fffaf0;border-color:#f6ad55;}
-.sel-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.sel-day{font-size:15px;font-weight:700;}
+.sel-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.sel-day{font-size:18px;font-weight:700;display:flex;align-items:center;flex-wrap:wrap;column-gap:8px;white-space:nowrap;}
 .sel-day .sat{color:#2b6cb0;}
-.tag{font-size:11px;color:#c05621;font-weight:600;margin-left:8px;}
-.x-btn{padding:4px 10px;border:1px solid #fc8181;border-radius:6px;background:#fff;font-size:12px;color:#e53e3e;cursor:pointer;}
-.sel-row .time-row select{height:40px;font-size:14px;}
-.empty{font-size:13px;color:#a0aec0;text-align:center;padding:8px 0;}
+.tag{font-size:16px;color:#c05621;font-weight:600;white-space:nowrap;}
+.x-btn{padding:7px 12px;border:1px solid #fc8181;border-radius:6px;background:#fff;font-size:16px;color:#e53e3e;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.empty{font-size:16px;color:#718096;text-align:center;padding:8px 0;}
 
-.submit-btn{width:100%;padding:16px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
+.submit-btn{width:100%;padding:18px;background:#1c1a16;color:#fff;border:none;border-radius:12px;font-size:19px;font-weight:700;cursor:pointer;margin-top:8px;}
 .submit-btn:active{opacity:.85;}
-.result-box{background:#c6f6d5;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#276749;display:none;}
-.result-box.err{background:#fed7d7;color:#c53030;}
+.sub-btn{width:100%;padding:12px;background:#fff;color:#1c1a16;border:1px solid #ccc;border-radius:12px;font-size:16px;cursor:pointer;margin-top:10px;}
+.result-box{display:none;margin-top:14px;border-radius:12px;padding:16px;font-size:17px;line-height:1.6;background:#c6f6d5;color:#22543d;border:2px solid #38a169;}
+.result-box .ok-title{font-size:26px;font-weight:800;margin-bottom:8px;}
+.result-box .ok-total{font-size:18px;font-weight:700;margin:6px 0;}
+.result-box .next{margin-top:12px;padding-top:12px;border-top:1px solid #9ae6b4;}
+.result-box .next b{font-size:18px;}
+.close-btn{width:100%;padding:16px;margin-top:12px;background:#276749;color:#fff;border:none;border-radius:12px;font-size:19px;font-weight:700;cursor:pointer;}
+.close-btn:active{opacity:.85;}
+.close-guide{display:none;margin-top:10px;font-size:17px;font-weight:700;line-height:1.6;}
+.result-box.err{background:#fed7d7;color:#9b2c2c;border-color:#e53e3e;}
+.result-box.err .ok-title{font-size:22px;}
 </style>
 </head>
 <body>
 <div class="header">
   <h1>📅 さむらい学童 シフト入力</h1>
-  <p>入力完了後、JSONをさむらい学童アプリにインポートしてください</p>
+  <p>出勤する日を選んで、いちばん下の<br>「シフトを送信する」を押してください</p>
 </div>
 <div class="container">
   <div class="card">
@@ -138,19 +148,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 
   <div id="submit-card" style="display:none;">
     <div id="hours-summary" style="background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-      <div style="font-size:13px;font-weight:600;color:#2b6cb0;margin-bottom:8px;">📊 月間勤務時間サマリー</div>
+      <div style="font-size:18px;font-weight:700;color:#2b6cb0;margin-bottom:8px;">📊 月間勤務時間サマリー</div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:14px;color:#1a202c;">月間総時間</span>
-        <span id="total-hours-disp" style="font-size:20px;font-weight:700;color:#1c1a16;">0時間</span>
+        <span style="font-size:16px;color:#1a202c;">月間総時間</span>
+        <span id="total-hours-disp" style="font-size:24px;font-weight:700;color:#1c1a16;">0時間</span>
       </div>
       <div style="background:#e8e8e8;border-radius:4px;height:8px;margin:8px 0;">
         <div id="hours-bar" style="background:#38a169;border-radius:4px;height:8px;width:0%;transition:width .3s;"></div>
       </div>
-      <div id="insurance-status" style="font-size:12px;color:#276749;">✓ 社保ライン（月87時間）内です</div>
-      <div style="font-size:11px;color:#a0aec0;margin-top:4px;">社保適用ライン: 月約87時間（週20時間換算）</div>
+      <div id="insurance-status" style="font-size:16px;color:#276749;">✓ 社保ライン（月87時間）内です</div>
+      <div style="font-size:16px;color:#718096;margin-top:4px;">社保ライン: 月約87時間（週20時間）</div>
     </div>
     <button class="submit-btn" id="submit-btn" onclick="submitShift()">📱 シフトを送信する</button>
-    <button class="submit-btn" style="background:#fff;color:#1c1a16;border:1px solid #ddd;margin-top:8px;font-size:13px;padding:10px;" onclick="exportShift()">📤 念のためJSONも保存（送信できない時の予備）</button>
+    <button class="sub-btn" onclick="exportShift()">📤 送れない時は、JSONで保存</button>
     <div class="result-box" id="result-box"></div>
   </div>
 </div>
@@ -485,6 +495,22 @@ function buildOutput(){
   };
 }
 
+// 送信結果を、必ず画面の真ん中に見えるようにする(小さい文字が画面の外に出て、送れたか分からない問題の対策)
+function showResult(){
+  const rb=document.getElementById('result-box');
+  rb.removeAttribute('style');
+  rb.style.display='block';
+  if(rb.scrollIntoView) rb.scrollIntoView({behavior:'smooth',block:'center'});
+}
+// LINEの中で開いている画面は、スクリプトから閉じられない場合がある。閉じなかった時は、✕を押す案内を出す。
+function closeForm(){
+  try{window.close();}catch(e){}
+  setTimeout(function(){
+    const g=document.getElementById('close-guide');
+    if(g) g.style.display='block';
+  },400);
+}
+
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let sending=false;
 async function submitShift(){
@@ -493,11 +519,13 @@ async function submitShift(){
   if(!output) return;
   const rb=document.getElementById('result-box');
   rb.className='result-box';
+  rb.removeAttribute('style');
   rb.style.display='block';
-  rb.innerHTML='送信中…';
+  rb.innerHTML='<div class="ok-title" style="font-size:20px">送信中…</div><div>そのまま、少しお待ちください。</div>';rb.style.background='#ebf8ff';rb.style.color='#2a4365';rb.style.borderColor='#90cdf4';
   if(!GAS_URL||GAS_URL.indexOf('PASTE_YOUR')===0){
     rb.className='result-box err';
-    rb.innerHTML='⚠ 送信先が未設定です(GAS_URL)。下の「JSONをエクスポート」で代わりに保存してください。';
+    rb.innerHTML='<div class="ok-title">⚠ 送信先が未設定です</div><div>下の「送れない時は、JSONで保存」で代わりに保存してください。</div>';
+    showResult();
     return;
   }
   const btn=document.getElementById('submit-btn');
@@ -523,12 +551,25 @@ async function submitShift(){
     const count=Object.keys(shiftData).length;
     const totalH=Math.floor(output.totalHours);
     const totalM=Math.round((output.totalHours-totalH)*60);
-    rb.innerHTML=`✓ ${output.staff}さんの${y}年${m}月分シフト（${count}日分）を送信しました。<br>
-      <b>月間総勤務時間: ${totalH}時間${totalM>0?totalM+'分':''}</b><br>
-      アプリの「🔄 LINEから取り込む」ボタンで反映されます。`;
+    const isAdmin=output.staff==='照喜名';
+    rb.className='result-box';
+    rb.innerHTML=`<div class="ok-title">✓ 送信しました</div>
+      <div>${output.staff}さんの${y}年${m}月分（${count}日分）が、照喜名さんに届きました。</div>
+      <div class="ok-total">月間総勤務時間: ${totalH}時間${totalM>0?totalM+'分':''}</div>
+      <div class="next">
+        <b>これで完了です。</b><br>
+        ${isAdmin?'学童アプリの「🔄 LINEから取り込む」ボタンで反映されます。<br>':''}
+        内容を直したときは、もう一度「シフトを送信する」を押すと、上書きされます。
+      </div>
+      <button class="close-btn" onclick="closeForm()">画面を閉じる</button>
+      <div class="close-guide" id="close-guide">画面の右上の「✕」を押すと、LINEのトークに戻れます。</div>`;
+    showResult();
   }catch(err){
     rb.className='result-box err';
-    rb.innerHTML=`⚠ 送信に失敗しました（${err.message}）。もう一度「シフトを送信する」を押すか、下の「JSONをエクスポート」で代わりに保存してください。`;
+    rb.innerHTML=`<div class="ok-title">⚠ 送信できませんでした</div>
+      <div>通信がうまくいかなかったようです（${err.message}）。</div>
+      <div class="next"><b>もう一度「シフトを送信する」を押してください。</b><br>それでも送れない時は、下の「送れない時は、JSONで保存」を使ってください。</div>`;
+    showResult();
   }finally{
     sending=false;
     btn.disabled=false;btn.style.opacity='';
@@ -548,9 +589,11 @@ function exportShift(){
   URL.revokeObjectURL(a.href);
   const count=Object.keys(shiftData).length;
   const rb=document.getElementById('result-box');
-  rb.style.display='block';
-  rb.innerHTML=`✓ ${output.staff}さんの${y}年${m}月分シフト（${count}日分）をエクスポートしました。<br>
-    このJSONファイルをさむらい学童アプリのインポートから読み込んでください。`;
+  rb.className='result-box';
+  rb.innerHTML=`<div class="ok-title">✓ 保存しました</div>
+    <div>${output.staff}さんの${y}年${m}月分（${count}日分）を、JSONファイルに保存しました。</div>
+    <div class="next">このファイルを、学童アプリの「インポート」から読み込んでください。</div>`;
+  showResult();
 }
 </script>
 </body>
