@@ -321,7 +321,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zj</div>
+    <div id="verlabel">画面の版: 11/5-zk</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -977,6 +977,9 @@ function finalMap(child){
 function sameItem(a, b){
   return a.pickup === b.pickup && a.location === b.location && a.startTime === b.startTime && (a.endTime || '') === (b.endTime || '') && (a.slot || '') === (b.slot || '');
 }
+// 登録済みの内容から、変わっていない日か(変わっていない日は、送らない)
+function isUnchanged(c, it){ const o = (reportsByChild[c] || {})[it.date]; return !!o && sameItem(o, it); }
+const SAME_TAG = ' <span style="color:var(--ink-soft);white-space:nowrap;">（変更なし）</span>';
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
   return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {}));
@@ -1324,7 +1327,7 @@ document.getElementById('submitBtn').onclick = () => {
   }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
-    const detail = usageText(it, g.children);
+    const detail = usageText(it, g.children) + (g.children.every(c => isUnchanged(c, it)) ? SAME_TAG : '');
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   // 2人以上まとめて送る時は、日にちを基準にして、その日、だれがどう利用するか(キャンセル・登録なしも)を、1日ぶんの枠にまとめて見せる
@@ -1337,7 +1340,7 @@ document.getElementById('submitBtn').onclick = () => {
       const allDel = rows.every(p => !p.m[k]);
       return '<div class="dh' + (allDel ? ' del' : '') + '">' + mdw(k) + '</div>' +
         rows.map(p => p.m[k]
-          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + tableText({ ...p.m[k], date: k }, p.c).split('・').map(t => '<span style="white-space:nowrap;">' + t + '</span>').join('・') + '</div>'
+          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + tableText({ ...p.m[k], date: k }, p.c).split('・').map(t => '<span style="white-space:nowrap;">' + t + '</span>').join('・') + (isUnchanged(p.c, { ...p.m[k], date: k }) ? SAME_TAG : '') + '</div>'
           : '<div class="nm del">' + p.c + 'さん</div><div class="tx del">キャンセル</div>').join('');
     }).join('') + '</div>';
   };
@@ -1345,7 +1348,9 @@ document.getElementById('submitBtn').onclick = () => {
     (selectedChildren.length > 1 ? '日にちごとに、利用するお子さんを表示しています。\n' : '') + (selectedChildren.length > 1 ? '' : groups.length > 1 ? 'お子さんごとに、内容がちがいます。\n' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)\n' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん\n' : ''))) +
     '';
   // 文は、単語の途中で折り返さないよう、区切りごとにまとめて並べる
-  ['やり直す場合は', '「戻って直す」で、', 'カードの内容を直して下さい。'].forEach(t => {
+  const anySame = selectedChildren.some(c => Object.keys(finalMap(c)).some(k => isUnchanged(c, { ...finalMap(c)[k], date: k })));
+  (anySame ? ['「変更なし」の日は、', '今回は送りません。', '（そのまま残ります）', 'BR'] : []).concat(['やり直す場合は', '「戻って直す」で、', 'カードの内容を直して下さい。']).forEach(t => {
+    if (t === 'BR') { document.getElementById('reviewSub').appendChild(document.createElement('br')); return; }
     const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; document.getElementById('reviewSub').appendChild(sp);
   });
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
@@ -1392,7 +1397,7 @@ async function doSubmit(){
   const perChild = {};
   selectedChildren.forEach(c => {
     const m = finalMap(c);
-    perChild[c] = { days: Object.keys(m).map(k => ({ date: k, ...m[k] })), deletes: Object.keys(reportsByChild[c] || {}).filter(k => !m[k]) };
+    perChild[c] = { days: Object.keys(m).map(k => ({ date: k, ...m[k] })).filter(it => !isUnchanged(c, it)), deletes: Object.keys(reportsByChild[c] || {}).filter(k => !m[k]) }; // 変わっていない日は、送らない
   });
   const first = perChild[selectedChildren[0]];
   document.getElementById('submitBtn').disabled = true;
