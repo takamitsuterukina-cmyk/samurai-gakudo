@@ -378,7 +378,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzl</div>
+    <div id="verlabel">画面の版: 11/5-zzm</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -854,7 +854,9 @@ function showInviteDone(oaId){
   // ここから予定の登録には進ませない(保護者連絡のトークの存在とメニューを知らないまま使い続けることがないように)。進む先は、保護者連絡のトークだけ
   if(oaId){
     chat.onclick = () => {
-      const url = 'https://line.me/R/oaMessage/' + encodeURIComponent(oaId) + '/';
+      // oaMessage だと、入力欄にカーソルが入り、キーボードが出て、下のメニューが隠れる(実機で確認)。
+      // 友だちのページ(ti/p)なら、入力欄は使わず、トークが開く(メニューが最初から開く設定)
+      const url = 'https://line.me/R/ti/p/' + encodeURIComponent(oaId);
       try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
     };
   }else{ // 公式アカウントのIDが取れなかった時は、この画面を閉じて、トークに戻ってもらう
