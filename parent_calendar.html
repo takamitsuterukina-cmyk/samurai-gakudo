@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-q</div>
+    <div id="verlabel">画面の版: 11/5-r</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -970,7 +970,16 @@ function renderChips(){
   const allOn = selectedChildren.length === children.length;
   const mk = (label, on, fn) => { const b = document.createElement('button'); b.className = 'chip' + (on ? ' on' : ''); b.textContent = label; b.onclick = fn; chips.appendChild(b); };
   mk('全員まとめて', allOn, () => changeChildren(children.slice()));
-  children.forEach(c => mk(c, !allOn && selectedChildren.indexOf(c) >= 0 && selectedChildren.length === 1, () => changeChildren([c])));
+  // お子さんの選び方: 全員を選んでいる時にタップすると、その子だけになる。そのあとで別の子をタップすると、その子が加わる(もう一度タップすると外れる)。
+  // → 3人以上のきょうだいの、一部の2人だけをまとめて選べる。1人も選ばない状態にはならない。
+  children.forEach(c => mk(c, !allOn && selectedChildren.indexOf(c) >= 0, () => {
+    let next;
+    if (selectedChildren.length === children.length) next = [c];
+    else if (selectedChildren.indexOf(c) >= 0) next = selectedChildren.filter(x => x !== c);
+    else next = children.filter(x => x === c || selectedChildren.indexOf(x) >= 0);
+    if (!next.length) return;
+    changeChildren(next);
+  }));
   const msg = document.getElementById('pickmsg');
   msg.textContent = '';
 }
