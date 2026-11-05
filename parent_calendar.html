@@ -194,7 +194,9 @@
   #regPane .box h3{font-size:19.7px;margin:0 0 8px;}
   #regPane .namerow{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
   #regPane .namerow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 10px;font-size:22.2px;background:var(--paper);}
-  #regPane .namerow button{flex:none;border:none;background:none;color:var(--accent);font-size:18.5px;font-weight:700;text-decoration:underline;padding:6px;}
+  #regPane .namerow button.ph{visibility:hidden;}
+  #regPane .namerow button{flex:none;white-space:nowrap;border:none;background:none;color:var(--accent);font-size:18.5px;font-weight:700;text-decoration:underline;padding:6px;}
+  #regPane .addbtn:disabled{opacity:.55;}
   #regPane .addbtn{width:100%;padding:10px 0;border-radius:10px;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);font-size:19.7px;font-weight:700;}
   #regPane .tg{display:flex;gap:8px;margin-bottom:8px;}
   #regPane .tg button{flex:1;padding:11px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:19.7px;color:var(--ink);}
@@ -206,6 +208,8 @@
   #regReview{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
   #regReview .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
   #regReview h2{font-size:22.2px;margin:0 0 8px;}
+  #regReview .row b{display:block;margin-bottom:4px;}
+  #regReview .rn{padding:3px 0;white-space:nowrap;}
   #regReview .row{padding:9px 0;border-top:1px solid var(--line);font-size:19.7px;line-height:1.5;}
   #regReview .row b{display:block;font-size:18.5px;color:var(--ink-soft);font-weight:400;}
   #regReview .btns{display:flex;gap:10px;margin-top:14px;}
@@ -272,7 +276,7 @@
 
 <div id="regPane">
   <h2>お子さんの登録</h2>
-  <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。お迎えの設定や時刻は、このあと、予定の登録画面で決められます。</div>
+  <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。<br>お迎えの設定や時刻は、<br>このあと、予定の登録画面で<br>決められます。</div>
   <div class="box">
     <h3>① お子さんのお名前(フルネーム)</h3>
     <div id="regNames"></div>
@@ -346,7 +350,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzf</div>
+    <div id="verlabel">画面の版: 11/5-zzg</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -807,11 +811,18 @@ function regAddName(value){
   if (wrap.children.length >= 6) return;
   const row = document.createElement('div');
   row.className = 'namerow';
-  row.innerHTML = '<input type="text" maxlength="30" placeholder="例: さむらい太郎" autocomplete="off">' + (wrap.children.length ? '<button type="button">削除</button>' : '');
+  row.innerHTML = '<input type="text" maxlength="30" placeholder="例: さむらい太郎" autocomplete="off">' + (wrap.children.length ? '<button type="button">削除</button>' : '<button type="button" class="ph" tabindex="-1" aria-hidden="true">削除</button>');
   row.querySelector('input').value = value || '';
   const del = row.querySelector('button');
-  if (del) del.onclick = () => { row.remove(); };
+  if (del && !del.classList.contains('ph')) del.onclick = () => { row.remove(); regUpdateAdd(); };
   wrap.appendChild(row);
+  regUpdateAdd();
+}
+function regUpdateAdd(){
+  const full = document.getElementById('regNames').children.length >= 6;
+  const b = document.getElementById('regAdd');
+  b.disabled = full;
+  b.textContent = full ? 'きょうだいは、6人までです' : '＋ きょうだいを追加';
 }
 function regNamesList(){
   const out = [];
@@ -829,7 +840,7 @@ function showRegForm(){
     err.textContent = '';
     if (!names.length) { err.textContent = 'お子さんのお名前を入れてください。'; return; }
     document.getElementById('regReviewBody').innerHTML =
-      '<div class="row"><b>お子さん</b>' + names.map(n => n.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('、') + '</div>';
+      '<div class="row"><b>お子さん(' + names.length + '人)</b>' + names.map(n => '<div class="rn">' + n.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>').join('') + '</div>';
     document.getElementById('regReview').style.display = 'flex';
   };
   document.getElementById('regBack').onclick = () => { document.getElementById('regReview').style.display = 'none'; };
