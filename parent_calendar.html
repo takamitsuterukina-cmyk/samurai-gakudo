@@ -301,7 +301,6 @@
       <div style="font-size:19.7px;line-height:1.7;">次は、<br>保護者連絡のトークから、<br>予定を登録します。</div>
     </div>
     <button class="go" id="invOpenChat">保護者連絡のトークを開く</button>
-    <button class="addbtn" id="invGoCalendar" style="margin-top:12px;">このまま予定を登録する</button>
   </div>
   <div id="regManual">
   <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。<br>お迎えの設定や時刻は、<br>このあと、予定の登録画面で<br>決められます。</div>
@@ -379,7 +378,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzj</div>
+    <div id="verlabel">画面の版: 11/5-zzk</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -852,12 +851,16 @@ function showInviteDone(oaId){
   document.getElementById('regInviteDone').style.display = 'block';
   document.getElementById('regPane').scrollIntoView();
   const chat = document.getElementById('invOpenChat');
-  if(!oaId){ chat.style.display = 'none'; }
-  chat.onclick = () => {
-    const url = 'https://line.me/R/oaMessage/' + encodeURIComponent(oaId) + '/';
-    try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
-  };
-  document.getElementById('invGoCalendar').onclick = () => { location.reload(); };
+  // ここから予定の登録には進ませない(保護者連絡のトークの存在とメニューを知らないまま使い続けることがないように)。進む先は、保護者連絡のトークだけ
+  if(oaId){
+    chat.onclick = () => {
+      const url = 'https://line.me/R/oaMessage/' + encodeURIComponent(oaId) + '/';
+      try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
+    };
+  }else{ // 公式アカウントのIDが取れなかった時は、この画面を閉じて、トークに戻ってもらう
+    chat.textContent = 'この画面を閉じる';
+    chat.onclick = () => { try{ liff.closeWindow(); }catch(e){} };
+  }
 }
 async function showInvite(token){
   let info = null;
