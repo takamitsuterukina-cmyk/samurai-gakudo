@@ -339,7 +339,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzb</div>
+    <div id="verlabel">画面の版: 11/5-zzc</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1251,7 +1251,7 @@ function renderList(){
     card.innerHTML = `
       <div class="cardhead">
         <div class="datelabel">${m}/${d}(${dow})${isPend ? '<span class="pend-tag">申込中(確認待ち)</span>' : (isExisting ? '<span class="existing-tag">登録済み</span>' : '')}</div>
-        <button class="remove" data-key="${key}">この日をキャンセル</button>
+        ${multi ? '' : `<button class="remove" data-key="${key}">この日をキャンセル</button>`}
       </div>
       <div class="samenote" data-key="${key}" style="display:none;margin:0 0 8px;color:var(--ink-soft);font-weight:700;"></div>
       ${body}${askNote}
