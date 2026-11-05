@@ -149,6 +149,10 @@
   #review .row{padding:9px 0;border-top:1px solid var(--line);font-size:19.7px;line-height:1.5;}
   #review .row b{display:block;}
   #review .row.del b{color:#a33;}
+  #review .kl{margin-top:6px;padding-left:10px;border-left:4px solid var(--accent-soft);}
+  #review .kl .nm{display:block;font-weight:700;}
+  #review .kl.del,#review .kl.del .nm{color:#a33;}
+  #review .kl.none{color:var(--ink-soft);}
   #review .btns{display:flex;gap:10px;margin-top:14px;}
   #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:20.9px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -300,7 +304,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-x</div>
+    <div id="verlabel">画面の版: 11/5-y</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1273,12 +1277,28 @@ document.getElementById('submitBtn').onclick = () => {
     const detail = usageText(it, g.children);
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
+  // 2人以上まとめて送る時は、日にちを基準にして、その日、だれがどう利用するか(キャンセル・登録なしも)を、1日ぶんの枠にまとめて見せる
+  const byDate = () => {
+    const per = selectedChildren.map(c => ({ c, m: finalMap(c), del: new Set(Object.keys(reportsByChild[c] || {}).filter(k => !finalMap(c)[k])) }));
+    const dates = new Set(); per.forEach(p => { Object.keys(p.m).forEach(k => dates.add(k)); p.del.forEach(k => dates.add(k)); });
+    return [...dates].sort().map(k => {
+      const lines = [];
+      per.forEach(p => {
+        const kind = p.m[k] ? '' : (p.del.has(k) ? 'del' : 'none');
+        const txt = p.m[k] ? usageText({ ...p.m[k], date: k }, [p.c]) : (kind === 'del' ? 'キャンセル' : '登録なし');
+        const g = lines.find(x => x.txt === txt && x.kind === kind);
+        if (g) g.names.push(p.c); else lines.push({ txt, kind, names: [p.c] });
+      });
+      return '<div class="row' + (lines.every(l => l.kind === 'del') ? ' del' : '') + '"><b>' + mdw(k) + '</b>' +
+        lines.map(l => '<div class="kl ' + l.kind + '"><span class="nm">' + l.names.map(n => n + 'さん').join('・') + '</span>' + l.txt + '</div>').join('') + '</div>';
+    }).join('');
+  };
   document.getElementById('reviewSub').textContent =
-    (groups.length > 1 ? 'お子さんごとに、内容がちがいます。　' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : ''))) +
+    (selectedChildren.length > 1 ? '日にちごとに、だれが利用するかを表示しています。　' : '') + (selectedChildren.length > 1 ? '' : groups.length > 1 ? 'お子さんごとに、内容がちがいます。　' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : ''))) +
     '内容がちがう日は、「戻って直す」で、カードの内容を直してください。';
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
-  document.getElementById('reviewBody').innerHTML = (groups.length > 1
-    ? groups.map(g => '<div class="row" style="background:var(--accent-soft);"><b>対象</b>' + g.children.join('・') + 'さん</div>' + rowsOf(g)).join('')
+  document.getElementById('reviewBody').innerHTML = (selectedChildren.length > 1
+    ? byDate()
     : rowsOf(groups[0])) +
     (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします（満席などで受け付けられない日は、送信後にお知らせします）。</div>' : '');
   document.getElementById('review').style.display = 'flex';
