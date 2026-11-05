@@ -323,7 +323,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zt</div>
+    <div id="verlabel">画面の版: 11/5-zu</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1397,9 +1397,7 @@ document.getElementById('submitBtn').onclick = () => {
     (selectedChildren.length > 1 ? '日にちごとに、利用するお子さんを表示しています。\n' : '') + (selectedChildren.length > 1 ? '' : groups.length > 1 ? 'お子さんごとに、内容がちがいます。\n' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)\n' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん\n' : ''))) +
     '';
   // 文は、単語の途中で折り返さないよう、区切りごとにまとめて並べる
-  const anySame = selectedChildren.some(c => Object.keys(finalMap(c)).some(k => isUnchanged(c, { ...finalMap(c)[k], date: k })));
-  (anySame ? ['「変更なし」の日は、', '今回は送りません。', '（そのまま残ります）', 'BR'] : []).concat(['やり直す場合は', '「戻って直す」で、', 'カードの内容を直して下さい。']).forEach(t => {
-    if (t === 'BR') { document.getElementById('reviewSub').appendChild(document.createElement('br')); return; }
+  ['やり直す場合は', '「戻って直す」で、', 'カードの内容を直して下さい。'].forEach(t => {
     const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; document.getElementById('reviewSub').appendChild(sp);
   });
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
