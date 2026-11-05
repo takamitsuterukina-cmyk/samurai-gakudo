@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-p</div>
+    <div id="verlabel">画面の版: 11/5-q</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1281,11 +1281,11 @@ async function doSubmit(){
       if (j && j.ok === false) throw new Error('ng');
       const pend = (j && j.pending) || [], rej = (j && j.rejected) || [];
       try{ await refreshFromServer(); }catch(e){ /* 読み直せなくても、送信は済んでいる */ }
-      let t = j ? '送信しました。' : '送信の結果を確認できませんでした。「予定を確認する」で、登録の状況を確かめてください。';
+      let t = j ? '送信しました。右上×を押してトーク画面に戻って下さい。' : '送信の結果を確認できませんでした。「予定を確認する」で、登録の状況を確かめてください。';
       if (pend.length) t += '\n' + new Set(pend.map(x => x.date)).size + '日分は「申込中」です。学童が確認して確定したら、LINEでお知らせします。';
       if (rej.length) t += '\n\n次の日は、受け付けられませんでした:\n' + rej.map(x => '・' + mdw(x.date) + (selectedChildren.length > 1 ? ' ' + x.child + 'さん' : '') + '　' + x.reason).join('\n');
       smsg.style.whiteSpace = 'pre-line';
-      smsg.textContent = t + (j ? '\n\nトーク画面に戻ってください。' : '');
+      smsg.textContent = t;
     }catch(err){
       smsg.textContent = '送信に失敗しました。もう一度お試しください。';
       document.getElementById('submitBtn').disabled = false;
@@ -1299,7 +1299,8 @@ async function doSubmit(){
       body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }),
     });
     const nCancel = Object.keys(cancelledDays).length;
-    document.getElementById('submitmsg').textContent = '送信しました。' + (nCancel ? nCancel + '日分のキャンセルも、受け付けました。' : '') + 'トーク画面に戻ってください。';
+    document.getElementById('submitmsg').style.whiteSpace = 'pre-line';
+    document.getElementById('submitmsg').textContent ='送信しました。右上×を押してトーク画面に戻って下さい。' + (nCancel ? '\n' + nCancel + '日分のキャンセルも、受け付けました。' : '');
     selectedChildren.forEach(c => {
       reportsByChild[c] = {};
       perChild[c].days.forEach(it => { const { date, ...rest } = it; reportsByChild[c][date] = rest; });
