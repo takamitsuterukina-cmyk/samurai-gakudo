@@ -79,6 +79,9 @@
   .day .mk{display:block;font-size:14px;font-weight:700;margin-top:1px;white-space:nowrap;}
   .day .mk.ok{color:var(--accent);} .day .mk.few{color:#b7791f;} .day .mk.full{color:#c53030;} .day .mk.off{color:var(--ink-soft);}
   .day.selected .mk{color:#fff;}
+  .card.flash{animation:cardflash 1.6s ease;}
+  @keyframes cardflash{0%,60%{box-shadow:0 0 0 4px var(--accent);}100%{box-shadow:0 0 0 0 transparent;}}
+  #daytoast{position:fixed;left:16px;right:16px;bottom:calc(120px + env(safe-area-inset-bottom));z-index:40;background:#333;color:#fff;border-radius:10px;padding:12px 14px;font-size:18.5px;line-height:1.6;display:none;}
   #capNote{display:none;margin:10px 16px 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--ink);font-size:18.5px;line-height:1.6;}
   #capNote .capdetail{margin-top:10px;font-size:16px;line-height:1.6;color:var(--ink-soft);}
   .card .pend-tag{font-size:16px;color:#8a5a00;background:#FFF4E0;border:1px solid #E9C98B;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
@@ -318,7 +321,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zi</div>
+    <div id="verlabel">画面の版: 11/5-zj</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -892,9 +895,21 @@ function restoreDay(key){
   delete cancelledDays[key];
   renderMonth();
 }
+function showRegisteredDay(key){
+  const el = document.getElementById('card-' + key);
+  if(el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+  let t = document.getElementById('daytoast');
+  if(!t){ t = document.createElement('div'); t.id = 'daytoast'; document.body.appendChild(t); }
+  t.innerHTML = '<span style="white-space:nowrap;">登録ずみの日です。</span><span style="white-space:nowrap;">変更・取り消しは、</span><span style="white-space:nowrap;">日ごとのカードで。</span>';
+  t.style.display = 'block';
+  clearTimeout(t._tm); t._tm = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
 function toggleDay(key){
   if(cancelledDays[key]){ restoreDay(key); return; }
   if(selected[key]){
+    // 登録済みの日は、日にちを押しても取り消さない(「今回は送らない日」と思って外すと、キャンセルになってしまうため)。
+    // 変更・取り消しは、下のその日のカードで行う。
+    if(selectedChildren.some(c => (reportsByChild[c] || {})[key])){ showRegisteredDay(key); return; }
     cancelDay(key); return;
   } else {
     const pk = (isBreakDay(key) || !selectedChildren.some(hasPickupService)) ? false : effectivePickup(); // 長期休みの平日・月謝契約でない人は、お迎えサービスなし
@@ -1080,6 +1095,7 @@ function renderList(){
     }
     const card = document.createElement('div');
     card.className = 'card';
+    card.id = 'card-' + key;
     const [y,m,d] = key.split('-').map(Number);
     const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
     if (!item && cancelledDays[key]) {
