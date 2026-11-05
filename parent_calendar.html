@@ -306,7 +306,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zc</div>
+    <div id="verlabel">画面の版: 11/5-zd</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1229,7 +1229,7 @@ document.getElementById('nextMonth').onclick = () => {
 function badDays(){
   const out = [];
   Object.keys(selected).forEach(k => {
-    const bad = selectedChildren.some(c => { const d = finalItem(c, k); return d && d.endTime && d.pickup && d.startTime && d.endTime <= d.startTime; });
+    const bad = selectedChildren.some(c => { const d = finalItem(c, k); return d && d.endTime && d.startTime && d.endTime <= d.startTime; });
     if (bad) out.push({ date: k });
   });
   return out;
@@ -1259,10 +1259,16 @@ function mdw(key){
 document.getElementById('submitBtn').onclick = () => {
   const bad = badDays();
   if (bad.length) {
-    document.getElementById('submitmsg').textContent = '帰りの時刻が下校の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
+    document.getElementById('submitmsg').textContent = '帰りの時刻が、来所（下校）の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
     return;
   }
   const md2 = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
+  // 来所の時刻と帰りの時刻は、どちらか片方だけは送れない(来て帰らない・来ないで帰る、はないため)
+  const halfDays = Object.keys(selected).filter(k => selectedChildren.some(c => { const d = finalItem(c, k); return d && !!d.startTime !== !!d.endTime; })).sort();
+  if (halfDays.length) {
+    document.getElementById('submitmsg').textContent = '来所の時刻と帰りの時刻は、両方入れてください（' + halfDays.map(md2).join('、') + '）。';
+    return;
+  }
   const brkItems = (pred) => Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && pred(it, c); })).sort();
   const noStart = brkItems((it, c) => !it.startTime && kindOfChild(c) === 'monthly'); // 来所の時刻が必要なのは、午後/1日を時刻で分ける月謝のお子さんだけ
   if (noStart.length) {
@@ -1310,6 +1316,7 @@ document.getElementById('submitBtn').onclick = () => {
     ? byDate()
     : rowsOf(groups[0])) +
     (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします。</div>' : '');
+  document.getElementById('submitmsg').textContent = '';
   document.getElementById('review').style.display = 'flex';
 };
 document.getElementById('reviewBack').onclick = () => {
