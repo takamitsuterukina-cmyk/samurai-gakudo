@@ -327,7 +327,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zx</div>
+    <div id="verlabel">画面の版: 11/5-zy</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -471,8 +471,18 @@ function saveUsualT(){
   const el = document.getElementById(id);
   ['change','input','focusout'].forEach(ev => el.addEventListener(ev, saveUsualT));
 });
-document.getElementById('u-pk-yes').onclick = () => { usualT.pickup = true; saveUsualT(); };
-document.getElementById('u-pk-no').onclick = () => { usualT.pickup = false; saveUsualT(); };
+function setUsualPickup(p){
+  saveUsualT();
+  const cur = mainUsualTimes(), nxt = p ? usualT.pk : usualT.np;
+  if(cur !== nxt){
+    nxt.start = cur.start; nxt.end = cur.end;
+    const ids = p ? ['u-pk-s','u-pk-e'] : ['u-np-s','u-np-e'];
+    fillTimeSelectEl(document.getElementById(ids[0]), nxt.start); fillTimeSelectEl(document.getElementById(ids[1]), nxt.end);
+  }
+  usualT.pickup = p; saveUsualT();
+}
+document.getElementById('u-pk-yes').onclick = () => setUsualPickup(true);
+document.getElementById('u-pk-no').onclick = () => setUsualPickup(false);
 document.getElementById('u-loc-g').onclick = () => { usualT.loc = 'genkan'; saveUsualT(); };
 document.getElementById('u-loc-c').onclick = () => { usualT.loc = 'classroom'; saveUsualT(); };
 // 「いつもの時間」を変えたら、まだ送信していない新しい日(登録済みの日は除く)にも、自動で入れる。
@@ -482,7 +492,7 @@ function applyUsualToNewDays(){
   const keys = Object.keys(selected).filter(k => !originalReports[k]);
   if (!keys.length) return;
   const applyTo = (it, brk) => {
-    const u = it.pickup ? usualT.pk : usualT.np;
+    const u = mainUsualTimes();
     if (u.start && !(brk && noStartZone(u.start))) it.startTime = u.start; // 長期休みの12時台・13時台は入れない
     if (u.end) it.endTime = u.end;
   };
@@ -495,10 +505,14 @@ function applyUsualToNewDays(){
 ['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => document.getElementById(id).addEventListener('change', applyUsualToNewDays));
 // 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
 // お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
+// いつもの時間は「お迎えの要否」と、その側の時刻1組をまとめて決めるもの。主になっている側の時刻を、どの日にも使う
+// (長期休みは、お迎えが自動でなしになるが、時刻は主の側のものが入る)。選ばなかった側の時刻は、どこにも使わない。
+function mainUsualTimes(){ return effectivePickup() ? usualT.pk : usualT.np; }
 function defaultTimesFor(pickup){
   saveUsualT(); // 入力欄の今の値を、そのまま使う
-  if(pickup) return { startTime: usualT.pk.start || (childInfo && childInfo.defaultTime) || '15:00', endTime: usualT.pk.end || '18:00' };
-  return { startTime: usualT.np.start || '', endTime: usualT.np.end || '18:00' };
+  const m = mainUsualTimes();
+  if(pickup) return { startTime: m.start || (childInfo && childInfo.defaultTime) || '15:00', endTime: m.end || '18:00' };
+  return { startTime: m.start || '', endTime: m.end || '18:00' };
 }
 let holidaySet = new Set(); // 'YYYY-MM-DD' -> 祝日名(内閣府準拠の公開データ)
 
