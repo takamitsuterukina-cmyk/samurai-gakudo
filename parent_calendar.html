@@ -155,6 +155,8 @@
   #review .rtab{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:14px;font-size:19.7px;line-height:1.5;}
   #review .rtab .dh{grid-column:1 / -1;font-weight:700;padding:9px 0 3px;border-top:1px solid var(--line);}
   #review .rtab .dh.del{color:#a33;}
+  .tt{white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .pkcap{font-size:16px;color:var(--ink-soft);margin-top:2px;}
   #review .rtab .nm{font-weight:700;padding:2px 0;}
   #review .rtab .tx{padding:2px 0;}
   #review .rtab .del{color:#a33;}
@@ -337,7 +339,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zz</div>
+    <div id="verlabel">画面の版: 11/5-zzb</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -896,7 +898,7 @@ async function loadSchedule(){
       const nbParts = t => t.split('・').map(x => '<span style="white-space:nowrap;">' + x + '</span>').join('・'); // 項目の途中では折り返さない
       const cellOf = r => r.status === 'cancelled'
         ? '<span style="color:#a33;font-weight:700;white-space:nowrap;">キャンセル済み</span>' // 取り消した日も、記録として残して見せる
-        : nbParts(tableText({ ...r, date }, r.childName)) + (r.status === 'pending' ? '<span class="pend-tag" style="white-space:nowrap;">申込中</span>' : '');
+        : timeCellHtml({ ...r, date }, r.childName) + (r.status === 'pending' ? '<span class="pend-tag" style="white-space:nowrap;">申込中</span>' : '');
       const body = '<div class="vtab">' + rs.map(r => (multi ? '<div class="vnm">' + r.childName + 'さん</div>' : '') + '<div class="vtx' + (multi ? '' : ' one') + '">' + cellOf(r) + '</div>').join('') + '</div>';
       const card = document.createElement('div');
       card.className = 'viewcard' + (date < today ? ' past' : '');
@@ -1396,6 +1398,17 @@ function tableText(it, c){
   if (it.pickup || !it.startTime || !it.endTime) return usageText(it, [c]);
   return (!isBreakDay(it.date) && hasPickupService(c) ? 'お迎えなし・' : '') + it.startTime + '〜' + it.endTime;
 }
+// 確認画面・予定確認の表で使う、時刻の見え方(お迎えありでもなしでも、同じ「開始〜終了」の形で、縦にそろう)。
+//   09:00〜18:00
+//   お迎えあり・子ども教室   ← お迎えの情報は、時刻の下に小さく
+function timeCellHtml(it, c){
+  const tm = v => v || '--:--';
+  let cap = '';
+  if (it.pickup) cap = 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location || '');
+  else if (!isBreakDay(it.date) && hasPickupService(c)) cap = 'お迎えなし'; // 月謝のお子さんは、お迎えの有無が大事な確認事項
+  return '<span class="tt">' + tm(it.startTime) + '〜' + tm(it.endTime) + '</span>' +
+    (cap ? '<div class="pkcap">' + cap.replace(/・$/, '') + '</div>' : '');
+}
 function mdw(key){
   const [y,m,d] = key.split('-').map(Number);
   return m + '/' + d + '(' + ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()] + ')';
@@ -1431,7 +1444,7 @@ document.getElementById('submitBtn').onclick = () => {
   }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
-    const detail = usageText(it, g.children) + (g.children.every(c => isUnchanged(c, it)) ? sameTag(g.children[0], it.date) : '');
+    const detail = timeCellHtml(it, g.children[0]) + (g.children.every(c => isUnchanged(c, it)) ? '<div>' + sameTag(g.children[0], it.date).trim() + '</div>' : '');
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   // 2人以上まとめて送る時は、日にちを基準にして、その日、だれがどう利用するか(キャンセル・登録なしも)を、1日ぶんの枠にまとめて見せる
@@ -1444,7 +1457,7 @@ document.getElementById('submitBtn').onclick = () => {
       const allDel = rows.every(p => !p.m[k]);
       return '<div class="dh' + (allDel ? ' del' : '') + '">' + mdw(k) + '</div>' +
         rows.map(p => p.m[k]
-          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + tableText({ ...p.m[k], date: k }, p.c).split('・').map(t => '<span style="white-space:nowrap;">' + t + '</span>').join('・') + (isUnchanged(p.c, { ...p.m[k], date: k }) ? sameTag(p.c, k) : '') + '</div>'
+          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + timeCellHtml({ ...p.m[k], date: k }, p.c) + (isUnchanged(p.c, { ...p.m[k], date: k }) ? '<div>' + sameTag(p.c, k).trim() + '</div>' : '') + '</div>'
           : '<div class="nm del">' + p.c + 'さん</div><div class="tx del">キャンセル</div>').join('');
     }).join('') + '</div>';
   };
