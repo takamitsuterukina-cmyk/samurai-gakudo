@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-s</div>
+    <div id="verlabel">画面の版: 11/5-t</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -586,7 +586,7 @@ function ingestReports(reports, strict){
     if(r.date < todayKeyG) return; // 過去の記録は編集対象にしない
     const name = (r.childName && reportsByChild[r.childName]) ? r.childName : (strict ? null : children[0]);
     if(!name) return;
-    reportsByChild[name][r.date] = reportItem(r);
+    reportsByChild[name][r.date] = normItem(reportItem(r), name, r.date);
     pendingByChild[name] = pendingByChild[name] || {};
     if(r.status === 'pending') pendingByChild[name][r.date] = true; else delete pendingByChild[name][r.date];
   });
@@ -887,10 +887,16 @@ function toggleDay(key){
 function finalItem(child, key){
   const o = ovr[key] && ovr[key][child];
   if (o && o.skip) return null;
-  let it = o || selected[key] || null;
-  if (it && !hasPickupService(child)) it = { ...it, pickup: false, location: '' }; // 送迎サービスがない(月謝契約でない)お子さんは、お迎えなし
-  if (it && isBreakDay(key)) return { ...it, slot: slotFromTimes(it, child) }; // 長期休みの平日は、時間帯のボタンは出さず、来所の時刻から決める(内部の計算用)
-  return it;
+  return normItem(o || selected[key] || null, child, key);
+}
+/* お子さん・日に合わせて、内容をそろえる(送信する内容と、登録済みの内容を、同じ形で比べるため、読み込みの時も同じ処理を通す)。
+   送迎サービスがない(月謝契約でない)お子さんは、お迎えなし。長期休みの平日は、午後/1日を、来所の時刻から決める(内部の計算用)。 */
+function normItem(it, child, key){
+  if (!it) return it;
+  let x = it;
+  if (!hasPickupService(child)) x = { ...x, pickup: false, location: '' };
+  if (isBreakDay(key)) x = { ...x, slot: slotFromTimes(x, child) };
+  return x;
 }
 /* 「お迎えなし」の表記は、月謝契約のお子さんの、長期休みでない日だけ出す(お迎えの有無が大事な確認事項のため)。
    長期休み中や、月謝契約でない人(スポット・スタッフ)は、お迎えがないのがふつうなので、出さない。
@@ -994,7 +1000,8 @@ function changeChildren(list){
   // 登録済みの日の変更・キャンセルだけは、切り替えると消えてしまうので、その時だけ確認する。
   const carry = {};
   Object.keys(selected).forEach(k => { if (!originalReports[k]) carry[k] = { ...selected[k] }; });
-  const editedExisting = Object.keys(cancelledDays).length > 0 || Object.keys(selected).some(k => originalReports[k] && (!sameItem(selected[k], originalReports[k]) || isSplit(k)));
+  // 登録済みの日を、実際に変更・キャンセルしているか(お子さんごとに、登録済みの内容と、いまの画面の内容を比べる)
+  const editedExisting = selectedChildren.some(c => Object.keys(reportsByChild[c] || {}).some(k => { const f = finalItem(c, k); return !f || !sameItem(f, reportsByChild[c][k]); }));
   if (editedExisting && !confirm('登録済みの日の変更（キャンセルをふくむ）があります。お子さんを切り替えると、その変更は消えます。よろしいですか？')) return;
   selectedChildren = list;
   loadChildState();
