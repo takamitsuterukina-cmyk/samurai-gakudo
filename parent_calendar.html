@@ -321,7 +321,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zk</div>
+    <div id="verlabel">画面の版: 11/5-zl</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -979,7 +979,11 @@ function sameItem(a, b){
 }
 // 登録済みの内容から、変わっていない日か(変わっていない日は、送らない)
 function isUnchanged(c, it){ const o = (reportsByChild[c] || {})[it.date]; return !!o && sameItem(o, it); }
-const SAME_TAG = ' <span style="color:var(--ink-soft);white-space:nowrap;">（変更なし）</span>';
+// 変更のない日の目印。確定済み(承認されて確定した地域枠・スタッフ枠の日)・申込中・登録済み(月謝など)の、どれかを添える
+function sameTag(c, date){
+  const label = (pendingByChild[c] || {})[date] ? '申込中' : (isBreakDay(date) && kindOfChild(c) !== 'monthly' ? '確定済み' : '登録済み');
+  return ' <span style="color:var(--ink-soft);white-space:nowrap;">（' + label + '・変更なし）</span>';
+}
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
   return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {}));
@@ -1327,7 +1331,7 @@ document.getElementById('submitBtn').onclick = () => {
   }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
-    const detail = usageText(it, g.children) + (g.children.every(c => isUnchanged(c, it)) ? SAME_TAG : '');
+    const detail = usageText(it, g.children) + (g.children.every(c => isUnchanged(c, it)) ? sameTag(g.children[0], it.date) : '');
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   // 2人以上まとめて送る時は、日にちを基準にして、その日、だれがどう利用するか(キャンセル・登録なしも)を、1日ぶんの枠にまとめて見せる
@@ -1340,7 +1344,7 @@ document.getElementById('submitBtn').onclick = () => {
       const allDel = rows.every(p => !p.m[k]);
       return '<div class="dh' + (allDel ? ' del' : '') + '">' + mdw(k) + '</div>' +
         rows.map(p => p.m[k]
-          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + tableText({ ...p.m[k], date: k }, p.c).split('・').map(t => '<span style="white-space:nowrap;">' + t + '</span>').join('・') + (isUnchanged(p.c, { ...p.m[k], date: k }) ? SAME_TAG : '') + '</div>'
+          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + tableText({ ...p.m[k], date: k }, p.c).split('・').map(t => '<span style="white-space:nowrap;">' + t + '</span>').join('・') + (isUnchanged(p.c, { ...p.m[k], date: k }) ? sameTag(p.c, k) : '') + '</div>'
           : '<div class="nm del">' + p.c + 'さん</div><div class="tx del">キャンセル</div>').join('');
     }).join('') + '</div>';
   };
