@@ -295,6 +295,14 @@
     <div class="err" id="invErr"></div>
     <div id="invWait" style="display:none;font-size:18.5px;color:var(--ink-soft);line-height:1.6;margin-top:10px;text-align:center;">登録しています。<br>そのままお待ちください。</div>
   </div>
+  <div id="regInviteDone" style="display:none">
+    <div class="box" style="text-align:center;padding:22px 14px;">
+      <div style="font-size:32px;font-weight:700;color:var(--accent);margin-bottom:10px;">✓ 登録できました</div>
+      <div style="font-size:19.7px;line-height:1.7;">次は、<br>保護者連絡のトークから、<br>予定を登録します。</div>
+    </div>
+    <button class="go" id="invOpenChat">保護者連絡のトークを開く</button>
+    <button class="addbtn" id="invGoCalendar" style="margin-top:12px;">このまま予定を登録する</button>
+  </div>
   <div id="regManual">
   <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。<br>お迎えの設定や時刻は、<br>このあと、予定の登録画面で<br>決められます。</div>
   <div class="box">
@@ -371,7 +379,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzi</div>
+    <div id="verlabel">画面の版: 11/5-zzj</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -838,6 +846,19 @@ function inviteToken(){
   }
   return /^[0-9a-f]{20}$/.test(t || '') ? t : '';
 }
+// 登録が終わった画面: 「保護者連絡のトーク」を開くボタン(保護者は、元いたトークの上に取り残されないように)
+function showInviteDone(oaId){
+  document.getElementById('regInvite').style.display = 'none';
+  document.getElementById('regInviteDone').style.display = 'block';
+  document.getElementById('regPane').scrollIntoView();
+  const chat = document.getElementById('invOpenChat');
+  if(!oaId){ chat.style.display = 'none'; }
+  chat.onclick = () => {
+    const url = 'https://line.me/R/oaMessage/' + encodeURIComponent(oaId) + '/';
+    try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
+  };
+  document.getElementById('invGoCalendar').onclick = () => { location.reload(); };
+}
 async function showInvite(token){
   let info = null;
   try{
@@ -892,12 +913,12 @@ async function showInvite(token){
       const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'registerForm', userId, token }) });
       j = await res.json();
     }catch(e){ j = null; }
-    if (j && (j.ok || j.error === 'already')) { location.reload(); return; }
+    if (j && (j.ok || j.error === 'already')) { showInviteDone(info.oaId); return; }
     if (!j) { // 結果が読み取れなくても、実際には登録できていることがあるので、サーバーに確かめる
       try{
         const r2 = await fetch(GAS_DIRECT_URL + '?action=init&userId=' + encodeURIComponent(userId));
         const d2 = await r2.json();
-        if (d2 && d2.info && d2.info.registered) { location.reload(); return; }
+        if (d2 && d2.info && d2.info.registered) { showInviteDone(info.oaId); return; }
       }catch(e){}
     }
     document.getElementById('invWait').style.display = 'none';
