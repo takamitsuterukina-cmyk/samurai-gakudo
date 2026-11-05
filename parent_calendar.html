@@ -318,7 +318,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zg</div>
+    <div id="verlabel">画面の版: 11/5-zh</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -802,6 +802,8 @@ async function loadSchedule(){
   try{
     const res = await fetch(GAS_DIRECT_URL + '?action=myReports&all=1&userId=' + encodeURIComponent(userId));
     const reports = await res.json();
+    const nowT = new Date();
+    document.getElementById('pageGuide').textContent = '登録した最新の内容です（表示のみ）。変更は「利用予定を登録する」から。（' + (nowT.getMonth()+1) + '/' + nowT.getDate() + ' ' + nowT.getHours() + ':' + String(nowT.getMinutes()).padStart(2,'0') + ' 時点）';
     if(!reports.length){
       listEl.innerHTML = '<div class="loadingmsg">まだ登録された予定はありません。</div>';
       return;
