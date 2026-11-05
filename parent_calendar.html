@@ -323,7 +323,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zr</div>
+    <div id="verlabel">画面の版: 11/5-zs</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1023,17 +1023,9 @@ function updateSendSummary(){
   dates.forEach(k => { if (dayStatus(k) === 'same') selectedChildren.forEach(c => { if ((reportsByChild[c] || {})[k]) sameLabels.push(sameLabel(c, k)); }); });
   if (!el) return;
   const nb = t => '<span style="white-space:nowrap;">' + t + '</span>';
-  const parts = [];
-  if (n.new) parts.push(nb('新しい日 ' + n.new + '日'));
-  if (n.changed) parts.push(nb('変更した日 ' + n.changed + '日'));
-  if (n.cancel) parts.push(nb('キャンセル ' + n.cancel + '日'));
-  const any = parts.length + n.same > 0;
-  el.style.display = any ? 'block' : 'none';
-  let h = parts.length
-    ? '<b>' + nb('送るのは、') + parts.join('・') + nb('だけです。') + '</b>'
-    : '<b>' + nb('変更はありません。') + '</b>';
-  if (n.same) h += '<br><span class="sub2">' + nb('登録済みの' + n.same + '日は、') + nb('引き続き' + keepWord(sameLabels) + 'の状態が保たれます。') + '</span>';
-  el.innerHTML = h;
+  // 登録済みでそのままの日がある時だけ、安心の一文を出す(「送るのは…だけ」のような言い方は、据え置きの日をとがめるように聞こえるため使わない)
+  el.style.display = n.same ? 'block' : 'none';
+  el.innerHTML = n.same ? nb('登録済みの日は、') + nb('引き続き' + keepWord(sameLabels) + 'の状態が保たれるので、') + nb('ご安心下さい。') : '';
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
