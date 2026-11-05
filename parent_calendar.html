@@ -306,7 +306,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zd</div>
+    <div id="verlabel">画面の版: 11/5-ze</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1263,10 +1263,10 @@ document.getElementById('submitBtn').onclick = () => {
     return;
   }
   const md2 = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
-  // 来所の時刻と帰りの時刻は、どちらか片方だけは送れない(来て帰らない・来ないで帰る、はないため)
-  const halfDays = Object.keys(selected).filter(k => selectedChildren.some(c => { const d = finalItem(c, k); return d && !!d.startTime !== !!d.endTime; })).sort();
+  // 来所の時刻と帰りの時刻は、両方入っていないと送れない(時間がわからないと受け付けられない)
+  const halfDays = Object.keys(selected).filter(k => selectedChildren.some(c => { const d = finalItem(c, k); return d && (!d.startTime || !d.endTime); })).sort();
   if (halfDays.length) {
-    document.getElementById('submitmsg').textContent = '来所の時刻と帰りの時刻は、両方入れてください（' + halfDays.map(md2).join('、') + '）。';
+    document.getElementById('submitmsg').textContent = '来所の時刻と帰りの時刻を、入れてください（' + halfDays.map(md2).join('、') + '）。';
     return;
   }
   const brkItems = (pred) => Object.keys(selected).filter(k => isBreakDay(k) && selectedChildren.some(c => { const it = finalItem(c, k); return it && pred(it, c); })).sort();
