@@ -318,7 +318,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zh</div>
+    <div id="verlabel">画面の版: 11/5-zi</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -816,9 +816,11 @@ async function loadSchedule(){
     dates.forEach(date => {
       const [y,m,d] = date.split('-').map(Number);
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
-      const rs = reports.filter(r => r.date === date);
+      const rs = reports.filter(r => r.date === date).sort((a, b) => (a.status === 'cancelled') - (b.status === 'cancelled')); // 利用する日を先に、キャンセルは後に
       const use = r => '利用'; // 午後/1日の区分は内部の計算用。画面には出さない
-      const detailOf = r => usageText(r, [r.childName], true) + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
+      const detailOf = r => r.status === 'cancelled'
+        ? '<span style="color:#a33;font-weight:700;">キャンセル済み</span>' // 取り消した日も、記録として残して見せる
+        : usageText(r, [r.childName], true) + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
       // きょうだいで内容が同じなら1行にまとめる
       const groups = [];
       rs.forEach(r => {
