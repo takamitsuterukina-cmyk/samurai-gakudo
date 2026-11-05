@@ -145,7 +145,7 @@
   #review{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
   #review .sheet{background:var(--surface);width:100%;max-width:560px;max-height:86vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
   #review h2{font-size:22.2px;margin:0 0 4px;}
-  #review .sub{font-size:18.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;}
+  #review .sub{white-space:pre-line;font-size:18.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;}
   #review .row{padding:9px 0;border-top:1px solid var(--line);font-size:19.7px;line-height:1.5;}
   #review .row b{display:block;}
   #review .row.del b{color:#a33;}
@@ -306,7 +306,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-z</div>
+    <div id="verlabel">画面の版: 11/5-zc</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1247,6 +1247,11 @@ function planGroups(){
   });
   return groups;
 }
+// 確認画面の表用の短い表記。お迎えなしで来所・帰りの両方がある時は、「9:00〜18:00」のように1つにして、折り返さないようにする
+function tableText(it, c){
+  if (it.pickup || !it.startTime || !it.endTime) return usageText(it, [c]);
+  return (!isBreakDay(it.date) && hasPickupService(c) ? 'お迎えなし・' : '') + it.startTime + '〜' + it.endTime;
+}
 function mdw(key){
   const [y,m,d] = key.split('-').map(Number);
   return m + '/' + d + '(' + ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()] + ')';
@@ -1289,18 +1294,22 @@ document.getElementById('submitBtn').onclick = () => {
       const allDel = rows.every(p => !p.m[k]);
       return '<div class="dh' + (allDel ? ' del' : '') + '">' + mdw(k) + '</div>' +
         rows.map(p => p.m[k]
-          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + usageText({ ...p.m[k], date: k }, [p.c]) + '</div>'
+          ? '<div class="nm">' + p.c + 'さん</div><div class="tx">' + tableText({ ...p.m[k], date: k }, p.c).split('・').map(t => '<span style="white-space:nowrap;">' + t + '</span>').join('・') + '</div>'
           : '<div class="nm del">' + p.c + 'さん</div><div class="tx del">キャンセル</div>').join('');
     }).join('') + '</div>';
   };
   document.getElementById('reviewSub').textContent =
-    (selectedChildren.length > 1 ? '日にちごとに、利用するお子さんを表示しています。　' : '') + (selectedChildren.length > 1 ? '' : groups.length > 1 ? 'お子さんごとに、内容がちがいます。　' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)　' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん　' : ''))) +
-    '内容がちがう日は、「戻って直す」で、カードの内容を直してください。';
+    (selectedChildren.length > 1 ? '日にちごとに、利用するお子さんを表示しています。\n' : '') + (selectedChildren.length > 1 ? '' : groups.length > 1 ? 'お子さんごとに、内容がちがいます。\n' : (selectedChildren.length > 1 ? '対象: ' + selectedChildren.join('、') + 'さん(まとめて)\n' : (children.length > 1 ? '対象: ' + selectedChildren[0] + 'さん\n' : ''))) +
+    '';
+  // 文は、単語の途中で折り返さないよう、区切りごとにまとめて並べる
+  ['やり直す場合は', '「戻って直す」で、', 'カードの内容を直して下さい。'].forEach(t => {
+    const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; document.getElementById('reviewSub').appendChild(sp);
+  });
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
   document.getElementById('reviewBody').innerHTML = (selectedChildren.length > 1
     ? byDate()
     : rowsOf(groups[0])) +
-    (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします（満席などで受け付けられない日は、送信後にお知らせします）。</div>' : '');
+    (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします。</div>' : '');
   document.getElementById('review').style.display = 'flex';
 };
 document.getElementById('reviewBack').onclick = () => {
