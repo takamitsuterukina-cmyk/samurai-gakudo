@@ -324,10 +324,20 @@
         <div class="uline"><label>来所の時刻</label><span class="tp" id="u-np-s"></span></div>
         <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-np-e"></span></div>
       </div>
+      <div class="urow" id="u-bk-row">
+        <div class="utitle">長期休みの日の時刻</div>
+        <div class="uline"><label>来所の時刻</label><span class="tp" id="u-bk-s"></span></div>
+        <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-bk-e"></span></div>
+      </div>
+      <div class="urow" id="u-sp-row">
+        <div class="utitle">来所・帰りの時刻</div>
+        <div class="uline"><label>来所の時刻</label><span class="tp" id="u-sp-s"></span></div>
+        <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-sp-e"></span></div>
+      </div>
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zy</div>
+    <div id="verlabel">画面の版: 11/5-zz</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -407,13 +417,14 @@ function initTimePair(el, value, excludeHours){
   [th, tm].forEach(x => x.addEventListener('change', () => { if (th.value === '18' && tm.value !== '00' && mins.indexOf(tm.value) >= 0) tm.value = '00'; sync(); }));
 }
 function fillTimeSelectEl(el, value){ initTimePair(el, value); }
-let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' }, pickup: null, loc: '' }; // pickup: ふだんのお迎え(null=未設定) loc: ふだんの場所 // いつもの時間(お迎えあり/なし別。このスマホに覚える)
+let usualT = { pk: { start: '', end: '' }, np: { start: '', end: '' }, brk: { start: '', end: '' }, sp: { start: '', end: '' }, pickup: null, loc: '' }; // brk: 月謝のお子さんの長期休みの日の時刻 sp: スポット・スタッフ枠のお子さんの時刻 // pickup: ふだんのお迎え(null=未設定) loc: ふだんの場所 // いつもの時間(お迎えあり/なし別。このスマホに覚える)
 function usualKey(){ return 'samuraiUsualTimes_' + (userId || ''); }
 function loadUsualT(){
   try{
     const o = JSON.parse(localStorage.getItem(usualKey()) || 'null');
     if(o){
-      ['pk','np'].forEach(k => { usualT[k] = Object.assign({ start:'', end:'' }, o[k] || {}); });
+      ['pk','np','brk'].forEach(k => { usualT[k] = Object.assign({ start:'', end:'' }, o[k] || {}); });
+      usualT.sp = Object.assign({ start:'', end:'' }, o.sp || o.np || {}); // 以前の保存には、スポット・スタッフ用の欄がないので、お迎えなしの時刻を引き継ぐ
       usualT.pickup = (o.pickup === true || o.pickup === false) ? o.pickup : null;
       usualT.loc = o.loc === 'classroom' || o.loc === 'genkan' ? o.loc : '';
     }
@@ -422,6 +433,8 @@ function loadUsualT(){
   syncUsualButtons();
   fillTimeSelectEl(document.getElementById('u-pk-s'), usualT.pk.start); fillTimeSelectEl(document.getElementById('u-pk-e'), usualT.pk.end);
   fillTimeSelectEl(document.getElementById('u-np-s'), usualT.np.start); fillTimeSelectEl(document.getElementById('u-np-e'), usualT.np.end);
+  fillTimeSelectEl(document.getElementById('u-bk-s'), usualT.brk.start); fillTimeSelectEl(document.getElementById('u-bk-e'), usualT.brk.end);
+  fillTimeSelectEl(document.getElementById('u-sp-s'), usualT.sp.start); fillTimeSelectEl(document.getElementById('u-sp-e'), usualT.sp.end);
 }
 let usualFirstVisit = false;
 // ふだんのお迎え・場所のボタンの見た目を合わせる(未設定の時は、登録時の設定を使うので、どちらも押されていない見た目)
@@ -429,21 +442,35 @@ function syncUsualButtons(){
   const pk = effectivePickup();
   document.getElementById('u-pk-yes').classList.toggle('on', pk === true);
   document.getElementById('u-pk-no').classList.toggle('on', pk === false);
-  document.getElementById('u-loc-row').style.display = pk === false ? 'none' : 'flex';
-  document.getElementById('u-pk-row').style.display = pk === false ? 'none' : 'block';
-  document.getElementById('u-np-row').style.display = pk === false ? 'block' : 'none';
-  // 送迎サービスがない(月謝契約でない)お子さんだけの時は、お迎えの項目を出さず、来所・帰りの時刻だけにする
-  const noSvc = !anyPickupService();
-  document.getElementById('u-pickup-row').style.display = noSvc ? 'none' : 'block';
-  document.querySelector('#u-np-row .utitle').textContent = noSvc ? '来所・帰りの時刻' : 'お迎えが不要な日の時刻';
+  // 選んでいるお子さん(選んでいなければ全員)に合わせて、出す設定を決める。
+  // 月謝のお子さん(送迎サービスあり): ふだんの日(お迎えの要否+その側の時刻)と、長期休みの日の時刻。 スポット・スタッフ枠のお子さん: 来所・帰りの時刻1組。
+  const list = selectedChildren.length ? selectedChildren : children;
+  const monN = list.filter(c => usualGroup(c) === 'monthly'), spN = list.filter(c => usualGroup(c) !== 'monthly');
+  const hasMon = monN.length > 0, hasSp = spN.length > 0, mixed = hasMon && hasSp;
+  const hasBrk = !!(cap && (cap.breaks || []).length);
+  const who = (arr, label) => mixed ? arr.map(n => n + 'さん').join('・') + '（' + label + '）：' : '';
+  const show = (id, on, disp) => { document.getElementById(id).style.display = on ? (disp || 'block') : 'none'; };
+  show('u-pickup-row', hasMon);
+  show('u-loc-row', hasMon && pk !== false, 'flex');
+  show('u-pk-row', hasMon && pk !== false);
+  show('u-np-row', hasMon && pk === false);
+  show('u-bk-row', hasMon && hasBrk);
+  show('u-sp-row', hasSp);
+  document.querySelector('#u-pickup-row .utitle').textContent = who(monN, '月謝枠') + 'ふだんのお迎え';
+  document.querySelector('#u-pk-row .utitle').textContent = who(monN, '月謝枠') + 'ふだんの日の時刻';
+  document.querySelector('#u-np-row .utitle').textContent = who(monN, '月謝枠') + 'ふだんの日の時刻';
+  document.querySelector('#u-bk-row .utitle').textContent = who(monN, '月謝枠') + '長期休みの日の時刻';
+  document.querySelector('#u-sp-row .utitle').textContent = who(spN, 'スポット・スタッフ枠') + '来所・帰りの時刻';
   const ex = document.querySelector('#usualBox .uexp');
-  if (ex) ex.innerHTML = noSvc
+  if (ex) ex.innerHTML = !hasMon
     ? '<span style="display:inline-block;">利用時間を登録しておくと</span><span style="display:inline-block;">日ごとに入力する手間を省けます。</span><br><span style="display:inline-block;">登録後も日ごとの詳細入力で</span><span style="display:inline-block;">個別に変更もできます。</span>'
     : '<span style="display:inline-block;">お迎え・利用時間を登録しておくと</span><span style="display:inline-block;">日ごとに入力する手間を省けます。</span><br><span style="display:inline-block;">登録後も日ごとの詳細入力で</span><span style="display:inline-block;">個別に変更もできます。</span>';
   const loc = effectiveLoc();
   document.getElementById('u-loc-g').classList.toggle('on', loc === 'genkan');
   document.getElementById('u-loc-c').classList.toggle('on', loc === 'classroom');
 }
+// いつもの時間の区分: 送迎サービスのある月謝のお子さん=monthly、スポット・スタッフ枠のお子さん=spot
+function usualGroup(c){ return hasPickupService(c) ? 'monthly' : 'spot'; }
 function effectivePickup(){
   if (!anyPickupService()) return false; // 送迎サービスがあるお子さんがいなければ、お迎えは、いつもなし
   return usualT.pickup !== null ? usualT.pickup : !!(childInfo && childInfo.defaultPickup);
@@ -462,12 +489,14 @@ function effectiveLoc(){ return usualT.loc || (childInfo && childInfo.defaultLoc
 function saveUsualT(){
   usualT.pk.start = document.getElementById('u-pk-s').value; usualT.pk.end = document.getElementById('u-pk-e').value;
   usualT.np.start = document.getElementById('u-np-s').value; usualT.np.end = document.getElementById('u-np-e').value;
+  usualT.brk.start = document.getElementById('u-bk-s').value; usualT.brk.end = document.getElementById('u-bk-e').value;
+  usualT.sp.start = document.getElementById('u-sp-s').value; usualT.sp.end = document.getElementById('u-sp-e').value;
   try{ localStorage.setItem(usualKey(), JSON.stringify(usualT)); }catch(e){}
   syncUsualButtons();
 }
 // スマホでは、時刻を選んだだけ(入力欄から離れていない)だと、「変更」の合図が出ないことがある。
 // 選んでいる途中の値も拾い、日にちを選ぶ直前にも、入力欄の今の値を読み直す。
-['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => {
+['u-pk-s','u-pk-e','u-np-s','u-np-e','u-bk-s','u-bk-e','u-sp-s','u-sp-e'].forEach(id => {
   const el = document.getElementById(id);
   ['change','input','focusout'].forEach(ev => el.addEventListener(ev, saveUsualT));
 });
@@ -485,24 +514,44 @@ document.getElementById('u-pk-yes').onclick = () => setUsualPickup(true);
 document.getElementById('u-pk-no').onclick = () => setUsualPickup(false);
 document.getElementById('u-loc-g').onclick = () => { usualT.loc = 'genkan'; saveUsualT(); };
 document.getElementById('u-loc-c').onclick = () => { usualT.loc = 'classroom'; saveUsualT(); };
+// そのお子さん・その日の「いつもの時刻」(設定が空なら、空のまま返す)。
+// 月謝: 長期休みの日は「長期休みの日」の設定(なければ、ふだんの日の設定)、ふだんの日は「ふだんの日」の設定。 スポット・スタッフ枠: 自分の1組。
+function usualTimesFor(child, key){
+  if (usualGroup(child) !== 'monthly') return { start: usualT.sp.start, end: usualT.sp.end };
+  const m = mainUsualTimes();
+  if (isBreakDay(key)) return { start: usualT.brk.start || m.start, end: usualT.brk.end || m.end };
+  return { start: m.start, end: m.end };
+}
 // 「いつもの時間」を変えたら、まだ送信していない新しい日(登録済みの日は除く)にも、自動で入れる。
 // (ボタンを押す必要はない。日にちを先に選んでから、いつもの時間を決めても同じ)
 function applyUsualToNewDays(){
   saveUsualT();
   const keys = Object.keys(selected).filter(k => !originalReports[k]);
   if (!keys.length) return;
-  const applyTo = (it, brk) => {
-    const u = mainUsualTimes();
-    if (u.start && !(brk && noStartZone(u.start))) it.startTime = u.start; // 長期休みの12時台・13時台は入れない
+  const applyTo = (it, child, k) => {
+    const u = usualTimesFor(child, k);
+    const brkMon = isBreakDay(k) && kindOfChild(child) === 'monthly';
+    if (u.start && !(brkMon && noStartZone(u.start))) it.startTime = u.start; // 長期休みの12時台・13時台は入れない
     if (u.end) it.endTime = u.end;
   };
   keys.forEach(k => {
-    applyTo(selected[k], isBreakDay(k) && selectedChildren.some(n => kindOfChild(n) === 'monthly'));
-    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], isBreakDay(k) && kindOfChild(n) === 'monthly'); });
+    applyTo(selected[k], selectedChildren[0] || children[0], k);
+    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], n, k); });
   });
   renderList();
 }
-['u-pk-s','u-pk-e','u-np-s','u-np-e'].forEach(id => document.getElementById(id).addEventListener('change', applyUsualToNewDays));
+['u-pk-s','u-pk-e','u-np-s','u-np-e','u-bk-s','u-bk-e','u-sp-s','u-sp-e'].forEach(id => document.getElementById(id).addEventListener('change', applyUsualToNewDays));
+// 新しく選んだ日の、お子さんごとの初めの内容(お迎え・場所・時刻)。お子さんの区分と、その日が長期休みかどうかで決まる。
+function newDayItem(child, key){
+  saveUsualT();
+  const brk = isBreakDay(key), mon = usualGroup(child) === 'monthly';
+  const pk = mon && !brk ? effectivePickup() : false; // 長期休みの平日・送迎サービスのない人は、お迎えなし
+  const u = usualTimesFor(child, key);
+  const it = { pickup: pk, location: mon ? effectiveLoc() : '', startTime: u.start || (pk ? ((childInfo && childInfo.defaultTime) || '15:00') : ''), endTime: u.end || '18:00' };
+  // 長期休みの平日: 12時台・13時台の来所はできないので空にする。月謝のお子さんは、ふだんの放課後(午後)として14:00を初めから入れておく
+  if (brk && kindOfChild(child) === 'monthly') { if (noStartZone(it.startTime)) it.startTime = ''; if (!it.startTime) it.startTime = '14:00'; }
+  return it;
+}
 // 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
 // お迎えあり: いつもの下校の時刻(未設定なら、登録時の時刻)。お迎えなし: いつもの来所の時刻(未設定なら空)。
 // いつもの時間は「お迎えの要否」と、その側の時刻1組をまとめて決めるもの。主になっている側の時刻を、どの日にも使う
@@ -930,15 +979,9 @@ function toggleDay(key){
     if(selectedChildren.some(c => (reportsByChild[c] || {})[key])){ showRegisteredDay(key); return; }
     cancelDay(key); return;
   } else {
-    const pk = (isBreakDay(key) || !selectedChildren.some(hasPickupService)) ? false : effectivePickup(); // 長期休みの平日・月謝契約でない人は、お迎えサービスなし
-    selected[key] = Object.assign({
-      pickup: pk,
-      location: effectiveLoc(),
-    }, defaultTimesFor(pk));
-    // 長期休みの平日は、時間帯のボタンはなく、来所の時刻で決まる(月謝のお子さんは14:00より前なら1日、以降は午後。地域・スタッフは常に1日)。
-    // 12時台・13時台の来所はできないので、「いつもの時間」がそこなら空にする。月謝のお子さんだけの時は、ふだんの放課後(午後)として14:00を初めから入れておく
-    if(isBreakDay(key) && selectedChildren.some(c => kindOfChild(c) === 'monthly') && noStartZone(selected[key].startTime)) selected[key].startTime = '';
-    if(isBreakDay(key) && !selected[key].startTime && selectedChildren.every(c => kindOfChild(c) === 'monthly')) selected[key].startTime = '14:00';
+    // お子さんごとに、そのお子さんのいつもの時間を入れる(月謝のお子さんと、スポット・スタッフ枠のお子さんでは、時刻の元が違う)
+    selected[key] = newDayItem(selectedChildren[0] || children[0], key);
+    if (selectedChildren.length > 1) { ovr[key] = {}; selectedChildren.forEach(n => { ovr[key][n] = newDayItem(n, key); }); }
   }
   renderMonth();
 }
