@@ -323,7 +323,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zp</div>
+    <div id="verlabel">画面の版: 11/5-zq</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -986,8 +986,11 @@ function sameItem(a, b){
 // 登録済みの内容から、変わっていない日か(変わっていない日は、送らない)
 function isUnchanged(c, it){ const o = (reportsByChild[c] || {})[it.date]; return !!o && sameItem(o, it); }
 // 変更のない日の目印。確定済み(承認されて確定した地域枠・スタッフ枠の日)・申込中・登録済み(月謝など)の、どれかを添える
+function sameLabel(c, date){ return (pendingByChild[c] || {})[date] ? '申込中' : (isBreakDay(date) && kindOfChild(c) !== 'monthly' ? '確定済み' : '登録済み'); }
+// 「変更なし。引き続き、○○の状態が保たれます。」の○○(確定済みなら「確定」。状態が混ざる時は「いまの」)
+function keepWord(labels){ const u = Array.from(new Set(labels)); return u.length !== 1 ? 'いまの' : (u[0] === '確定済み' ? '確定' : u[0]); }
 function sameTag(c, date){
-  const label = (pendingByChild[c] || {})[date] ? '申込中' : (isBreakDay(date) && kindOfChild(c) !== 'monthly' ? '確定済み' : '登録済み');
+  const label = sameLabel(c, date);
   return ' <span style="color:var(--ink-soft);white-space:nowrap;">（' + label + '・変更なし）</span>';
 }
 /* 今回の送信で、日ごとに何が起きるか: new=新しい日 / changed=変更した日 / cancel=キャンセル / same=登録済みでそのまま(送らない) / none=関係なし */
@@ -1011,7 +1014,13 @@ function updateSendSummary(){
   selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => dates.add(k)));
   const n = { new: 0, changed: 0, cancel: 0, same: 0 };
   dates.forEach(k => { const st = dayStatus(k); if (n[st] !== undefined) n[st]++; });
-  document.querySelectorAll('#list .samenote').forEach(e => { e.style.display = dayStatus(e.dataset.key) === 'same' ? 'block' : 'none'; });
+  document.querySelectorAll('#list .samenote').forEach(e => {
+    const same = dayStatus(e.dataset.key) === 'same';
+    e.style.display = same ? 'block' : 'none';
+    if (same) e.textContent = '変更なし。引き続き' + keepWord(selectedChildren.filter(c => (reportsByChild[c] || {})[e.dataset.key]).map(c => sameLabel(c, e.dataset.key))) + 'の状態が保たれます。';
+  });
+  const sameLabels = [];
+  dates.forEach(k => { if (dayStatus(k) === 'same') selectedChildren.forEach(c => { if ((reportsByChild[c] || {})[k]) sameLabels.push(sameLabel(c, k)); }); });
   if (!el) return;
   const nb = t => '<span style="white-space:nowrap;">' + t + '</span>';
   const parts = [];
@@ -1023,7 +1032,7 @@ function updateSendSummary(){
   let h = parts.length
     ? '<b>' + nb('送るのは、') + parts.join('・') + nb('だけです。') + '</b>'
     : '<b>' + nb('変更はありません。') + '</b>';
-  if (n.same) h += '<br><span class="sub2">' + nb('登録済みの' + n.same + '日は、') + nb('そのままです。') + nb('（送りません）') + '</span>';
+  if (n.same) h += '<br><span class="sub2">' + nb('登録済みの' + n.same + '日は、') + nb('変更なし。') + nb('引き続き' + keepWord(sameLabels) + 'の状態が保たれます。') + '</span>';
   el.innerHTML = h;
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
@@ -1195,7 +1204,7 @@ function renderList(){
         <div class="datelabel">${m}/${d}(${dow})${isPend ? '<span class="pend-tag">申込中(確認待ち)</span>' : (isExisting ? '<span class="existing-tag">登録済み</span>' : '')}</div>
         <button class="remove" data-key="${key}">この日をキャンセル</button>
       </div>
-      <div class="samenote" data-key="${key}" style="display:none;margin:0 0 8px;color:var(--ink-soft);font-weight:700;">変更なし。この日は、送りません（そのまま残ります）。</div>
+      <div class="samenote" data-key="${key}" style="display:none;margin:0 0 8px;color:var(--ink-soft);font-weight:700;"></div>
       ${body}${askNote}
     `;
     list.appendChild(card);
