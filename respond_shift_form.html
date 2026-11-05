@@ -27,9 +27,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .result-box{display:none;margin-top:14px;border-radius:12px;padding:16px;font-size:17px;line-height:1.6;background:#c6f6d5;color:#22543d;border:2px solid #38a169;}
 .result-box .ok-title{font-size:26px;font-weight:800;margin-bottom:8px;}
 .result-box .next{margin-top:12px;padding-top:12px;border-top:1px solid #9ae6b4;}
-.close-btn{width:100%;padding:16px;margin-top:12px;background:#276749;color:#fff;border:none;border-radius:12px;font-size:19px;font-weight:700;cursor:pointer;}
-.close-btn:active{opacity:.85;}
-.close-guide{display:none;margin-top:10px;font-size:17px;font-weight:700;line-height:1.6;}
+.close-guide{margin-top:12px;padding:12px;border:2px dashed #38a169;border-radius:10px;background:#fff;color:#22543d;font-size:18px;font-weight:700;line-height:1.6;text-align:center;}
 .result-box.err{background:#fed7d7;color:#9b2c2c;border-color:#e53e3e;}
 .result-box.err .ok-title{font-size:22px;}
 </style>
@@ -116,14 +114,6 @@ function showResult(){
   rb.style.display='block';
   if(rb.scrollIntoView) rb.scrollIntoView({behavior:'smooth',block:'center'});
 }
-// LINEの中で開いている画面は、スクリプトから閉じられない場合がある。閉じなかった時は、✕を押す案内を出す。
-function closeForm(){
-  try{window.close();}catch(e){}
-  setTimeout(function(){
-    const g=document.getElementById('close-guide');
-    if(g) g.style.display='block';
-  },400);
-}
 function toMin(t){const [h,mm]=t.split(':').map(Number);return h*60+mm;}
 function setAnswer(day,val){
   answers[day]=val;
@@ -199,8 +189,7 @@ async function sendAnswer(){
       rb.innerHTML=`<div class="ok-title">✓ 送信しました</div>
         <div>${r.duplicate?'回答は、すでに届いています（同じ内容は二重には送られません）。':'回答が、照喜名さんに届きました。ありがとうございます。'}</div>
         <div class="next"><b>これで完了です。</b><br>回答を直したいときは、もう一度「回答を送る」を押してください。</div>
-        <button class="close-btn" onclick="closeForm()">画面を閉じる</button>
-        <div class="close-guide" id="close-guide">画面の右上の「✕」を押すと、LINEのトークに戻れます。</div>`;
+        <div class="close-guide">画面の右上の「✕」を押すと、<br>LINEのトークに戻れます。</div>`;
       showResult();
     }else if(r.network){
       rb.className='result-box err';
