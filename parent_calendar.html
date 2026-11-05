@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-t</div>
+    <div id="verlabel">画面の版: 11/5-u</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1090,7 +1090,11 @@ function renderList(){
         return '<div class="kidblock"><div class="kidhead"><b>' + n + 'さん</b>' +
           (skip ? '' : '<button class="kidtog" data-key="' + key + '" data-n="' + i + '">この日は、お休みにする</button>') + '</div>' +
           (skip
-            ? '<div class="cancelmsg" style="margin-bottom:6px;">この日は、お休み(キャンセル)になります。</div><button class="kidtog undoskip" data-key="' + key + '" data-n="' + i + '">お休みを、もとにもどす</button>'
+            ? ((reportsByChild[n] || {})[key]
+              // 登録済みの日を、お休み(キャンセル)にしようとしている
+              ? '<div class="cancelmsg" style="margin-bottom:6px;">この日は、お休み(キャンセル)になります。</div><button class="kidtog undoskip" data-key="' + key + '" data-n="' + i + '">お休みを、もとにもどす</button>'
+              // もともと、この日は登録していない(ほかのお子さんだけ登録済み)。キャンセルではない
+              : '<div style="margin-bottom:6px;font-weight:700;color:var(--ink-soft);">この日は、まだ登録していません。</div><button class="kidtog undoskip" data-key="' + key + '" data-n="' + i + '">' + n + 'さんも登録する</button>')
             : fieldsHtml(key, oo, String(i))) + '</div>';
       }).join('') + '<button class="unsplit" data-key="' + key + '">全員同じ内容に戻す(お休みも、もどします)</button>';
     }
