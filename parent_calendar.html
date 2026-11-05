@@ -300,7 +300,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-o</div>
+    <div id="verlabel">画面の版: 11/5-p</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -793,7 +793,7 @@ async function loadSchedule(){
       const dow = ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()];
       const rs = reports.filter(r => r.date === date);
       const use = r => '利用'; // 午後/1日の区分は内部の計算用。画面には出さない
-      const detailOf = r => (r.pickup ? use(r) + '・' + (PICKUP_LOCATIONS[r.location] || r.location) + '・下校' + r.startTime : use(r) + '・お迎えなし' + (r.startTime ? '・来所' + r.startTime : '')) + (r.endTime ? '・帰り' + r.endTime : '') + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
+      const detailOf = r => usageText(r, [r.childName], true) + (r.status === 'pending' ? '<span class="pend-tag">申込中(確認待ち)</span>' : '');
       // きょうだいで内容が同じなら1行にまとめる
       const groups = [];
       rs.forEach(r => {
@@ -891,6 +891,23 @@ function finalItem(child, key){
   if (it && !hasPickupService(child)) it = { ...it, pickup: false, location: '' }; // 送迎サービスがない(月謝契約でない)お子さんは、お迎えなし
   if (it && isBreakDay(key)) return { ...it, slot: slotFromTimes(it, child) }; // 長期休みの平日は、時間帯のボタンは出さず、来所の時刻から決める(内部の計算用)
   return it;
+}
+/* 「お迎えなし」の表記は、月謝契約のお子さんの、長期休みでない日だけ出す(お迎えの有無が大事な確認事項のため)。
+   長期休み中や、月謝契約でない人(スポット・スタッフ)は、お迎えがないのがふつうなので、出さない。
+   it: {date, pickup, location, startTime, endTime}、names: 対象のお子さんの名前、withUse: 先頭に「利用」を付けるか(予定を確認する画面用) */
+function usageText(it, names, withUse){
+  const parts = [];
+  if (it.pickup) {
+    parts.push('お迎えあり');
+    parts.push((PICKUP_LOCATIONS[it.location] || it.location || '') + (it.startTime ? '・下校' + it.startTime : ''));
+  } else {
+    if (!isBreakDay(it.date) && names.some(hasPickupService)) parts.push('お迎えなし');
+    if (it.startTime) parts.push('来所' + it.startTime);
+  }
+  if (it.endTime) parts.push('帰り' + it.endTime);
+  const body = parts.filter(Boolean).join('・');
+  if (withUse) return '利用' + (body ? '・' + body : '');
+  return body || '利用';
 }
 /* 長期休みの平日は、月謝のお子さんだけ、12:00〜13:59の来所はできない(午後利用は14:00から。11時台までなら1日利用)。
    地域・スタッフは一律料金なので、何時に来てもよい。 */
@@ -1019,7 +1036,7 @@ function renderList(){
     if (!item && cancelledDays[key]) {
       // キャンセルにした日: 枠は消さず、キャンセルになることが分かる形で残す
       const was = cancelledDays[key].item || {};
-      const wasTxt = was.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[was.location] || was.location || '') + (was.startTime ? '・下校' + was.startTime : '') : 'お迎えなし' + (was.startTime ? '・来所' + was.startTime : '');
+      const wasTxt = usageText({ ...was, date: key }, selectedChildren).replace(/・帰り.*$/, '');
       card.className = 'card cancelled';
       card.innerHTML = `
         <div class="cardhead">
@@ -1222,7 +1239,7 @@ document.getElementById('submitBtn').onclick = () => {
   }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
-    const detail = (it.pickup ? 'お迎えあり・' + (PICKUP_LOCATIONS[it.location] || it.location) + '・下校' + it.startTime : 'お迎えなし' + (it.startTime ? '・来所' + it.startTime : '')) + (it.endTime ? '・帰り' + it.endTime : '');
+    const detail = usageText(it, g.children);
     return '<div class="row"><b>' + mdw(it.date) + '</b>' + detail + '</div>';
   }).join('') + g.deletes.map(k => '<div class="row del"><b>' + mdw(k) + '</b>キャンセル</div>').join('');
   document.getElementById('reviewSub').textContent =
