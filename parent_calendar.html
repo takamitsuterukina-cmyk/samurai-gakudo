@@ -163,22 +163,28 @@
   #review .btns{display:flex;gap:10px;margin-top:14px;}
   #review .btns button{flex:1;padding:13px 0;border-radius:10px;font-size:20.9px;font-weight:700;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
   #review .btns button.go{background:var(--accent);border-color:var(--accent);color:#fff;}
-  details.usual{margin:12px 16px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
-  details.usual summary{padding:12px 32px 12px 0;cursor:pointer;list-style:none;position:relative;display:flex;align-items:center;gap:12px;}
+  details.usual{margin:12px 16px 8px;background:var(--accent-soft);border:2px solid var(--accent);border-radius:12px;padding:0 14px;}
+  details.usual summary{padding:12px 92px 12px 0;cursor:pointer;list-style:none;position:relative;display:flex;align-items:center;gap:12px;}
+  details.usual[open] summary{background:var(--accent);margin:0 -14px;padding:12px 100px 12px 14px;border-radius:9px 9px 0 0;}
+  details.usual[open] summary .ut,details.usual[open] summary .us{color:#fff;}
+  details.usual[open] .uicon{background:#fff;}
+  details.usual[open] .uicon svg{stroke:var(--accent);}
   details.usual .uicon{flex:none;width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;}
   details.usual .uexp{padding:0 0 12px;font-size:18.5px;line-height:1.6;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:10px;}
   details.usual summary::-webkit-details-marker{display:none;}
-  details.usual summary::after{content:'▾';position:absolute;right:2px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:22.2px;}
-  details.usual[open] summary::after{content:'▴';}
+  details.usual summary::after{content:'ひらく ▾';position:absolute;right:0;top:50%;transform:translateY(-50%);color:var(--accent);background:#fff;border:1px solid var(--accent);border-radius:16px;padding:4px 12px;font-size:16px;font-weight:700;white-space:nowrap;}
+  details.usual[open] summary::after{content:'とじる ▴';right:12px;border-color:#fff;}
   details.usual summary .ut{display:block;font-size:19.7px;font-weight:700;color:var(--accent);}
   details.usual summary .us{display:block;margin-top:4px;font-size:18.5px;font-weight:400;color:var(--ink-soft);line-height:1.55;}
-  details.usual .urow{padding:8px 0;border-top:1px solid var(--line);}
+  details.usual .urow{padding:8px 0;border-top:1px solid #c9d9c4;}
+  details.usual .tp select{background:#fff;border-color:var(--accent);}
+  details.usual .uclose{display:block;width:100%;margin:10px 0 14px;padding:12px 0;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:19.7px;font-weight:700;}
   details.usual .utitle{font-size:18.5px;font-weight:700;margin-bottom:6px;}
   details.usual .uline{display:flex;gap:8px;align-items:center;font-size:18.5px;margin-bottom:6px;}
   details.usual .uline label{width:112px;flex:none;color:var(--ink-soft);}
   details.usual .uline input[type=time]{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:19.7px;background:var(--paper);}
   details.usual .utg{display:flex;gap:8px;}
-  details.usual .utg button{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:19.7px;color:var(--ink);}
+  details.usual .utg button{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--accent);background:#fff;font-size:19.7px;color:var(--ink);}
   details.usual .utg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
   details.usual .unote{font-size:16px;color:var(--ink-soft);padding:0 0 12px;line-height:1.5;}
   #regPane{display:none;padding:16px;}
@@ -336,10 +342,11 @@
         <div class="uline"><label>来所の時刻</label><span class="tp" id="u-sp-s"></span></div>
         <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-sp-e"></span></div>
       </div>
+      <button type="button" class="uclose" id="usualClose">いつもの時間の設定を、とじる</button>
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzd</div>
+    <div id="verlabel">画面の版: 11/5-zze</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -526,6 +533,11 @@ function usualTimesFor(child, key){
 }
 // 「いつもの時間」を変えたら、まだ送信していない新しい日(登録済みの日は除く)にも、自動で入れる。
 // (ボタンを押す必要はない。日にちを先に選んでから、いつもの時間を決めても同じ)
+document.getElementById('usualClose').onclick = () => {
+  const b = document.getElementById('usualBox');
+  b.open = false;
+  b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
 function applyUsualToNewDays(){
   saveUsualT();
   const keys = Object.keys(selected).filter(k => !originalReports[k]);
