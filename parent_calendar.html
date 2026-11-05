@@ -318,7 +318,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zf</div>
+    <div id="verlabel">画面の版: 11/5-zg</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -335,7 +335,6 @@
   <div id="done"><div class="sheet">
     <h2>✓ 送信しました</h2>
     <div id="doneBody"></div>
-    <button class="back" id="doneBack">この画面にもどる</button>
   </div></div>
 
   <footer id="inputFooter">
@@ -1367,7 +1366,6 @@ function showDone(info){
   document.getElementById('doneBody').innerHTML = h;
   document.getElementById('done').style.display = 'flex';
 }
-document.getElementById('doneBack').onclick = () => { document.getElementById('done').style.display = 'none'; };
 
 async function doSubmit(){
   // お子さんごとの内容(まとめて登録でも、その日だけお休み・別内容の子は、その内容で)
