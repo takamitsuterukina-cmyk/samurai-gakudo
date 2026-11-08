@@ -402,6 +402,28 @@ function onTimeChange(d){
   if(!shiftData[d]||!s||!e) return;
   shiftData[d]={start:s,end:e};
   renderCal(); // 時間を選んでいる途中で、下の一覧を作り直すと、選択の画面が閉じてしまうため、カレンダーだけ更新する
+  markDiff(d); // 「いつもと違う」の印も、一覧を作り直さずに、その場で付け外しする
+  updateHoursSummary();
+  autoSave(); // 保存し忘れると、開き直した時に、個別に変えた時間が消えて、全部「いつもの時間」に戻ってしまう
+}
+function markDiff(d){
+  const sel=document.getElementById('s-'+d);
+  const row=sel&&sel.closest('.sel-row');
+  if(!row) return;
+  const [y,m]=ymParts();
+  const u=usualFor(new Date(y,m-1,d).getDay());
+  const sd=shiftData[d];
+  const diff=hasUsual(u)&&(sd.start!==u.start||sd.end!==u.end);
+  row.classList.toggle('diff',diff);
+  const day=row.querySelector('.sel-day');
+  const tag=day.querySelector('.tag');
+  if(diff&&!tag){
+    const t=document.createElement('span');
+    t.className='tag';t.textContent='いつもと違う';
+    day.appendChild(t);
+  }else if(!diff&&tag){
+    tag.remove();
+  }
 }
 
 function renderCal(){
