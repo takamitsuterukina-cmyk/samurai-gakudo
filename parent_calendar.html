@@ -378,7 +378,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/5-zzn</div>
+    <div id="verlabel">画面の版: 11/9-a</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -476,8 +476,19 @@ function loadUsualT(){
   fillTimeSelectEl(document.getElementById('u-np-s'), usualT.np.start); fillTimeSelectEl(document.getElementById('u-np-e'), usualT.np.end);
   fillTimeSelectEl(document.getElementById('u-bk-s'), usualT.brk.start); fillTimeSelectEl(document.getElementById('u-bk-e'), usualT.brk.end);
   fillTimeSelectEl(document.getElementById('u-sp-s'), usualT.sp.start); fillTimeSelectEl(document.getElementById('u-sp-e'), usualT.sp.end);
+  usualBasis = snapUsual();
 }
 let usualFirstVisit = false;
+// 「いつもの時間」を変えた時に、日ごとに自分で変えた時刻を上書きしないための記録。
+// usualBasis: 最後に、画面の日にちへ「いつもの時間」を反映した時点の内容 / itemBasis: その日の内容を作った(反映した)時の「いつもの時間」
+let usualBasis = null;
+const itemBasis = new WeakMap();
+function snapUsual(){ return JSON.parse(JSON.stringify(usualT)); }
+// 保存してあった内容でのその日の「いつもの時刻」(usualTimesFor と同じ計算を、指定した内容で行う)
+function usualTimesWith(snap, child, key){
+  const cur = usualT; usualT = snap;
+  try{ return usualTimesFor(child, key); } finally{ usualT = cur; }
+}
 // ふだんのお迎え・場所のボタンの見た目を合わせる(未設定の時は、登録時の設定を使うので、どちらも押されていない見た目)
 function syncUsualButtons(){
   const pk = effectivePickup();
@@ -573,18 +584,28 @@ document.getElementById('usualClose').onclick = () => {
 function applyUsualToNewDays(){
   saveUsualT();
   const keys = Object.keys(selected).filter(k => !originalReports[k]);
-  if (!keys.length) return;
-  const applyTo = (it, child, k) => {
-    const u = usualTimesFor(child, k);
-    const brkMon = isBreakDay(k) && kindOfChild(child) === 'monthly';
-    if (u.start && !(brkMon && noStartZone(u.start))) it.startTime = u.start; // 長期休みの12時台・13時台は入れない
-    if (u.end) it.endTime = u.end;
-  };
-  keys.forEach(k => {
-    applyTo(selected[k], selectedChildren[0] || children[0], k);
-    Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], n, k); });
-  });
-  renderList();
+  const before = usualBasis || snapUsual();
+  if (keys.length) {
+    // 日ごとに自分で変えた時刻は、そのまま残す(いつもの時間のままの時刻だけ、新しいいつもの時間にそろえる)
+    const applyTo = (it, child, k) => {
+      const u = usualTimesFor(child, k);
+      const b = itemBasis.get(it) || usualTimesWith(before, child, k);
+      const brkMon = isBreakDay(k) && kindOfChild(child) === 'monthly';
+      // 「自分で変えていない」= 空、前のいつもの時間のまま、または、日を選んだ時に自動で入った初めの値のまま
+      const startFree = !it.startTime || it.startTime === b.start || it.startTime === b.ds;
+      const endFree = !it.endTime || it.endTime === b.end || it.endTime === b.de;
+      const nb = { start: b.start, end: b.end, ds: b.ds, de: b.de };
+      if (u.start && startFree && !(brkMon && noStartZone(u.start))) { it.startTime = u.start; nb.start = u.start; nb.ds = it.startTime; } // 長期休みの12時台・13時台は入れない
+      if (u.end && endFree) { it.endTime = u.end; nb.end = u.end; nb.de = it.endTime; }
+      itemBasis.set(it, nb); // 自分で変えた時刻は、「自動で入った値」の記録に入れない(次に、いつもの時間を変えた時も、そのまま残すため)
+    };
+    keys.forEach(k => {
+      applyTo(selected[k], selectedChildren[0] || children[0], k);
+      Object.keys(ovr[k] || {}).forEach(n => { if (!ovr[k][n].skip) applyTo(ovr[k][n], n, k); });
+    });
+    renderList();
+  }
+  usualBasis = snapUsual();
 }
 ['u-pk-s','u-pk-e','u-np-s','u-np-e','u-bk-s','u-bk-e','u-sp-s','u-sp-e'].forEach(id => document.getElementById(id).addEventListener('change', applyUsualToNewDays));
 // 新しく選んだ日の、お子さんごとの初めの内容(お迎え・場所・時刻)。お子さんの区分と、その日が長期休みかどうかで決まる。
@@ -596,6 +617,7 @@ function newDayItem(child, key){
   const it = { pickup: pk, location: mon ? effectiveLoc() : '', startTime: u.start || (pk ? ((childInfo && childInfo.defaultTime) || '15:00') : ''), endTime: u.end || '18:00' };
   // 長期休みの平日: 12時台・13時台の来所はできないので空にする。月謝のお子さんは、ふだんの放課後(午後)として14:00を初めから入れておく
   if (brk && kindOfChild(child) === 'monthly') { if (noStartZone(it.startTime)) it.startTime = ''; if (!it.startTime) it.startTime = '14:00'; }
+  itemBasis.set(it, { start: u.start, end: u.end, ds: it.startTime, de: it.endTime });
   return it;
 }
 // 新しく日を選んだ時・お迎えの要否を切り替えた時の、時刻の初めの値。
