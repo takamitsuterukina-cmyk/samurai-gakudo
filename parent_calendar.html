@@ -263,6 +263,7 @@
     background:var(--accent);color:#fff;font-size:20.9px;font-weight:700;
   }
   footer button:disabled{background:#B9C4B4;}
+  footer button .bsub{display:block;font-size:16px;font-weight:700;line-height:1.3;margin-top:2px;}
   #done{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
   #done .sheet{background:var(--surface);width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
   #done h2{font-size:24px;margin:0 0 12px;color:var(--accent);}
@@ -319,8 +320,10 @@
       <h3>先に、友だち追加をお願いします</h3>
       <div class="hint2" style="font-size:19.7px;line-height:1.6;margin:0 0 10px;">追加すると、<br>保護者連絡のトークに、<br>登録のご案内が届きます。</div>
       <button type="button" class="addbtn" id="invAddFriend">友だち追加する</button>
-      <button type="button" class="addbtn" id="invFriendDone" style="margin-top:8px;">追加しました</button>
+      <div id="invFriendMsg" style="display:none;font-size:18.5px;line-height:1.6;color:var(--ink-soft);margin-top:10px;text-align:center;"></div>
+      <button type="button" class="addbtn" id="invFriendDone" style="display:none;margin-top:8px;">もう一度、確認する</button>
     </div>
+    <div class="box" id="invFriendOk" style="display:none;background:var(--accent-soft);border:1px solid var(--accent);text-align:center;font-size:19.7px;font-weight:700;color:var(--accent);">✓ 友だち追加を確認しました</div>
     <button class="go" id="invGo">登録する</button>
     <div class="err" id="invErr"></div>
     <div id="invWait" style="display:none;font-size:18.5px;color:var(--ink-soft);line-height:1.6;margin-top:10px;text-align:center;">登録しています。<br>そのままお待ちください。</div>
@@ -332,7 +335,7 @@
       <!-- メニューの案内は、説明の文章と図を、同じ色面(図の地の色)の枠にまとめる -->
       <div style="background:#F4F1EA;border-radius:12px;overflow:hidden;margin-top:16px;padding-top:16px;">
         <div style="font-size:19.7px;line-height:1.7;color:var(--ink);font-weight:700;">メニューが見えない時。</div>
-        <img src="guide_menu_v2.png" alt="メニューが見えないときは、左下の「≡」を押します。「メニュー ▲」が出たら、それを押します。出てきた「利用予定を登録する」を押します。" style="width:100%;height:auto;margin-top:6px;display:block;">
+        <img src="guide_menu_v3.png" alt="メニューが見えないときは、左下の「≡」を押します。「メニュー ▲」が出たら、それを押します。出てきた「利用予定を登録する」を押します。" style="width:100%;height:auto;margin-top:6px;display:block;">
       </div>
     </div>
     <button class="go" id="invOpenChat">保護者連絡のトークを開く</button>
@@ -418,8 +421,8 @@
       <button type="button" class="uclose" id="usualClose">いつもの時間の設定を、とじる</button>
     </details>
     <div id="list"></div>
-    <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/9-i</div>
+    <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
+    <div id="verlabel">画面の版: 11/9-k</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -430,7 +433,7 @@
     <h2>この内容で送ります。よろしいですか？</h2>
     <div class="sub" id="reviewSub"></div>
     <div id="reviewBody"></div>
-    <div class="btns"><button id="reviewBack">戻って直す</button><button class="go" id="reviewGo">この内容で送信する</button></div>
+    <div class="btns"><button id="reviewBack">戻って直す</button><button class="go" id="reviewGo"><span style="display:inline-block;">この内容で</span> <span style="display:inline-block;">送信する</span></button></div>
   </div></div>
 
   <div id="done"><div class="sheet">
@@ -440,7 +443,7 @@
 
   <footer id="inputFooter">
     <div id="sendSummary"></div>
-    <button id="submitBtn" disabled>選択した日を送信する</button>
+    <button id="submitBtn" disabled>登録内容を確認する</button>
     <div id="submitmsg"></div>
   </footer>
 </div>
@@ -1018,22 +1021,45 @@ async function showInvite(token){
     }catch(e){}
     try{ const f = await liff.getFriendship(); return !!f.friendFlag; }catch(e){ return true; }
   };
+  let confirmedOk = false;
   const applyFriend = (ok) => {
     document.getElementById('invFriend').style.display = ok ? 'none' : 'block';
     goBtn.disabled = !ok;
+    if(!ok){ confirmedOk = false; document.getElementById('invFriendOk').style.display = 'none'; }
   };
   applyFriend(info.friend !== undefined ? !!info.friend : await checkFriend());
+  // 「友だち追加する」を押したあとは、追加できたかを、こちらで確かめて知らせる(「追加しました」を、自分で押さなくてよい)。
+  // 追加の画面から戻った時と、数秒おきに、確かめる。確認できたら、自動で、登録するボタンが押せるようになる。
+  const fMsg = document.getElementById('invFriendMsg'), fRetry = document.getElementById('invFriendDone'), fOk = document.getElementById('invFriendOk');
+  let watching = null, tapped = false, busy = false;
+  const stopWatch = () => { if(watching){ clearInterval(watching); watching = null; } };
+  const probe = async (fromReturn) => {
+    if(busy || confirmedOk) return;
+    busy = true;
+    try{
+      const ok = await checkFriend();
+      if(ok){
+        confirmedOk = true; stopWatch();
+        applyFriend(true); fOk.style.display = 'block';
+        document.getElementById('invErr').textContent = '';
+      }else if(fromReturn){
+        fMsg.textContent = 'まだ、追加が確認できません。追加してから、この画面に戻ってください。';
+        fMsg.style.display = 'block'; fRetry.style.display = 'block';
+      }
+    }finally{ busy = false; }
+  };
   document.getElementById('invAddFriend').onclick = () => {
     const id = info.oaId || '';
     if(!id){ document.getElementById('invErr').textContent = 'LINEのトークに戻って、このアカウントを友だち追加してください。'; return; }
     const url = 'https://line.me/R/ti/p/' + encodeURIComponent(id);
     try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
+    tapped = true;
+    fMsg.textContent = '追加すると、自動で次に進みます。'; fMsg.style.display = 'block';
+    if(!watching){ const until = Date.now() + 180000; watching = setInterval(() => { if(Date.now() > until) stopWatch(); else probe(false); }, 3000); }
   };
-  document.getElementById('invFriendDone').onclick = async () => {
-    const ok = await checkFriend();
-    applyFriend(ok);
-    document.getElementById('invErr').textContent = ok ? '' : 'まだ、友だち追加が確認できません。追加してから、もう一度押してください。';
-  };
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && tapped) probe(true); });
+  window.addEventListener('focus', () => { if(tapped) probe(true); });
+  fRetry.onclick = () => probe(true);
   goBtn.onclick = async () => {
     const err = document.getElementById('invErr'); err.textContent = '';
     goBtn.disabled = true; goBtn.textContent = '登録中...';
@@ -1481,7 +1507,13 @@ function renderList(){
   document.getElementById('usualBox').style.display = selKeys.length ? 'block' : 'none'; // ②が出ている間だけ(日にちを選ぶ前は出さない)
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
-  document.getElementById('submitBtn').textContent = !hasSel && !isDirty() ? '↑ 日にちを選んでください' : (selectedChildren.length > 1 ? '送信する（' + selectedChildren.length + '人まとめて）' : (children.length > 1 ? '送信する（' + selectedChildren[0] + 'さん）' : '送信する'));
+  {
+    // 押すと、まず「この内容で送ります」の確認の画面が出る。なので、ボタンは「登録内容を確認する」(だれの分かは、2行目に)
+    const btn = document.getElementById('submitBtn');
+    const who = selectedChildren.length > 1 ? '（' + selectedChildren.length + '人まとめて）' : (children.length > 1 ? '（' + selectedChildren[0] + 'さん）' : '');
+    if (!hasSel && !isDirty()) btn.textContent = '↑ 日にちを選んでください';
+    else { btn.textContent = '登録内容を確認する'; if (who) { const sub = document.createElement('span'); sub.className = 'bsub'; sub.textContent = who; btn.appendChild(sub); } }
+  }
   list.innerHTML = '';
   const multi = selectedChildren.length > 1;
   keys.forEach(key => {
@@ -1510,7 +1542,7 @@ function renderList(){
           <div class="datelabel"><s>${m}/${d}(${dow})</s><span class="cancel-tag">キャンセル</span></div>
           <button class="undo" data-key="${key}">もとにもどす</button>
         </div>
-        <div class="cancelmsg">この日は、キャンセルになります。<br>いちばん下の「送信する」を押すと、学童に伝わります。</div>
+        <div class="cancelmsg">この日は、キャンセルになります。<br>いちばん下の「登録内容を確認する」を押して、<br>確認のあと送信すると、学童に伝わります。</div>
         <div class="cancelwas">登録していた内容: ${wasTxt}${was.endTime ? '・帰り' + was.endTime : ''}</div>`;
       list.appendChild(card);
       return;
