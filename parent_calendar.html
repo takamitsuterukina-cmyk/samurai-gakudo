@@ -85,6 +85,13 @@
   #daytoast{position:fixed;left:16px;right:16px;bottom:calc(120px + env(safe-area-inset-bottom));z-index:40;background:#333;color:#fff;border-radius:10px;padding:12px 14px;font-size:18.5px;line-height:1.6;display:none;}
   #capNote{display:none;margin:10px 16px 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--ink);font-size:18.5px;line-height:1.6;}
   #capNote .capdetail{margin-top:10px;font-size:16px;line-height:1.6;color:var(--ink-soft);}
+  /* 変更・キャンセルは3日前までの案内(いつも出す)と、3日以内の日を選んだ時の知らせ */
+  #leadNote{margin:12px 16px 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--ink);font-size:18.5px;line-height:1.6;}
+  #leadNote span,#lateNote span{display:inline-block;}
+  #leadNote .lead2{margin-top:4px;font-size:16px;color:var(--ink-soft);}
+  #leadNote .lead3{margin-top:8px;}
+  #lateNote{display:none;margin:10px 16px 0;padding:10px 12px;border-radius:10px;background:#FFF4E0;border:1px solid #E0A040;color:var(--ink);font-size:18.5px;line-height:1.6;}
+  #lateNote b{display:block;margin-bottom:2px;}
   .card .pend-tag{font-size:16px;color:#8a5a00;background:#FFF4E0;border:1px solid #E9C98B;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:700;}
   .card .nopick{font-size:18.5px;font-weight:700;color:#8a5a00;background:#FFF4E0;border:1px solid #E9C98B;border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.5;}
   .card .capnote2{font-size:17.2px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
@@ -357,6 +364,11 @@
   </header>
 
   <div id="inputPane">
+    <div id="leadNote">
+      <div class="lead1"><span>予定の変更・キャンセルは、</span><span>3日前までにお願いします。</span></div>
+      <div class="lead2"><span>（例）金曜の利用は火曜まで、</span><span>月曜の利用は前の週の金曜まで。</span></div>
+      <div class="lead3"><span>3日以内の変更は、</span><span>トークでご連絡下さい。</span><span>確認の上ご返答差し上げます</span></div>
+    </div>
     <div id="childpick"><div class="pickhead">予定を登録するお子さん</div><div class="chips" id="chips"></div><div class="pickhint">全員まとめてを選び、②の詳細入力で個別変更する事もできます。</div><div class="pickmsg" id="pickmsg"></div></div>
     <div class="stephead"><span class="sn">①</span>日にちをタップして選択<span class="ss">（選択後②で詳細入力）</span></div>
     <div class="monthbar">
@@ -372,6 +384,7 @@
 
     <div id="capNote"></div>
     <div id="satNote" style="display:none;margin:10px 16px 0;font-size:16px;line-height:1.6;color:var(--ink-soft);"></div>
+    <div id="lateNote"></div>
     <div id="empty-hint" style="padding:0"></div>
     <div id="detail-hint"><span class="sn">②</span>日ごとの詳細入力</div>
     <details class="usual" id="usualBox">
@@ -406,7 +419,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/9-h</div>
+    <div id="verlabel">画面の版: 11/9-i</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1329,7 +1342,25 @@ function dayStatus(key){
   return st;
 }
 /* 「今回送るのは…」の案内と、各日のカードの「変更なし」の表示を、いまの内容に合わせる(時刻を変えた時も呼ぶ) */
+/* 3日以内(今日から数えて0〜2日後)の日で、今回の送信で、新しく入れる・変更する・キャンセルする日 */
+const LEAD_DAYS = 3;
+function lateChangedKeys(){
+  if(!todayKeyG) return [];
+  const limit = addDaysKey(todayKeyG, LEAD_DAYS);
+  const dates = new Set(Object.keys(selected).concat(Object.keys(cancelledDays)));
+  selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => dates.add(k)));
+  return Array.from(dates).filter(k => k >= todayKeyG && k < limit && ['new','changed','cancel'].indexOf(dayStatus(k)) >= 0).sort();
+}
+const LATE_PHRASES = ['3日以内の変更は、', 'トークでご連絡下さい。', '確認の上ご返答差し上げます'];
+function renderLateNote(){
+  const el = document.getElementById('lateNote');
+  if(!el) return;
+  const ks = lateChangedKeys();
+  el.style.display = ks.length ? 'block' : 'none';
+  el.innerHTML = ks.length ? '<b>3日以内の変更が含まれています。</b>' + LATE_PHRASES.map(t => '<span>' + t + '</span>').join('') : '';
+}
 function updateSendSummary(){
+  renderLateNote();
   const el = document.getElementById('sendSummary');
   const dates = new Set(Object.keys(selected).concat(Object.keys(cancelledDays)));
   selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => dates.add(k)));
@@ -1736,7 +1767,8 @@ document.getElementById('submitBtn').onclick = () => {
   document.getElementById('reviewBody').innerHTML = (selectedChildren.length > 1
     ? byDate()
     : rowsOf(groups[0])) +
-    (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします。</div>' : '');
+    (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします。</div>' : '') +
+    (lateChangedKeys().length ? '<div class="row" style="background:#FFF4E0;line-height:1.6;"><b style="display:block;">3日以内の変更が含まれています。</b>' + LATE_PHRASES.map(t => '<span style="display:inline-block;">' + t + '</span>').join('') + '</div>' : '');
   document.getElementById('submitmsg').textContent = '';
   document.getElementById('review').style.display = 'flex';
 };
