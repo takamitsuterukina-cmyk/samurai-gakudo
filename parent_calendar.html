@@ -271,11 +271,33 @@
   #sendSummary{display:none;text-align:center;font-size:17px;line-height:1.6;color:var(--ink);margin-bottom:8px;}
   #sendSummary .sub2{color:var(--ink-soft);}
   #submitmsg{text-align:center;font-size:18.5px;color:var(--ink-soft);margin-top:6px;}
+  /* ご案内ページ(持ち物・料金など): 見出しごとに、白い枠。文字は、LINEの文字より小さくしない */
+  #infoPane{padding-bottom:40px;}
+  #infoPane .icard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
+  #infoPane .ititle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
+  #infoPane .iwho{display:inline-block;font-size:18.5px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-radius:6px;padding:2px 10px;margin:0 6px 8px 0;white-space:nowrap;}
+  #infoPane .iline{font-size:19.7px;line-height:1.7;color:var(--ink);}
+  #infoPane .iline span{display:inline-block;margin-right:.45em;} /* 言葉のまとまりの途中では、折り返さない。まとまりの間には、小さなすき間 */
+  #infoPane #infoClose{padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:22.2px;font-weight:700;}
+  #infoPane .irows{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:14px;row-gap:6px;font-size:19.7px;line-height:1.7;}
+  #infoPane .ilabel{white-space:nowrap;font-weight:700;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  #infoPane .ival{color:var(--ink);}
+  #infoPane .ival span{display:inline-block;margin-right:.45em;}
+  #infoPane .iline + .irows{margin-top:8px;}
+  #infoPane .inone{text-align:center;font-size:19.7px;color:var(--ink-soft);padding:30px 16px;line-height:1.7;}
+  #infoPreview{margin:0 16px 12px;padding:10px 14px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#8a5a00;font-size:18.5px;font-weight:700;line-height:1.5;}
 </style>
 </head>
 <body>
 
 <div id="status">読み込み中...</div>
+
+<div id="infoPane" style="display:none">
+  <header><h1>学童からのご案内</h1></header>
+  <div id="infoPreview" style="display:none"></div>
+  <div id="infoBody"></div>
+  <button class="go" id="infoClose" style="display:none;margin:8px 16px 0;width:calc(100% - 32px);">この画面を閉じる</button>
+</div>
 
 <div id="regPane">
   <h2>お子さんの登録</h2>
@@ -384,7 +406,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/9-g</div>
+    <div id="verlabel">画面の版: 11/9-h</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -806,6 +828,67 @@ function setupApp(initData, keepView){
   }
 }
 
+/* ご案内ページ: サーバーが、この家庭の契約に合う案内だけを返す(他の契約の案内は、届かない) */
+async function showInfoPage(){
+  const status = document.getElementById('status');
+  const body = document.getElementById('infoBody');
+  const mkLines = (box, lines) => {
+    (lines || []).forEach(parts => {
+      const d = document.createElement('div'); d.className = 'iline';
+      parts.forEach(p => { const s = document.createElement('span'); s.textContent = p; d.appendChild(s); });
+      box.appendChild(d);
+    });
+  };
+  const mkRows = (box, rows) => { // 縦をそろえる表(項目 | 内容)
+    if(!rows || !rows.length) return;
+    const g = document.createElement('div'); g.className = 'irows';
+    rows.forEach(r => {
+      const l = document.createElement('div'); l.className = 'ilabel'; l.textContent = r.label; g.appendChild(l);
+      const v = document.createElement('div'); v.className = 'ival';
+      r.parts.forEach(p => { const s = document.createElement('span'); s.textContent = p; v.appendChild(s); });
+      g.appendChild(v);
+    });
+    box.appendChild(g);
+  };
+  try{
+    const as = new URLSearchParams(location.search).get('as') || '';
+    const res = await fetch(GAS_DIRECT_URL + '?action=info&userId=' + encodeURIComponent(userId) + (as ? '&as=' + encodeURIComponent(as) : ''));
+    const d = await res.json();
+    if(!d || !d.ok) throw new Error('info');
+    status.style.display = 'none';
+    document.getElementById('infoPane').style.display = 'block';
+    if(d.preview){
+      const labels = { monthly: '月謝', spot: 'スポット', staff: 'スタッフ', unknown: '契約が未設定' };
+      const pv = document.getElementById('infoPreview');
+      pv.textContent = '確認用: ' + (labels[d.preview] || '') + 'の人に見える画面です。';
+      pv.style.display = 'block';
+    }
+    body.innerHTML = '';
+    (d.sections || []).forEach(s => {
+      const c = document.createElement('div'); c.className = 'icard';
+      const t = document.createElement('div'); t.className = 'ititle'; t.textContent = s.title; c.appendChild(t);
+      (s.who || []).forEach(n => { const w = document.createElement('span'); w.className = 'iwho'; w.textContent = n + ' さん'; c.appendChild(w); });
+      mkLines(c, s.lines);
+      mkRows(c, s.rows);
+      body.appendChild(c);
+    });
+    if(d.unknownNote && d.unknownNote.length){
+      const c = document.createElement('div'); c.className = 'icard';
+      const t = document.createElement('div'); t.className = 'ititle'; t.textContent = '料金について'; c.appendChild(t);
+      mkLines(c, d.unknownNote);
+      body.appendChild(c);
+    }
+    if(!body.children.length){
+      const n = document.createElement('div'); n.className = 'inone'; n.innerHTML = 'いま、ご案内は<br>ありません。'; body.appendChild(n);
+    }
+    const cl = document.getElementById('infoClose');
+    if(liff.isInClient && liff.isInClient()){ cl.style.display = 'block'; cl.onclick = () => liff.closeWindow(); }
+  }catch(e){
+    status.style.display = 'block';
+    status.innerHTML = '読み込めませんでした。<br>トークに戻って、<br>もう一度、開いてください。';
+  }
+}
+
 async function boot(){
   try{
     await liff.init({ liffId: LIFF_ID });
@@ -813,6 +896,7 @@ async function boot(){
     loadHolidays(); // カレンダー描画をブロックしないよう非同期のまま進める(読み込み完了後に自動で再描画)
     const idToken = liff.getDecodedIDToken();
     userId = idToken.sub;
+    if(new URLSearchParams(location.search).get('mode') === 'info'){ await showInfoPage(); return; } // 「ご案内を見る」から開いた時
     // 開くのを速く見せるため、前回の内容を先に表示し、最新の内容は裏で読み込んで、あとから入れ替える。
     // (最新を読み終えるまでは、送信できないようにして、古い内容のまま送ってしまうのを防ぐ)
     const cacheKey = 'samuraiInitCache_' + userId;
