@@ -16,6 +16,7 @@
     --line:#DEDBC8;
     --amber:#A8642A;
   }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -52,14 +53,14 @@
     padding:10px;
   }
   .cal .dow{
-    display:grid;grid-template-columns:repeat(7,1fr);
+    display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px; /* 文字が大きい設定の携帯でも、7列は枠の幅を超えない(minmax(0,..)がないと、日にちの大きさに引っ張られて、右にはみ出す) */
     font-size:16px;color:var(--ink-soft);text-align:center;margin-bottom:4px;
   }
   .cal .days{
-    display:grid;grid-template-columns:repeat(7,1fr);gap:4px;
+    display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;
   }
   .day{
-    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    min-width:0;padding:0;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
     border-radius:8px;font-size:19.7px;background:transparent;border:none;
     color:var(--ink);position:relative;
   }
@@ -383,7 +384,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span>送信するボタンを押す</div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/9-f</div>
+    <div id="verlabel">画面の版: 11/9-g</div>
   </div>
 
   <div id="viewPane" style="display:none">
