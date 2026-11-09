@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>予定の登録のしかた</title>
+<style>
+  :root{--accent:#3E6B49;--accent-soft:#EAF1E7;--paper:#F6F4EC;--surface:#FFFFFF;--ink:#23261E;--ink-soft:#767a6c;--line:#DEDBC8;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;padding:0 0 40px;}
+  .wrap{max-width:480px;margin:0 auto;padding:0 16px;}
+  header{padding:22px 0 6px;text-align:center;}
+  header h1{font-size:26px;margin:0;line-height:1.4;}
+  header p{font-size:18.5px;color:var(--ink-soft);margin:6px 0 0;line-height:1.6;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px 16px;}
+  .head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .num{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;}
+  .head h2{margin:0;font-size:22px;line-height:1.4;}
+  .ln{font-size:18.5px;line-height:1.7;}
+  .ln span{display:inline-block;}
+  .ln.sub{font-size:16px;color:var(--ink-soft);}
+  .txt{margin-top:12px;}
+  .shot{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper);}
+  .shot img{display:block;width:100%;height:auto;}
+  .ring{position:absolute;border:3px solid var(--accent);border-radius:12px;box-shadow:0 0 0 3px #fff;}
+  .pill{position:absolute;margin-top:6px;}
+  .pill span{display:inline-block;position:relative;background:var(--accent);color:#fff;font-weight:700;font-size:16px;line-height:1;padding:7px 14px;border-radius:999px;white-space:nowrap;}
+  .pill span::before{content:"";position:absolute;left:18px;top:-8px;border:8px solid transparent;border-top:0;border-bottom-color:var(--accent);}
+  .down{width:0;height:0;margin:10px auto;border:16px solid transparent;border-bottom:0;border-top:22px solid var(--accent);}
+  .mid{margin-top:12px;text-align:center;}
+  .mid .down{margin:6px auto;border-width:12px 12px 0;border-top-width:16px;}
+  .bar{position:relative;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 14px;background:#fff;border:1px solid var(--line);border-radius:12px;}
+  .bar .t{font-size:16px;color:var(--ink-soft);}
+  .bar .x{position:relative;width:38px;height:38px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 0 3px #fff;display:flex;align-items:center;justify-content:center;}
+  .bar .x svg{width:18px;height:18px;stroke:var(--ink);stroke-width:2.6;stroke-linecap:round;}
+  .bar .pill{right:6px;left:auto;top:48px;z-index:2;margin-top:10px;}
+  .bar .pill span::before{left:auto;right:18px;}
+  .barwrap{margin-bottom:44px;}
+  .note{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;margin-top:16px;}
+  .note .ttl{font-size:19px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+  .note .ln + .ln{margin-top:6px;}
+  .gap{height:6px;}
+  .useful{margin-top:14px;background:var(--accent-soft);border:2px solid var(--accent);}
+  .useful h2 small{display:block;font-size:16px;font-weight:700;color:var(--accent);line-height:1.4;}
+  .num.ico{background:var(--accent);}
+  .useful .shot{background:var(--accent-soft);}
+  .useful .txt + .shot{margin-top:14px;}
+  .sec{background:var(--accent);color:#fff;border-radius:14px;padding:12px 14px;margin:22px 0 14px;}
+  .sec h2{margin:0;font-size:24px;line-height:1.4;}
+  .sec p{margin:2px 0 0;font-size:18.5px;line-height:1.6;}
+  .sec p span{display:inline-block;}
+  .bdg{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff;}
+  .ln b{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font-size:16px;margin-right:6px;}
+  .msgcap{font-size:16px;color:var(--ink-soft);margin-bottom:6px;}
+  .msg{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .bub{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.7;}
+  .bub .ln{font-size:16px;line-height:1.7;}
+  .bub .lnk{display:block;margin-top:8px;padding:8px 10px;border:3px solid var(--accent);border-radius:12px;box-shadow:0 0 0 3px #fff;color:var(--accent);font-weight:700;font-size:16px;line-height:1.5;word-break:break-all;text-decoration:underline;}
+  .msg .pill{position:relative;margin-top:14px;}
+  .msg .pill span::before{left:30px;}
+  .menuimg{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="wrap"><header><h1>予定の登録のしかた</h1><p><span style="display:inline-block;">トークのメニューから、</span><span style="display:inline-block;">登録します。</span></p></header><section class="card"><div class="head"><span class="num">1</span><h2>メニューを開く</h2></div><img class="menuimg" src="guide_menu_v3.png" alt="トーク画面の左下の「≡」を押し、「メニュー ▲」を押して、「利用予定を登録する」を押す手順"><div class="txt"><div class="ln"><span>「利用予定を登録する」を</span><span>押すと、</span><span>登録の画面が開きます。</span></div></div></section><div class="down" aria-hidden="true"></div><section class="card"><div class="head"><span class="num">2</span><h2>日にちを選ぶ</h2></div><div class="shot"><img src="guide_reg_a.png" alt="登録の画面。通う日の日にちをタップすると、緑になる。" style="aspect-ratio:375/791.0"><div class="ring" style="left:18.51%;top:79.46%;width:38.21%;height:6.37%"></div><div class="pill" style="left:19.58%;top:87.10%"><span>ここを押します</span></div></div><div class="txt"><div class="ln"><span>通う日を、</span><span>タップします。</span></div><div class="ln"><span>緑になった日が、</span><span>選んだ日です。</span></div><div class="ln"><span>複数日選択できます。</span></div><div class="ln sub"><span>別の月は、</span><span>上の ‹ › で</span><span>切りかえます。</span></div></div></section><div class="down" aria-hidden="true"></div><section class="card"><div class="head"><span class="num">3</span><h2>時刻を入れる</h2></div><div class="shot"><img src="guide_reg_b.png" alt="日ごとの詳細入力。来所の時刻と、帰りの時刻を入れる。" style="aspect-ratio:375/407.0"><div class="ring" style="left:5.60%;top:63.30%;width:88.80%;height:20.39%"></div><div class="pill" style="left:8.27%;top:86.39%"><span>ここに時刻を入れます</span></div></div><div class="txt"><div class="ln"><span>選んだ日ごとに、</span><span>来所と帰りの</span><span>時刻を入れます。</span></div><div class="ln"><span>お迎えが必要な日は、</span><span>「お迎え必要」を</span><span>押します。</span></div></div></section><section class="card useful"><div class="head"><span class="num ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><h2><small>便利機能</small>いつもの時間を登録</h2></div><div class="shot"><img src="guide_use_a.png" alt="「便利機能 いつもの時間を登録」の枠。「ひらく」を押す。" style="aspect-ratio:375/96.0"><div class="ring" style="left:69.33%;top:28.12%;width:23.20%;height:43.75%"></div></div><div class="txt"><div class="ln"><span>毎回、</span><span>同じ時刻の方は、</span><span>ここに登録しておくと</span><span>便利です。</span></div><div class="ln"><span>日にちを選ぶと、</span><span>②のところに</span><span>出ます。</span></div><div class="ln"><span>「ひらく」を押して、</span><span>いつもの時刻を</span><span>入れておきます。</span></div></div><div class="shot"><img src="guide_use_b.png" alt="ひらいたところ。いつもの来所の時刻と、帰りの時刻を入れる。" style="aspect-ratio:375/550.0"><div class="ring" style="left:6.93%;top:65.45%;width:86.13%;height:17.45%"></div></div><div class="txt"><div class="ln"><span>登録した時刻は、</span><span>日ごとの時刻に</span><span>自動で入ります。</span></div><div class="ln"><span>日ごとに、</span><span>あとから変えることも</span><span>できます。</span></div><div class="ln sub"><span>この時刻は、</span><span>お使いのスマホに</span><span>覚えられます。</span></div></div></section><div class="down" aria-hidden="true"></div><section class="card"><div class="head"><span class="num">4</span><h2>登録内容を確認する</h2></div><div class="shot"><img src="guide_reg_c.png" alt="画面の下の「登録内容を確認する」ボタン。" style="aspect-ratio:375/87.0"><div class="ring" style="left:2.93%;top:9.20%;width:94.13%;height:75.86%"></div></div><div class="txt"><div class="ln"><span>いちばん下の</span><span>「登録内容を確認する」を</span><span>押します。</span></div></div><div class="mid"><div class="down"></div></div><div class="shot"><img src="guide_reg_d.png" alt="確認の画面。「この内容で送信する」を押す。" style="aspect-ratio:375/554.0"><div class="ring" style="left:50.27%;top:80.47%;width:46.53%;height:17.33%"></div></div><div class="txt"><div class="ln"><span>確認の画面で、</span><span>内容を見て、</span><span>「この内容で送信する」を</span><span>押します。</span></div></div></section><div class="down" aria-hidden="true"></div><section class="card"><div class="head"><span class="num">5</span><h2>送信できました</h2></div><div class="barwrap"><div class="bar"><span class="t">さむらい学童</span><span class="x"><svg viewBox="0 0 18 18"><path d="M3 3l12 12M15 3L3 15"/></svg></span><div class="pill"><span>ここを押します</span></div></div></div><div class="shot"><img src="guide_reg_e.png" alt="「送信しました」の画面。" style="aspect-ratio:375/313.0"></div><div class="txt"><div class="ln"><span>これで、</span><span>登録は終わりです。</span></div><div class="ln"><span>右上の ×(バツ)を</span><span>押して、</span><span>トーク画面に戻ります。</span></div></div></section><div class="note"><div class="ttl">あとから変更するとき</div><div class="ln"><span>同じ画面から、</span><span>変更・キャンセルが</span><span>できます。</span></div><div class="ln"><span>予定の変更・キャンセルは、</span><span>3日前までにお願いします。</span></div><div class="ln"><span>3日以内の変更は、</span><span>トークでご連絡下さい。</span><span>確認の上ご返答差し上げます</span></div><div class="ln"><span>登録した内容は、</span><span>メニューの「予定を確認する」で</span><span>見られます。</span></div></div></div>
+</body>
+</html>
