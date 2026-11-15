@@ -341,6 +341,11 @@
     <button class="go" id="invOpenChat">保護者連絡のトークを開く</button>
   </div>
   <div id="regManual">
+  <div class="box" id="regInviteHint" style="background:var(--accent-soft);border:1px solid var(--accent);">
+    <h3 style="margin:0 0 6px;">施設から、リンクやQRが届いている方へ</h3>
+    <div style="font-size:19.7px;line-height:1.7;"><span style="display:inline-block;">この画面を閉じて、</span> <span style="display:inline-block;">届いたリンクを、</span> <span style="display:inline-block;">もう一度押してください。</span><br><span style="display:inline-block;">お名前を入れなくても、</span> <span style="display:inline-block;">登録できます。</span></div>
+    <div style="font-size:18.5px;line-height:1.7;color:var(--ink-soft);margin-top:8px;"><span style="display:inline-block;">届いていない方は、</span> <span style="display:inline-block;">下から、そのまま</span> <span style="display:inline-block;">登録できます。</span></div>
+  </div>
   <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。<br>お迎えの設定や時刻は、<br>このあと、予定の登録画面で<br>決められます。</div>
   <div class="box">
     <h3>① お子さんのお名前(フルネーム)</h3>
@@ -907,6 +912,7 @@ async function showInfoPage(){
 
 async function boot(){
   try{
+    rememberInvite();
     await liff.init({ liffId: LIFF_ID });
     if(!liff.isLoggedIn()){ liff.login(); return; }
     loadHolidays(); // カレンダー描画をブロックしないよう非同期のまま進める(読み込み完了後に自動で再描画)
@@ -940,8 +946,13 @@ async function boot(){
     if(!initData.info.registered){
       try{ localStorage.removeItem(cacheKey); }catch(e){}
       document.getElementById('app').style.display = 'none';
-      const tk = inviteToken();
-      if(tk && await showInvite(tk)) return; // 招待リンクで開いた時は、名簿の名前が入った登録画面
+      // 招待リンクで開いた時は、名簿の名前が入った登録画面。リンクなしで開いた時(トークのメニューなど)でも、前に開いたリンクが分かれば(サーバーの記憶・この携帯の記憶)、同じ画面にする
+      const direct = inviteToken();
+      // (今、押したリンクが使えない時は、その理由を出して、名前を入れる画面へ。ほかの候補は試さない)
+      const cands = direct ? [direct] : [...new Set([initData.pendingInvite || '', storedInvite()].filter(Boolean))];
+      for(const tk of cands){
+        if(await showInvite(tk, !direct)) return;
+      }
       showRegForm(); // まだ登録していない人には、登録フォームを出す(最初の1回だけ)
       return;
     }
@@ -973,6 +984,20 @@ function inviteToken(){
   }
   return /^[0-9a-f]{20}$/.test(t || '') ? t : '';
 }
+// 開いた招待リンクの合言葉を、この携帯に覚えておく(3日間)。LINEのログインや友だち追加で開き直されても、リンクなしで開いても、名前入りの登録画面に戻すため
+function rememberInvite(){
+  try{
+    const t = inviteToken();
+    if(t) localStorage.setItem('samuraiInvite', JSON.stringify({ t, at: Date.now() }));
+  }catch(e){}
+}
+function storedInvite(){
+  try{
+    const v = JSON.parse(localStorage.getItem('samuraiInvite') || 'null');
+    if(v && /^[0-9a-f]{20}$/.test(v.t || '') && Date.now() - v.at < 3 * 86400000) return v.t;
+  }catch(e){}
+  return '';
+}
 // 登録が終わった画面: 「保護者連絡のトーク」を開くボタン(保護者は、元いたトークの上に取り残されないように)
 function showInviteDone(oaId){
   document.getElementById('regInvite').style.display = 'none';
@@ -992,7 +1017,8 @@ function showInviteDone(oaId){
     chat.onclick = () => { try{ liff.closeWindow(); }catch(e){} };
   }
 }
-async function showInvite(token){
+// quiet: 覚えていたリンクを試す時(今、押したリンクではない時)。使えなくても、理由は出さない(静かに、次の候補か、名前を入れる画面へ)
+async function showInvite(token, quiet){
   let info = null;
   try{
     const res = await fetch(GAS_DIRECT_URL + '?action=inviteInfo&token=' + encodeURIComponent(token) + '&userId=' + encodeURIComponent(userId));
@@ -1001,6 +1027,7 @@ async function showInvite(token){
   document.getElementById('status').style.display = 'none';
   document.getElementById('regPane').style.display = 'block';
   if(!info || !info.ok || !info.names || !info.names.length){
+    if(quiet && info && !info.ok) return false;
     // 使われているか、無効なリンク。名前を入れて登録する画面に切り替え、理由を伝える
     const n = document.getElementById('regNotice');
     n.textContent = (info && info.error === 'used') ? 'このリンクは、すでに使われています。お名前を入れて登録するか、施設にご連絡ください。' : (info ? 'このリンクは、使えません。お名前を入れて登録するか、施設にご連絡ください。' : '読み込めませんでした。時間を置いて、もう一度開いてください。');
