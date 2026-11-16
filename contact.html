@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お電話・メール</title>
+<style>
+  :root{--accent:#3E6B49;--accent-soft:#EAF1E7;--paper:#F6F4EC;--surface:#FFFFFF;--ink:#23261E;--ink-soft:#767a6c;--line:#DEDBC8;--warn:#B8541F;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;padding:0 0 40px;}
+  .wrap{max-width:480px;margin:0 auto;padding:0 16px;}
+  header{padding:22px 0 6px;text-align:center;}
+  header h1{font-size:26px;margin:0;line-height:1.4;}
+  header p{font-size:16px;color:var(--ink-soft);margin:6px 0 0;line-height:1.7;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px;}
+  .card h2{margin:0 0 8px;font-size:20px;line-height:1.4;color:var(--accent);}
+  .ln{font-size:16px;line-height:1.8;}
+  .ln span{display:inline-block;}
+  .btn{display:block;width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:18px;font-weight:700;text-align:center;text-decoration:none;font-family:inherit;cursor:pointer;}
+  .btn.sub{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .hours{margin-top:10px;padding:10px 12px;background:var(--accent-soft);border-radius:10px;}
+  .hours b{display:block;font-size:16px;margin-bottom:2px;}
+  .warn{margin-top:10px;color:var(--warn);font-size:16px;line-height:1.7;font-weight:700;display:none;}
+  .confirm{display:none;margin-top:12px;padding:14px;border:2px solid var(--accent);border-radius:12px;background:#fff;}
+  .confirm .big{font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:.02em;}
+  .addr{margin-top:8px;font-size:16px;word-break:break-all;color:var(--ink);}
+  .foot{margin-top:20px;font-size:16px;color:var(--ink-soft);line-height:1.8;text-align:center;}
+  .foot span{display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>お電話・メール</h1>
+    <p>ご相談・ご質問は、<br>お電話・メール・対面で<br>お願いします。</p>
+  </header>
+
+  <div class="card" id="phoneCard">
+    <h2>お電話</h2>
+    <div class="ln"><span>052-803-5517</span><br><span>（忍者保育園共有）</span></div>
+    <div class="hours ln">
+      <b>お電話の受付時間</b>
+      <span>平日 8:00〜19:00</span><br>
+      <span>土曜 8:30〜17:00</span><br>
+      <span>日曜・祝日・休園日はお休みです</span>
+    </div>
+    <div class="warn" id="phoneWarn">いまは、お電話の受付時間外です。<br>つながらない場合があります。</div>
+    <button type="button" class="btn" id="phoneAsk">お電話をかける</button>
+    <div class="confirm" id="phoneConfirm">
+      <div class="big">052-803-5517</div>
+      <div class="ln" style="text-align:center;"><span>この番号に、</span><span>お電話をかけます。</span></div>
+      <div class="ln" style="margin-top:8px;"><span>忍者保育園と共有の番号です。</span><br><span>つながったら、</span><br><span>「さむらい学童の、</span><span>お子さんの</span><span>お名前です」と</span><br><span>お伝えください。</span></div>
+      <a class="btn" href="tel:0528035517" id="phoneGo">かける</a>
+      <button type="button" class="btn sub" id="phoneBack">もどる</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>メール</h2>
+    <div class="ln"><span>ご相談・ご質問は、</span><span>メールでも</span><span>お受けします。</span></div>
+    <div class="addr" id="addr">samurai@tasukeainagoya.com</div>
+    <a class="btn" id="mailGo" href="#">メールを書く</a>
+    <button type="button" class="btn sub" id="mailCopy">アドレスをコピー</button>
+    <div class="ln" id="mailMsg" style="margin-top:8px;color:var(--accent);font-weight:700;display:none;">コピーしました</div>
+    <div class="ln" style="margin-top:10px;color:var(--ink-soft);"><span>メールアプリが開かない時は、</span><span>アドレスをコピーして</span><span>お使いください。</span></div>
+  </div>
+
+  <div class="foot">
+    <span>さむらい学童</span><br>
+    <span>470-0133</span><br>
+    <span>愛知県日進市梅森台1-95</span><br><br>
+    <span>トークは、スケジュールに関する</span><br><span>連絡事項に限らせて頂きます。</span>
+  </div>
+</div>
+<script>
+(function(){
+  var MAIL = 'samurai@tasukeainagoya.com';
+  var subject = '【さむらい学童 ご相談】お子さんのお名前';
+  var body = 'お子さんのお名前：\n（ご相談の内容を、お書きください）\n';
+  document.getElementById('mailGo').href = 'mailto:' + MAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+  // お電話の受付時間(平日 8:00-19:00 / 土曜 8:30-17:00)の外なら、確認の前に、お知らせを出す
+  function jstNow(){ var d = new Date(); return new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000); }
+  function phoneOpen(){
+    var n = jstNow(), dow = n.getDay(), m = n.getHours() * 60 + n.getMinutes();
+    if(dow === 0) return false;
+    if(dow === 6) return m >= 8 * 60 + 30 && m < 17 * 60;
+    return m >= 8 * 60 && m < 19 * 60;
+  }
+  var warn = document.getElementById('phoneWarn');
+  if(!phoneOpen()) warn.style.display = 'block';
+
+  var ask = document.getElementById('phoneAsk'), conf = document.getElementById('phoneConfirm');
+  ask.addEventListener('click', function(){ ask.style.display = 'none'; conf.style.display = 'block'; conf.scrollIntoView({behavior:'smooth', block:'center'}); });
+  document.getElementById('phoneBack').addEventListener('click', function(){ conf.style.display = 'none'; ask.style.display = 'block'; });
+
+  document.getElementById('mailCopy').addEventListener('click', function(){
+    var msg = document.getElementById('mailMsg');
+    function done(){ msg.style.display = 'block'; setTimeout(function(){ msg.style.display = 'none'; }, 3000); }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(MAIL).then(done, fallback); return; }
+    }catch(e){}
+    fallback();
+    function fallback(){
+      var t = document.createElement('textarea'); t.value = MAIL; t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select();
+      try{ document.execCommand('copy'); done(); }catch(e){}
+      document.body.removeChild(t);
+    }
+  });
+})();
+</script>
+</body>
+</html>
