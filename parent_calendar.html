@@ -144,6 +144,21 @@
   .detail-row.end{margin-top:8px;}
   .hint{font-size:16px;color:var(--ink-soft);margin:4px 0 0 120px;line-height:1.4;}
 
+  /* 長期休みの給食の「必要/不要」(1日利用の日があるお子さんだけに出す) */
+  #lunchBox{display:none;margin:14px 16px 0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;}
+  #lunchBox .lh{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;margin-bottom:4px;}
+  #lunchBox .lh .sn{display:inline-block;margin-right:6px;color:var(--accent);}
+  #lunchBox .lw{font-size:19.7px;font-weight:700;color:var(--ink);margin:12px 0 2px;}
+  #lunchBox .ld{font-size:16px;color:var(--ink-soft);margin:2px 0 6px;line-height:1.5;}
+  #lunchBox .lt{display:flex;gap:8px;margin:6px 0;}
+  #lunchBox .lt button{flex:1;min-height:56px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);font-size:20px;color:var(--ink);line-height:1.3;}
+  #lunchBox .lt button .ls{display:block;font-size:16px;font-weight:400;}
+  #lunchBox .lt button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  #lunchBox .lt button.on .ls{color:#fff;}
+  #lunchBox .lnote{margin-top:10px;font-size:16px;line-height:1.7;color:var(--ink-soft);}
+  #lunchBox .lnote p{margin:0 0 4px;}
+  #lunchBox .lnote span{display:inline-block;margin-right:.3em;}
+  #lunchBox .lmiss{font-size:16px;font-weight:700;color:#c53030;margin-top:6px;}
   #submitGuide .sh{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;}
   #submitGuide .sh .sn{display:inline-block;margin-right:6px;color:var(--accent);}
   #submitGuide{display:none;margin:18px 16px 0;}
@@ -439,8 +454,9 @@
       <button type="button" class="uclose" id="usualClose">いつもの時間の設定を、とじる</button>
     </details>
     <div id="list"></div>
+    <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/16-b</div>
+    <div id="verlabel">画面の版: 11/16-c(給食テスト)</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -484,6 +500,63 @@ let selectedChildren = [];    // 今、予定を登録する対象のお子さ�
 let reportsByChild = {};      // { お子さん名: { 'YYYY-MM-DD': {pickup, location, startTime} } } 今日以降の登録済みの内容
 let todayKeyG = '';
 let cap = null;               // 長期休み(冬休みなど)の設定と空き状況。設定が無い間は null(今までどおりの画面)
+let lunchSaved = {};          // サーバーに記録済みの、給食の希望 { お子さん: { 日付: 'need'|'bring' } }
+const lunchPick = {};         // いま画面で選んでいる、給食の希望 { お子さん: 'need'|'bring' }
+
+/* ===== 長期休みの給食(必要/不要) =====
+   聞くのは、長期休みの平日で、昼の前に来る(1日利用の)日があるお子さんだけ。午後だけの日は、給食の時間に間に合わないので聞かない。 */
+function lunchDays(c){
+  return Object.keys(selected).filter(k => isBreakDay(k)).filter(k => {
+    const it = finalItem(c, k);
+    return it && (!it.startTime || it.startTime < '12:00');
+  }).sort();
+}
+function lunchSavedChoice(c, days){
+  const m = lunchSaved[c] || {};
+  const vs = days.map(k => m[k]);
+  return (vs.length && vs.every(v => v && v === vs[0])) ? vs[0] : ''; // 記録が全部の日で同じ時だけ、前回の選択として出す
+}
+/* 給食の欄は、サーバー(GAS)が給食の申告に対応している時(読み込みの返事に lunch がある時)だけ出す。
+   古いGASのままだと、選んでも記録されないので、出さない。 */
+let lunchEnabled = false;
+function lunchAsk(){ return lunchEnabled ? selectedChildren.filter(c => lunchDays(c).length) : []; }
+function lunchChoice(c){ return lunchPick[c] !== undefined ? lunchPick[c] : lunchSavedChoice(c, lunchDays(c)); }
+function lunchMissing(){ return lunchAsk().filter(c => !lunchChoice(c)); }
+function lunchDirty(){ return lunchAsk().some(c => { const ch = lunchChoice(c); return ch && lunchSavedChoice(c, lunchDays(c)) !== ch; }); }
+function lunchPayload(){
+  const out = {};
+  lunchAsk().forEach(c => { const ch = lunchChoice(c); if (!ch) return; out[c] = {}; lunchDays(c).forEach(k => { out[c][k] = ch; }); });
+  return out;
+}
+const LUNCH_LABEL = { need: '給食 必要', bring: '給食 不要（お弁当持参）' };
+function renderLunchBox(){
+  const box = document.getElementById('lunchBox');
+  const ask = lunchAsk();
+  if (!ask.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const nb = t => '<span>' + t + '</span>';
+  const md = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
+  let h = '<div class="lh">給食は 必要ですか？</div>';
+  ask.forEach((c, i) => {
+    const ch = lunchChoice(c);
+    if (children.length > 1) h += '<div class="lw">' + c.replace(/[&<>"]/g, x => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[x])) + ' さん</div>';
+    h += '<div class="ld">対象の日： ' + lunchDays(c).map(md).join('、') + '</div>';
+    h += '<div class="lt"><button type="button" data-i="' + i + '" data-v="need" class="' + (ch === 'need' ? 'on' : '') + '">必要</button>' +
+         '<button type="button" data-i="' + i + '" data-v="bring" class="' + (ch === 'bring' ? 'on' : '') + '">不要<span class="ls">お弁当持参</span></button></div>';
+    if (!ch) h += '<div class="lmiss">どちらかを選んでください。</div>';
+  });
+  h += '<div class="lnote">' +
+    '<p>' + nb('不要の場合は') + nb('お弁当をご持参ください。') + '</p>' +
+    '<p>' + nb('ごはんのみ・おかずのみの提供は、') + nb('調理室との連携、') + nb('仕分けの負担から') + nb('廃止させて頂きました。') + '</p>' +
+    '<p>' + nb('ご理解の程') + nb('宜しくお願いいたします。') + '</p></div>';
+  box.innerHTML = h;
+  box.style.display = 'block';
+  box.querySelectorAll('.lt button').forEach(b => b.onclick = () => {
+    lunchPick[ask[Number(b.dataset.i)]] = b.dataset.v;
+    renderLunchBox();
+    document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
+    updateSendSummary();
+  });
+}
 let pendingByChild = {};      // { お子さん名: { 'YYYY-MM-DD': true } } 学童の確認待ち(申込中)の日
 let slotDefault = '';         // 長期休みの日を新しく選んだ時の、時間帯の初めの値(am/pm/all)
 const SLOT_LABELS = { am:'午前', pm:'午後', all:'1日' };
@@ -835,6 +908,8 @@ let freshLoaded = false; // 最新の内容をサーバーから読み終えた�
 function setupApp(initData, keepView){
   childInfo = initData.info;
   cap = initData.cap || null;
+  lunchEnabled = !!initData.lunch && typeof initData.lunch === 'object';
+  lunchSaved = lunchEnabled ? initData.lunch : {};
   try{ slotDefault = localStorage.getItem('samuraiSlot_' + userId) || ''; }catch(e){ slotDefault = ''; }
   if(['pm','all'].indexOf(slotDefault) < 0) slotDefault = '';
   children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
@@ -1461,7 +1536,7 @@ function updateSendSummary(){
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
-  return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {}));
+  return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {})) || lunchDirty();
 }
 
 /* 画面で触った変更があるか(登録済みの内容と、いま画面の内容が違うか) */
@@ -1558,6 +1633,7 @@ function renderList(){
     }
     document.getElementById('submitNote').innerHTML = parts.join('<br>');
   }
+  renderLunchBox();
   document.getElementById('usualBox').style.display = selKeys.length ? 'block' : 'none'; // ②が出ている間だけ(日にちを選ぶ前は出さない)
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
@@ -1823,6 +1899,12 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '午前のみのご利用は、受け付けていません（' + amOnly.map(md2).join('、') + '）。帰りの時刻を、12時より後にしてください。';
     return;
   }
+  const lunchMiss = lunchMissing();
+  if (lunchMiss.length) {
+    document.getElementById('submitmsg').textContent = '給食が必要か不要か、選んでください' + (children.length > 1 ? '（' + lunchMiss.join('、') + 'さん）' : '') + '。';
+    const lb = document.getElementById('lunchBox'); if (lb && lb.scrollIntoView) lb.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
   const groups = planGroups();
   const rowsOf = g => g.days.map(it => {
     const detail = timeCellHtml(it, g.children[0]) + (g.children.every(c => isUnchanged(c, it)) ? '<div>' + sameTag(g.children[0], it.date).trim() + '</div>' : '');
@@ -1849,10 +1931,15 @@ document.getElementById('submitBtn').onclick = () => {
   ['やり直す場合は', '「戻って直す」で、', 'カードの内容を直して下さい。'].forEach(t => {
     const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; document.getElementById('reviewSub').appendChild(sp);
   });
+  // 給食の希望(選んだお子さんの分)。確認の画面にも出して、送る前に見直せるようにする
+  const lunchRowsHtml = lunchAsk().length
+    ? '<div class="row"><b>給食</b>' + lunchAsk().map(c => '<div>' + (children.length > 1 ? c.replace(/[&<>"]/g, x => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[x])) + 'さん：' : '') + (lunchChoice(c) === 'bring' ? '不要（お弁当持参）' : '必要') + '</div>').join('') + '</div>'
+    : '';
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
   document.getElementById('reviewBody').innerHTML = (selectedChildren.length > 1
     ? byDate()
-    : rowsOf(groups[0])) +
+    : (groups.length ? rowsOf(groups[0]) : '<div class="row">日にちの変更は、ありません。</div>')) +
+    lunchRowsHtml +
     (needOk ? '<div class="row" style="background:#FFF4E0;line-height:1.6;">長期休みの申し込みは、学童が確認してから確定します。確定・お断りは、LINEでお知らせします。</div>' : '') +
     (lateChangedKeys().length ? '<div class="row" style="background:#FFF4E0;line-height:1.6;"><b style="display:block;">3日以内の変更が含まれています。</b>' + LATE_PHRASES.map(t => '<span style="display:inline-block;">' + t + '</span>').join('') + '</div>' : '');
   document.getElementById('submitmsg').textContent = '';
@@ -1897,16 +1984,18 @@ async function doSubmit(){
     perChild[c] = { days: Object.keys(m).map(k => ({ date: k, ...m[k] })).filter(it => !isUnchanged(c, it)), deletes: Object.keys(reportsByChild[c] || {}).filter(k => !m[k]) }; // 変わっていない日は、送らない
   });
   const first = perChild[selectedChildren[0]];
+  const lunch = lunchPayload(); // 長期休みの給食の希望 { お子さん: { 日付: 'need'|'bring' } }
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitmsg').textContent = '送信中...';
   const smsg = document.getElementById('submitmsg');
   if (cap) {
     // 長期休みの設定がある時は、結果(申込中になった日・受け付けられなかった日)を読み取れるよう、直接送る
     try{
-      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }) });
+      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild, lunch }) });
       let j = null; try{ j = await res.json(); }catch(e){}
       if (j && j.ok === false) throw new Error('ng');
       const pend = (j && j.pending) || [], rej = (j && j.rejected) || [];
+      Object.keys(lunch).forEach(c => { lunchSaved[c] = { ...(lunchSaved[c] || {}), ...lunch[c] }; }); // 読み直しが遅れても、送った分は記録済みとして扱う
       try{ await refreshFromServer(); }catch(e){ /* 読み直せなくても、送信は済んでいる */ }
       smsg.textContent = '';
       showDone({ unknown: !j, pend: new Set(pend.map(x => x.date)).size, rej, nCancel: 0 });
@@ -1920,8 +2009,9 @@ async function doSubmit(){
     await fetch(GAS_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild }),
+      body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild, lunch }),
     });
+    Object.keys(lunch).forEach(c => { lunchSaved[c] = { ...(lunchSaved[c] || {}), ...lunch[c] }; }); // 送ったので、記録済みとして扱う
     const nCancel = Object.keys(cancelledDays).length;
     document.getElementById('submitmsg').textContent = '';
     showDone({ nCancel });
