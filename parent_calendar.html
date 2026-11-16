@@ -145,7 +145,8 @@
   .hint{font-size:16px;color:var(--ink-soft);margin:4px 0 0 120px;line-height:1.4;}
 
   /* 長期休みの給食の「必要/不要」(1日利用の日があるお子さんだけに出す) */
-  #lunchBox{display:none;margin:14px 16px 0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;}
+  #lunchBox{display:none;margin:14px 16px 0;}
+  #lunchBox .lcard{padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;}
   #lunchBox .lh{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;margin-bottom:4px;}
   #lunchBox .lh .sn{display:inline-block;margin-right:6px;color:var(--accent);}
   #lunchBox .lw{font-size:19.7px;font-weight:700;color:var(--ink);margin:12px 0 2px;}
@@ -567,29 +568,34 @@ function renderLunchBox(){
   const nb = t => '<span>' + t + '</span>';
   const md = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
   const tg = (i, key, opts, cur) => '<div class="lt">' + opts.map(o => '<button type="button" data-i="' + i + '" data-k="' + key + '" data-v="' + o.v + '" class="' + (cur === o.v ? 'on' : '') + '">' + o.t + (o.s ? '<span class="ls">' + o.s + '</span>' : '') + '</button>').join('') + '</div>';
-  let h = '<div class="lh">給食・アレルギー・英語レッスン</div>';
+  // 食べ物に関すること(給食・アレルギー)と、英語レッスンは、別の枠に分ける
+  let food = '<div class="lh">給食・アレルギー</div>', eng = '<div class="lh">英語レッスン</div>';
   let anyLunch = false;
   kids.forEach((c, i) => {
     const p = profileOf(c), lunchDaysC = lunchDays(c), ch = lunchChoice(c);
-    if (children.length > 1) h += '<div class="lw">' + escHtml(c) + ' さん</div>';
+    const who = children.length > 1 ? '<div class="lw">' + escHtml(c) + ' さん</div>' : '';
+    food += who;
     if (lunchDaysC.length) {
       anyLunch = true;
-      h += '<div class="lq">給食は 必要ですか？</div><div class="ld">対象の日： ' + lunchDaysC.map(md).join('、') + '</div>' +
+      food += '<div class="lq">給食は 必要ですか？</div><div class="ld">対象の日： ' + lunchDaysC.map(md).join('、') + '</div>' +
         tg(i, 'lunch', [{ v:'need', t:'必要' }, { v:'bring', t:'不要', s:'お弁当持参' }], ch);
-      if (!ch) h += '<div class="lmiss">どちらかを選んでください。</div>';
+      if (!ch) food += '<div class="lmiss">どちらかを選んでください。</div>';
     }
-    h += '<div class="lq">アレルギーは ありますか？</div>' + tg(i, 'allergy', [{ v:'no', t:'なし' }, { v:'yes', t:'あり' }], p.allergy);
+    food += '<div class="lq">アレルギーは ありますか？</div>' + tg(i, 'allergy', [{ v:'no', t:'なし' }, { v:'yes', t:'あり' }], p.allergy);
     if (p.allergy === 'yes') {
-      h += '<input type="text" class="li" data-i="' + i + '" maxlength="100" placeholder="食材（例：卵・乳製品）" value="' + escHtml(p.allergyDetail) + '">';
-      if (!p.allergyDetail.trim()) h += '<div class="lmiss" data-for="' + i + '">食材を入れてください。</div>';
-    } else if (!p.allergy) h += '<div class="lmiss">どちらかを選んでください。</div>';
-    h += '<div class="lq">英語レッスンを 受けますか？</div>' + tg(i, 'english', [{ v:'yes', t:'受ける' }, { v:'no', t:'受けない' }], p.english);
-    if (!p.english) h += '<div class="lmiss">どちらかを選んでください。</div>';
+      food += '<input type="text" class="li" data-i="' + i + '" maxlength="100" placeholder="食材（例：卵・乳製品）" value="' + escHtml(p.allergyDetail) + '">';
+      if (!p.allergyDetail.trim()) food += '<div class="lmiss" data-for="' + i + '">食材を入れてください。</div>';
+    } else if (!p.allergy) food += '<div class="lmiss">どちらかを選んでください。</div>';
+    eng += who + '<div class="lq">英語レッスンを 受けますか？</div>' + tg(i, 'english', [{ v:'yes', t:'受ける' }, { v:'no', t:'受けない' }], p.english);
+    if (!p.english) eng += '<div class="lmiss">どちらかを選んでください。</div>';
   });
-  if (anyLunch) h += '<div class="lnote">' +
-    '<p>' + nb('不要の場合は') + nb('お弁当をご持参ください。') + '</p>' +
+  // 給食の注意書きは、給食・アレルギーの枠の下(英語の枠より上)に置く
+  if (anyLunch) food += '<div class="lnote">' +
+    '<p>' + nb('給食不要の場合は') + nb('お弁当をご持参ください。') + '</p>' +
+    '<p>' + nb('給食必要で、') + nb('個別の日のみ') + nb('お弁当持参の場合は、') + nb('3日前までに') + nb('トークで') + nb('ご連絡下さい。') + '</p>' +
     '<p>' + nb('ごはんのみ・おかずのみの提供は、') + nb('調理室との連携、') + nb('仕分けの負担から') + nb('廃止させて頂きました。') + '</p>' +
     '<p>' + nb('ご理解の程') + nb('宜しくお願いいたします。') + '</p></div>';
+  const h = '<div class="lcard">' + food + '</div><div class="lcard">' + eng + '</div>';
   box.innerHTML = h;
   box.style.display = 'block';
   const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; updateSendSummary(); };
@@ -1984,12 +1990,17 @@ document.getElementById('submitBtn').onclick = () => {
     const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; document.getElementById('reviewSub').appendChild(sp);
   });
   // 給食の希望(選んだお子さんの分)。確認の画面にも出して、送る前に見直せるようにする
+  // 確認の画面も、食べ物(給食・アレルギー)と英語レッスンを、別の枠に分ける
   const lunchRowsHtml = breakKids().length
-    ? '<div class="row"><b>給食・アレルギー・英語</b>' + breakKids().map(c => {
+    ? '<div class="row"><b>給食・アレルギー</b>' + breakKids().map(c => {
         const p = profileOf(c);
         const who = children.length > 1 ? '<div><b>' + escHtml(c) + 'さん</b></div>' : '';
         const lunchLine = lunchAsk().indexOf(c) >= 0 ? '<div>給食：' + (lunchChoice(c) === 'bring' ? '不要（お弁当持参）' : '必要') + '</div>' : '';
-        return who + lunchLine + '<div>アレルギー：' + (p.allergy === 'yes' ? 'あり（' + escHtml(p.allergyDetail.trim()) + '）' : 'なし') + '</div><div>英語レッスン：' + (p.english === 'yes' ? '受ける' : '受けない') + '</div>';
+        return who + lunchLine + '<div>アレルギー：' + (p.allergy === 'yes' ? 'あり（' + escHtml(p.allergyDetail.trim()) + '）' : 'なし') + '</div>';
+      }).join('') + '</div>' +
+      '<div class="row"><b>英語レッスン</b>' + breakKids().map(c => {
+        const p = profileOf(c);
+        return '<div>' + (children.length > 1 ? escHtml(c) + 'さん：' : '') + (p.english === 'yes' ? '受ける' : '受けない') + '</div>';
       }).join('') + '</div>'
     : '';
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
