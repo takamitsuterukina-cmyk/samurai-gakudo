@@ -292,6 +292,12 @@
   #infoPane .ival{color:var(--ink);}
   #infoPane .ival span{display:inline-block;margin-right:.45em;}
   #infoPane .iline + .irows{margin-top:8px;}
+  /* 項目ごとに「・」を付け、折り返した行は、文字の頭にそろえる。項目の間には、うすい区切り線 */
+  #infoPane .ibul{display:flex;align-items:flex-start;gap:.3em;}
+  #infoPane .ibul + .ibul{border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;}
+  #infoPane .ibul .ibm{flex:none;margin-right:0;font-weight:700;color:var(--accent);}
+  #infoPane .ibul .itext{min-width:0;flex:1;}
+  #infoPane .inote{font-size:17.5px;color:var(--ink-soft);padding-left:1.3em;line-height:1.6;margin-top:4px;}
   #infoPane .inone{text-align:center;font-size:19.7px;color:var(--ink-soft);padding:30px 16px;line-height:1.7;}
   #infoPreview{margin:0 16px 12px;padding:10px 14px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#8a5a00;font-size:18.5px;font-weight:700;line-height:1.5;}
 </style>
@@ -427,7 +433,7 @@
     </details>
     <div id="list"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/9-k</div>
+    <div id="verlabel">画面の版: 11/16-a</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -853,10 +859,21 @@ function setupApp(initData, keepView){
 async function showInfoPage(){
   const status = document.getElementById('status');
   const body = document.getElementById('infoBody');
-  const mkLines = (box, lines) => {
+  // plain=true: 文章のまま(「・」を付けない)。それ以外は、1行=1項目として「・」を付ける。「※」「(」で始まる行は、前の項目の補足(「・」なし)
+  const mkLines = (box, lines, plain) => {
     (lines || []).forEach(parts => {
-      const d = document.createElement('div'); d.className = 'iline';
-      parts.forEach(p => { const s = document.createElement('span'); s.textContent = p; d.appendChild(s); });
+      const d = document.createElement('div');
+      const first = (parts[0] || '').charAt(0);
+      const isNote = !plain && (first === '※' || first === '(' || first === '（');
+      let host = d;
+      if(plain){ d.className = 'iline'; }
+      else if(isNote){ d.className = 'iline inote'; }
+      else {
+        d.className = 'iline ibul';
+        const b = document.createElement('span'); b.className = 'ibm'; b.setAttribute('aria-hidden', 'true'); b.textContent = '・'; d.appendChild(b);
+        host = document.createElement('div'); host.className = 'itext'; d.appendChild(host);
+      }
+      parts.forEach(p => { const s = document.createElement('span'); s.textContent = p; host.appendChild(s); });
       box.appendChild(d);
     });
   };
@@ -896,7 +913,7 @@ async function showInfoPage(){
     if(d.unknownNote && d.unknownNote.length){
       const c = document.createElement('div'); c.className = 'icard';
       const t = document.createElement('div'); t.className = 'ititle'; t.textContent = '料金について'; c.appendChild(t);
-      mkLines(c, d.unknownNote);
+      mkLines(c, d.unknownNote, true);
       body.appendChild(c);
     }
     if(!body.children.length){
