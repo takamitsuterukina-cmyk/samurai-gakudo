@@ -700,10 +700,10 @@ function syncUsualButtons(){
   show('u-np-row', hasMon && pk === false);
   show('u-bk-row', hasMon && hasBrk);
   show('u-sp-row', hasSp);
-  document.querySelector('#u-pickup-row .utitle').textContent = who(monN, '月謝枠') + 'ふだんのお迎え';
-  document.querySelector('#u-pk-row .utitle').textContent = who(monN, '月謝枠') + 'ふだんの日の時刻';
-  document.querySelector('#u-np-row .utitle').textContent = who(monN, '月謝枠') + 'ふだんの日の時刻';
-  document.querySelector('#u-bk-row .utitle').textContent = who(monN, '月謝枠') + '長期休みの日の時刻';
+  document.querySelector('#u-pickup-row .utitle').textContent = who(monN, '月謝契約枠') + 'ふだんのお迎え';
+  document.querySelector('#u-pk-row .utitle').textContent = who(monN, '月謝契約枠') + 'ふだんの日の時刻';
+  document.querySelector('#u-np-row .utitle').textContent = who(monN, '月謝契約枠') + 'ふだんの日の時刻';
+  document.querySelector('#u-bk-row .utitle').textContent = who(monN, '月謝契約枠') + '長期休みの日の時刻';
   document.querySelector('#u-sp-row .utitle').textContent = who(spN, 'スポット・スタッフ枠') + '来所・帰りの時刻';
   const ex = document.querySelector('#usualBox .uexp');
   if (ex) ex.innerHTML = !hasMon
