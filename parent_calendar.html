@@ -149,6 +149,8 @@
   #lunchBox .lh{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;margin-bottom:4px;}
   #lunchBox .lh .sn{display:inline-block;margin-right:6px;color:var(--accent);}
   #lunchBox .lw{font-size:19.7px;font-weight:700;color:var(--ink);margin:12px 0 2px;}
+  #lunchBox .lq{font-size:19.7px;font-weight:700;color:var(--ink);margin:16px 0 2px;line-height:1.5;}
+  #lunchBox .li{display:block;width:100%;box-sizing:border-box;font-size:19.7px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);margin:6px 0;}
   #lunchBox .ld{font-size:16px;color:var(--ink-soft);margin:2px 0 6px;line-height:1.5;}
   #lunchBox .lt{display:flex;gap:8px;margin:6px 0;}
   #lunchBox .lt button{flex:1;min-height:56px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);font-size:20px;color:var(--ink);line-height:1.3;}
@@ -456,7 +458,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/16-c(給食テスト)</div>
+    <div id="verlabel">画面の版: 11/16-d(給食・アレルギー・英語テスト)</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -529,34 +531,82 @@ function lunchPayload(){
   lunchAsk().forEach(c => { const ch = lunchChoice(c); if (!ch) return; out[c] = {}; lunchDays(c).forEach(k => { out[c][k] = ch; }); });
   return out;
 }
-const LUNCH_LABEL = { need: '給食 必要', bring: '給食 不要（お弁当持参）' };
+/* ===== お子さんのアレルギー・英語レッスン(同じ画面で聞く。お子さんごとの情報) =====
+   長期休みの日を選んだお子さん全員に聞く(午後だけの日でも、おやつ・英語は関係するため)。 */
+let profileSaved = {};        // サーバーに記録済みの { お子さん: { allergy:'yes'|'no', allergyDetail, english:'yes'|'no' } }
+const profilePick = {};       // いま画面で選んだ・入力した { お子さん: { allergy?, allergyDetail?, english? } }
+function breakKids(){ return lunchEnabled ? selectedChildren.filter(c => Object.keys(selected).some(k => isBreakDay(k) && finalItem(c, k))) : []; }
+function profileOf(c){
+  const s = profileSaved[c] || {}, p = profilePick[c] || {};
+  return {
+    allergy: p.allergy !== undefined ? p.allergy : (s.allergy || ''),
+    allergyDetail: p.allergyDetail !== undefined ? p.allergyDetail : (s.allergyDetail || ''),
+    english: p.english !== undefined ? p.english : (s.english || ''),
+  };
+}
+function profileMissing(c){ const p = profileOf(c); return !p.allergy || !p.english || (p.allergy === 'yes' && !p.allergyDetail.trim()); }
+function profileDirty(){
+  return breakKids().some(c => {
+    if (profileMissing(c)) return false;
+    const p = profileOf(c), s = profileSaved[c] || {};
+    return p.allergy !== (s.allergy || '') || (p.allergy === 'yes' && p.allergyDetail.trim() !== (s.allergyDetail || '')) || p.english !== (s.english || '');
+  });
+}
+function profilePayload(){
+  const out = {};
+  breakKids().forEach(c => { if (profileMissing(c)) return; const p = profileOf(c); out[c] = { allergy: p.allergy, allergyDetail: p.allergy === 'yes' ? p.allergyDetail.trim() : '', english: p.english }; });
+  return out;
+}
+/* 給食・アレルギー・英語の、選び忘れがあるお子さん */
+function confirmMissingKids(){ return breakKids().filter(c => lunchMissing().indexOf(c) >= 0 || profileMissing(c)); }
+function escHtml(t){ return String(t).replace(/[&<>"]/g, x => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[x])); }
 function renderLunchBox(){
   const box = document.getElementById('lunchBox');
-  const ask = lunchAsk();
-  if (!ask.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const kids = breakKids();
+  if (!kids.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
   const nb = t => '<span>' + t + '</span>';
   const md = k => Number(k.slice(5,7)) + '/' + Number(k.slice(8,10));
-  let h = '<div class="lh">給食は 必要ですか？</div>';
-  ask.forEach((c, i) => {
-    const ch = lunchChoice(c);
-    if (children.length > 1) h += '<div class="lw">' + c.replace(/[&<>"]/g, x => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[x])) + ' さん</div>';
-    h += '<div class="ld">対象の日： ' + lunchDays(c).map(md).join('、') + '</div>';
-    h += '<div class="lt"><button type="button" data-i="' + i + '" data-v="need" class="' + (ch === 'need' ? 'on' : '') + '">必要</button>' +
-         '<button type="button" data-i="' + i + '" data-v="bring" class="' + (ch === 'bring' ? 'on' : '') + '">不要<span class="ls">お弁当持参</span></button></div>';
-    if (!ch) h += '<div class="lmiss">どちらかを選んでください。</div>';
+  const tg = (i, key, opts, cur) => '<div class="lt">' + opts.map(o => '<button type="button" data-i="' + i + '" data-k="' + key + '" data-v="' + o.v + '" class="' + (cur === o.v ? 'on' : '') + '">' + o.t + (o.s ? '<span class="ls">' + o.s + '</span>' : '') + '</button>').join('') + '</div>';
+  let h = '<div class="lh">給食・アレルギー・英語レッスン</div>';
+  let anyLunch = false;
+  kids.forEach((c, i) => {
+    const p = profileOf(c), lunchDaysC = lunchDays(c), ch = lunchChoice(c);
+    if (children.length > 1) h += '<div class="lw">' + escHtml(c) + ' さん</div>';
+    if (lunchDaysC.length) {
+      anyLunch = true;
+      h += '<div class="lq">給食は 必要ですか？</div><div class="ld">対象の日： ' + lunchDaysC.map(md).join('、') + '</div>' +
+        tg(i, 'lunch', [{ v:'need', t:'必要' }, { v:'bring', t:'不要', s:'お弁当持参' }], ch);
+      if (!ch) h += '<div class="lmiss">どちらかを選んでください。</div>';
+    }
+    h += '<div class="lq">アレルギーは ありますか？</div>' + tg(i, 'allergy', [{ v:'no', t:'なし' }, { v:'yes', t:'あり' }], p.allergy);
+    if (p.allergy === 'yes') {
+      h += '<input type="text" class="li" data-i="' + i + '" maxlength="100" placeholder="食材（例：卵・乳製品）" value="' + escHtml(p.allergyDetail) + '">';
+      if (!p.allergyDetail.trim()) h += '<div class="lmiss" data-for="' + i + '">食材を入れてください。</div>';
+    } else if (!p.allergy) h += '<div class="lmiss">どちらかを選んでください。</div>';
+    h += '<div class="lq">英語レッスンを 受けますか？</div>' + tg(i, 'english', [{ v:'yes', t:'受ける' }, { v:'no', t:'受けない' }], p.english);
+    if (!p.english) h += '<div class="lmiss">どちらかを選んでください。</div>';
   });
-  h += '<div class="lnote">' +
+  if (anyLunch) h += '<div class="lnote">' +
     '<p>' + nb('不要の場合は') + nb('お弁当をご持参ください。') + '</p>' +
     '<p>' + nb('ごはんのみ・おかずのみの提供は、') + nb('調理室との連携、') + nb('仕分けの負担から') + nb('廃止させて頂きました。') + '</p>' +
     '<p>' + nb('ご理解の程') + nb('宜しくお願いいたします。') + '</p></div>';
   box.innerHTML = h;
   box.style.display = 'block';
+  const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; updateSendSummary(); };
   box.querySelectorAll('.lt button').forEach(b => b.onclick = () => {
-    lunchPick[ask[Number(b.dataset.i)]] = b.dataset.v;
+    const c = kids[Number(b.dataset.i)], k = b.dataset.k;
+    if (k === 'lunch') lunchPick[c] = b.dataset.v;
+    else { profilePick[c] = profilePick[c] || {}; profilePick[c][k] = b.dataset.v; }
     renderLunchBox();
-    document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
-    updateSendSummary();
+    refreshSubmit();
   });
+  box.querySelectorAll('.li').forEach(inp => inp.addEventListener('input', () => {
+    const c = kids[Number(inp.dataset.i)];
+    profilePick[c] = profilePick[c] || {}; profilePick[c].allergyDetail = inp.value;
+    const m = box.querySelector('.lmiss[data-for="' + inp.dataset.i + '"]');
+    if (m) m.style.display = inp.value.trim() ? 'none' : '';
+    refreshSubmit(); // 入力中は、画面を作り直さない(文字入力が途切れないように)
+  }));
 }
 let pendingByChild = {};      // { お子さん名: { 'YYYY-MM-DD': true } } 学童の確認待ち(申込中)の日
 let slotDefault = '';         // 長期休みの日を新しく選んだ時の、時間帯の初めの値(am/pm/all)
@@ -911,6 +961,7 @@ function setupApp(initData, keepView){
   cap = initData.cap || null;
   lunchEnabled = !!initData.lunch && typeof initData.lunch === 'object';
   lunchSaved = lunchEnabled ? initData.lunch : {};
+  profileSaved = (lunchEnabled && initData.profile && typeof initData.profile === 'object') ? initData.profile : {};
   try{ slotDefault = localStorage.getItem('samuraiSlot_' + userId) || ''; }catch(e){ slotDefault = ''; }
   if(['pm','all'].indexOf(slotDefault) < 0) slotDefault = '';
   children = (childInfo.children && childInfo.children.length) ? childInfo.children : [childInfo.childName];
@@ -1537,7 +1588,7 @@ function updateSendSummary(){
 }
 function isSplit(key){ return !!ovr[key] && Object.keys(ovr[key]).length > 0; }
 function isDirty(){
-  return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {})) || lunchDirty();
+  return selectedChildren.some(c => !sameAsReports(finalMap(c), reportsByChild[c] || {})) || lunchDirty() || profileDirty();
 }
 
 /* 画面で触った変更があるか(登録済みの内容と、いま画面の内容が違うか) */
@@ -1900,9 +1951,9 @@ document.getElementById('submitBtn').onclick = () => {
     document.getElementById('submitmsg').textContent = '午前のみのご利用は、受け付けていません（' + amOnly.map(md2).join('、') + '）。帰りの時刻を、12時より後にしてください。';
     return;
   }
-  const lunchMiss = lunchMissing();
+  const lunchMiss = confirmMissingKids();
   if (lunchMiss.length) {
-    document.getElementById('submitmsg').textContent = '給食が必要か不要か、選んでください' + (children.length > 1 ? '（' + lunchMiss.join('、') + 'さん）' : '') + '。';
+    document.getElementById('submitmsg').textContent = '給食・アレルギー・英語レッスンを、すべて選んでください' + (children.length > 1 ? '（' + lunchMiss.join('、') + 'さん）' : '') + '。';
     const lb = document.getElementById('lunchBox'); if (lb && lb.scrollIntoView) lb.scrollIntoView({ behavior:'smooth', block:'center' });
     return;
   }
@@ -1933,8 +1984,13 @@ document.getElementById('submitBtn').onclick = () => {
     const sp = document.createElement('span'); sp.style.whiteSpace = 'nowrap'; sp.textContent = t; document.getElementById('reviewSub').appendChild(sp);
   });
   // 給食の希望(選んだお子さんの分)。確認の画面にも出して、送る前に見直せるようにする
-  const lunchRowsHtml = lunchAsk().length
-    ? '<div class="row"><b>給食</b>' + lunchAsk().map(c => '<div>' + (children.length > 1 ? c.replace(/[&<>"]/g, x => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[x])) + 'さん：' : '') + (lunchChoice(c) === 'bring' ? '不要（お弁当持参）' : '必要') + '</div>').join('') + '</div>'
+  const lunchRowsHtml = breakKids().length
+    ? '<div class="row"><b>給食・アレルギー・英語</b>' + breakKids().map(c => {
+        const p = profileOf(c);
+        const who = children.length > 1 ? '<div><b>' + escHtml(c) + 'さん</b></div>' : '';
+        const lunchLine = lunchAsk().indexOf(c) >= 0 ? '<div>給食：' + (lunchChoice(c) === 'bring' ? '不要（お弁当持参）' : '必要') + '</div>' : '';
+        return who + lunchLine + '<div>アレルギー：' + (p.allergy === 'yes' ? 'あり（' + escHtml(p.allergyDetail.trim()) + '）' : 'なし') + '</div><div>英語レッスン：' + (p.english === 'yes' ? '受ける' : '受けない') + '</div>';
+      }).join('') + '</div>'
     : '';
   const needOk = groups.some(g => g.children.some(c => kindOfChild(c) !== 'monthly') && g.days.some(it => isBreakDay(it.date) && !g.children.every(c => (reportsByChild[c] || {})[it.date])));
   document.getElementById('reviewBody').innerHTML = (selectedChildren.length > 1
@@ -1986,17 +2042,19 @@ async function doSubmit(){
   });
   const first = perChild[selectedChildren[0]];
   const lunch = lunchPayload(); // 長期休みの給食の希望 { お子さん: { 日付: 'need'|'bring' } }
+  const profile = profilePayload(); // アレルギー・英語レッスンの申告 { お子さん: { allergy, allergyDetail, english } }
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitmsg').textContent = '送信中...';
   const smsg = document.getElementById('submitmsg');
   if (cap) {
     // 長期休みの設定がある時は、結果(申込中になった日・受け付けられなかった日)を読み取れるよう、直接送る
     try{
-      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild, lunch }) });
+      const res = await fetch(GAS_DIRECT_URL, { method:'POST', body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild, lunch, profile }) });
       let j = null; try{ j = await res.json(); }catch(e){}
       if (j && j.ok === false) throw new Error('ng');
       const pend = (j && j.pending) || [], rej = (j && j.rejected) || [];
       Object.keys(lunch).forEach(c => { lunchSaved[c] = { ...(lunchSaved[c] || {}), ...lunch[c] }; }); // 読み直しが遅れても、送った分は記録済みとして扱う
+      Object.keys(profile).forEach(c => { profileSaved[c] = { ...profile[c] }; });
       try{ await refreshFromServer(); }catch(e){ /* 読み直せなくても、送信は済んでいる */ }
       smsg.textContent = '';
       showDone({ unknown: !j, pend: new Set(pend.map(x => x.date)).size, rej, nCancel: 0 });
@@ -2010,9 +2068,10 @@ async function doSubmit(){
     await fetch(GAS_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild, lunch }),
+      body: JSON.stringify({ action:'batchSubmit', userId, days: first.days, deletes: first.deletes, children: selectedChildren, perChild, lunch, profile }),
     });
     Object.keys(lunch).forEach(c => { lunchSaved[c] = { ...(lunchSaved[c] || {}), ...lunch[c] }; }); // 送ったので、記録済みとして扱う
+    Object.keys(profile).forEach(c => { profileSaved[c] = { ...profile[c] }; });
     const nCancel = Object.keys(cancelledDays).length;
     document.getElementById('submitmsg').textContent = '';
     showDone({ nCancel });
