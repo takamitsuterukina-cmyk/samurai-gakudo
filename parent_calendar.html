@@ -1846,7 +1846,7 @@ function fieldsHtml(key, item, c){
   const svc = cardHasPickup(c);
   if (!svc) item = { ...item, pickup: false }; // 送迎サービスがない(月謝契約でない)お子さん: お迎えの項目は出さない
   return `
-      ${!svc ? '' : (isBreakDay(key) ? '<div class="nopick">長期休み期間中は、お迎えサービスはありません。</div>' : `<div class="toggle-row">
+      ${!svc ? '' : (isBreakDay(key) ? '' /* 「お迎えサービスはありません」は、ご案内に書いてあるので、日ごとのカードには出さない */ : `<div class="toggle-row">
         <button class="pk ${item.pickup ? 'on':''}"${at} data-v="1">お迎え必要</button>
         <button class="pk ${!item.pickup ? 'on':''}"${at} data-v="0">お迎え不要</button>
       </div>`)}
