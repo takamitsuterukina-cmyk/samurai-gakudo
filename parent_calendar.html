@@ -511,18 +511,19 @@ function lunchDays(c){
     return it && (!it.startTime || it.startTime < '12:00');
   }).sort();
 }
-function lunchSavedChoice(c, days){
-  const m = lunchSaved[c] || {};
-  const vs = days.map(k => m[k]);
-  return (vs.length && vs.every(v => v && v === vs[0])) ? vs[0] : ''; // 記録が全部の日で同じ時だけ、前回の選択として出す
+function lunchSavedChoice(c){
+  // 給食の希望は、お子さんの全部の日に共通。記録済みの日が、全部同じ希望の時だけ、前回の選択として出す(日によって違う時は、選び直してもらう)
+  const vs = Object.values(lunchSaved[c] || {});
+  return (vs.length && vs.every(v => v === vs[0])) ? vs[0] : '';
 }
 /* 給食の欄は、サーバー(GAS)が給食の申告に対応している時(読み込みの返事に lunch がある時)だけ出す。
    古いGASのままだと、選んでも記録されないので、出さない。 */
 let lunchEnabled = false;
 function lunchAsk(){ return lunchEnabled ? selectedChildren.filter(c => lunchDays(c).length) : []; }
-function lunchChoice(c){ return lunchPick[c] !== undefined ? lunchPick[c] : lunchSavedChoice(c, lunchDays(c)); }
+function lunchChoice(c){ return lunchPick[c] !== undefined ? lunchPick[c] : lunchSavedChoice(c); }
 function lunchMissing(){ return lunchAsk().filter(c => !lunchChoice(c)); }
-function lunchDirty(){ return lunchAsk().some(c => { const ch = lunchChoice(c); return ch && lunchSavedChoice(c, lunchDays(c)) !== ch; }); }
+// 選んだ日のどれかに、いまの希望が記録されていなければ、送るべき変更がある
+function lunchDirty(){ return lunchAsk().some(c => { const ch = lunchChoice(c); return ch && lunchDays(c).some(k => (lunchSaved[c] || {})[k] !== ch); }); }
 function lunchPayload(){
   const out = {};
   lunchAsk().forEach(c => { const ch = lunchChoice(c); if (!ch) return; out[c] = {}; lunchDays(c).forEach(k => { out[c][k] = ch; }); });
