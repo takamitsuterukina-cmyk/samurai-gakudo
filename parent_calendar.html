@@ -692,7 +692,7 @@ function syncUsualButtons(){
   const monN = list.filter(c => usualGroup(c) === 'monthly'), spN = list.filter(c => usualGroup(c) !== 'monthly');
   const hasMon = monN.length > 0, hasSp = spN.length > 0, mixed = hasMon && hasSp;
   const hasBrk = !!(cap && (cap.breaks || []).length);
-  const who = (arr, label) => mixed ? arr.map(n => n + 'さん').join('・') + '（' + label + '）：' : '';
+  const who = arr => mixed ? arr.map(n => n + 'さん').join('・') + '：' : ''; // 契約の種類は、保護者には出さない(名前だけで区別する)
   const show = (id, on, disp) => { document.getElementById(id).style.display = on ? (disp || 'block') : 'none'; };
   show('u-pickup-row', hasMon);
   show('u-loc-row', hasMon && pk !== false, 'flex');
@@ -700,11 +700,11 @@ function syncUsualButtons(){
   show('u-np-row', hasMon && pk === false);
   show('u-bk-row', hasMon && hasBrk);
   show('u-sp-row', hasSp);
-  document.querySelector('#u-pickup-row .utitle').textContent = who(monN, '月謝契約枠') + 'ふだんのお迎え';
-  document.querySelector('#u-pk-row .utitle').textContent = who(monN, '月謝契約枠') + 'ふだんの日の時刻';
-  document.querySelector('#u-np-row .utitle').textContent = who(monN, '月謝契約枠') + 'ふだんの日の時刻';
-  document.querySelector('#u-bk-row .utitle').textContent = who(monN, '月謝契約枠') + '長期休みの日の時刻';
-  document.querySelector('#u-sp-row .utitle').textContent = who(spN, 'スポット・スタッフ枠') + '来所・帰りの時刻';
+  document.querySelector('#u-pickup-row .utitle').textContent = who(monN) + 'ふだんのお迎え';
+  document.querySelector('#u-pk-row .utitle').textContent = who(monN) + 'ふだんの日の時刻';
+  document.querySelector('#u-np-row .utitle').textContent = who(monN) + 'ふだんの日の時刻';
+  document.querySelector('#u-bk-row .utitle').textContent = who(monN) + '長期休みの日の時刻';
+  document.querySelector('#u-sp-row .utitle').textContent = who(spN) + '来所・帰りの時刻';
   const ex = document.querySelector('#usualBox .uexp');
   if (ex) ex.innerHTML = !hasMon
     ? '<span style="display:inline-block;">利用時間を登録しておくと</span><span style="display:inline-block;">日ごとに入力する手間を省けます。</span><br><span style="display:inline-block;">登録後も日ごとの詳細入力で</span><span style="display:inline-block;">個別に変更もできます。</span>'
