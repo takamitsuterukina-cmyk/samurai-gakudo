@@ -281,6 +281,10 @@
     background:var(--accent);color:#fff;font-size:20.9px;font-weight:700;
   }
   footer button:disabled{background:#B9C4B4;}
+  /* 途中の段階のボタン(まだ確認の画面には進まない): 色を抜いて、確定のボタンと見分ける */
+  footer button.step{background:var(--surface);color:var(--accent);border:2px solid var(--accent);}
+  @keyframes stepflash{0%{box-shadow:0 0 0 5px rgba(62,107,73,.65);}100%{box-shadow:0 0 0 0 rgba(62,107,73,0);}}
+  .stepflash{animation:stepflash 1.1s ease-out 2;}
   footer button .bsub{display:block;font-size:16px;font-weight:700;line-height:1.3;margin-top:2px;}
   #done{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;}
   #done .sheet{background:var(--surface);width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));}
@@ -459,7 +463,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/16-d</div>
+    <div id="verlabel">画面の版: 11/16-e</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1572,8 +1576,54 @@ function renderLateNote(){
   el.style.display = ks.length ? 'block' : 'none';
   el.innerHTML = ks.length ? '<b>3日以内の変更が含まれています。</b>' + LATE_PHRASES.map(t => '<span>' + t + '</span>').join('') : '';
 }
+/* 日にちを選んだあと、下の「日ごとの入力」に気づかないまま、確認のボタンを押してしまうのを防ぐ。
+   ・日ごとの入力が、まだ画面に入っていない間 → 「↓ 日ごとの入力に進む」(押すと、入力の所まで動く)
+   ・入力がまだの項目がある間 → 「↓ 入力がまだの項目があります」(押すと、その項目まで動く)
+   ・そろったら → 「登録内容を確認する」(確認の画面に進む) */
+function incompleteTarget(){
+  const keys = Object.keys(selected).sort();
+  for (const k of keys) {
+    if (selectedChildren.some(c => { const d = finalItem(c, k); return d && (!d.startTime || !d.endTime); })) return document.getElementById('card-' + k);
+  }
+  if (confirmMissingKids().length) return document.getElementById('lunchBox');
+  return null;
+}
+function listInView(){
+  const el = document.getElementById('list');
+  if (!el || !el.firstElementChild) return true;
+  return el.getBoundingClientRect().top < window.innerHeight * 0.65;
+}
+function updateSubmitLabel(){
+  const btn = document.getElementById('submitBtn');
+  if (!btn) return;
+  const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
+  const who = selectedChildren.length > 1 ? '（' + selectedChildren.length + '人まとめて）' : (children.length > 1 ? '（' + selectedChildren[0] + 'さん）' : '');
+  let mode = '';
+  if (!hasSel && !isDirty()) { btn.textContent = '↑ 日にちを選んでください'; }
+  else if (!btn.disabled && Object.keys(selected).length && !listInView()) { mode = 'scroll'; btn.textContent = '↓ 日ごとの入力に進む'; }
+  else if (!btn.disabled && Object.keys(selected).length && incompleteTarget()) { mode = 'next'; btn.textContent = '↓ 入力がまだの項目があります'; }
+  else {
+    // 押すと、まず「この内容で送ります」の確認の画面が出る。なので、ボタンは「登録内容を確認する」(だれの分かは、2行目に)
+    btn.textContent = '登録内容を確認する';
+    if (who) { const sub = document.createElement('span'); sub.className = 'bsub'; sub.textContent = who; btn.appendChild(sub); }
+  }
+  btn.dataset.mode = mode;
+  btn.classList.toggle('step', !!mode);
+  const msg = document.getElementById('submitmsg');
+  if (msg && !mode && /^↓/.test(msg.textContent)) msg.textContent = '';
+}
+let _scrollTick = false;
+window.addEventListener('scroll', () => { if (_scrollTick) return; _scrollTick = true; requestAnimationFrame(() => { _scrollTick = false; updateSubmitLabel(); }); }, { passive: true });
+window.addEventListener('resize', () => updateSubmitLabel());
+function stepScroll(el, block){
+  if (!el) return;
+  if (el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: block || 'center' });
+  el.classList.remove('stepflash'); void el.offsetWidth; el.classList.add('stepflash');
+  setTimeout(() => el.classList.remove('stepflash'), 2400);
+}
 function updateSendSummary(){
   renderLateNote();
+  updateSubmitLabel();
   const el = document.getElementById('sendSummary');
   const dates = new Set(Object.keys(selected).concat(Object.keys(cancelledDays)));
   selectedChildren.forEach(c => Object.keys(reportsByChild[c] || {}).forEach(k => dates.add(k)));
@@ -1695,13 +1745,7 @@ function renderList(){
   document.getElementById('usualBox').style.display = selKeys.length ? 'block' : 'none'; // ②が出ている間だけ(日にちを選ぶ前は出さない)
   document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded;
   const hasSel = Object.keys(selected).length > 0 || Object.keys(cancelledDays).length > 0;
-  {
-    // 押すと、まず「この内容で送ります」の確認の画面が出る。なので、ボタンは「登録内容を確認する」(だれの分かは、2行目に)
-    const btn = document.getElementById('submitBtn');
-    const who = selectedChildren.length > 1 ? '（' + selectedChildren.length + '人まとめて）' : (children.length > 1 ? '（' + selectedChildren[0] + 'さん）' : '');
-    if (!hasSel && !isDirty()) btn.textContent = '↑ 日にちを選んでください';
-    else { btn.textContent = '登録内容を確認する'; if (who) { const sub = document.createElement('span'); sub.className = 'bsub'; sub.textContent = who; btn.appendChild(sub); } }
-  }
+  updateSubmitLabel();
   list.innerHTML = '';
   const multi = selectedChildren.length > 1;
   keys.forEach(key => {
@@ -1929,6 +1973,12 @@ function mdw(key){
   return m + '/' + d + '(' + ['日','月','火','水','木','金','土'][new Date(y,m-1,d).getDay()] + ')';
 }
 document.getElementById('submitBtn').onclick = () => {
+  const stepMode = document.getElementById('submitBtn').dataset.mode;
+  if (stepMode === 'scroll') { stepScroll(document.getElementById('detail-hint'), 'start'); return; } // まず、日ごとの入力の所へ
+  if (stepMode === 'next') {
+    const t = incompleteTarget();
+    if (t) { stepScroll(t, 'center'); document.getElementById('submitmsg').textContent = '↓ 入力がまだの所があります。'; return; }
+  }
   const bad = badDays();
   if (bad.length) {
     document.getElementById('submitmsg').textContent = '帰りの時刻が、来所（下校）の時刻より前になっている日があります（' + bad.map(d => Number(d.date.slice(5,7)) + '/' + Number(d.date.slice(8,10))).join('、') + '）。確認してください。';
