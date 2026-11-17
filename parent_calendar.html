@@ -353,6 +353,14 @@
   #guidePane{padding-bottom:40px;}
   #guidePane .gcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
   #guidePane .gtitle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
+  /* ご案内の画面の項目: 見出しだけを出して、押すと開く(ご案内ページと同じ形) */
+  #guidePane .gcard{padding:0;overflow:hidden;}
+  #guidePane .gbody{padding:6px 16px 14px;}
+  #guidePane summary.gtitle{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:16px 16px 16px 14px;font-size:23px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-left:8px solid var(--accent);line-height:1.35;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  #guidePane summary.gtitle::-webkit-details-marker{display:none;}
+  #guidePane summary.gtitle::after{content:'';flex:none;width:11px;height:11px;border-right:4px solid var(--accent);border-bottom:4px solid var(--accent);transform:rotate(45deg);margin:-6px 4px 0 0;}
+  #guidePane details[open] > summary.gtitle::after{transform:rotate(-135deg);margin-top:5px;}
+  #guidePane details[open] > summary.gtitle{border-bottom:1px solid var(--line);}
   #guidePane .gline{font-size:19.7px;line-height:1.45;color:var(--ink);}
   #guidePane .gline span{display:inline-block;}
   #guidePane .gline.soft{color:var(--ink-soft);}
@@ -402,6 +410,17 @@
   #disasterPane .dmap{margin:6px 16px 8px;}
   #disasterPane .dmap img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:var(--paper);}
   #disasterPane .dmap .dnote{margin:6px 0 0;}
+  /* 災害時対応の「③ 学童の災害時の決まり」: 見出しごとに、開閉 */
+  #disasterPane .dsec{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:0 16px 10px;overflow:hidden;}
+  #disasterPane .dsecbody{padding:8px 0 10px;}
+  #disasterPane .dsecbody .dtext,#disasterPane .dsecbody .dnote,#disasterPane .dsecbody .dmap{margin-left:14px;margin-right:14px;}
+  #disasterPane .dsecbody .dpdf{width:calc(100% - 28px);margin:8px 14px 4px;}
+  #disasterPane summary.dsum{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:15px 14px;font-size:21px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-left:8px solid var(--accent);line-height:1.35;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  #disasterPane summary.dsum span span{display:inline-block;}
+  #disasterPane summary.dsum::-webkit-details-marker{display:none;}
+  #disasterPane summary.dsum::after{content:'';flex:none;width:11px;height:11px;border-right:4px solid var(--accent);border-bottom:4px solid var(--accent);transform:rotate(45deg);margin:-6px 4px 0 0;}
+  #disasterPane details[open] > summary.dsum::after{transform:rotate(-135deg);margin-top:5px;}
+  #disasterPane details[open] > summary.dsum{border-bottom:1px solid var(--line);}
   #disasterPane .dclose{display:none;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:20px;font-weight:700;font-family:inherit;}
   #infoPane .ibtn{display:block;width:100%;margin:8px 0 4px;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
   #infoPane .ibtn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent);}
@@ -553,7 +572,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-zd</div>
+    <div id="verlabel">画面の版: 11/17-ze</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1282,7 +1301,7 @@ const DS_NOTES = [
 
 // 災害時対応のページに出す、学童の決まり(「■」=見出し / 「＞」=前の項目の続き / 「※」=補足 / 「＠PDF」「＠地図」=その場所に、ボタン・地図を出す / それ以外=「・」つきの項目。空白=折り返してよい場所)
 const DS_TEXT = [
-  '■各種警報・災害発生時等の対応について',
+  '■各種警報・ 災害発生時等の 対応について',
   'さむらい学童の 開所・閉所の判断は、 日進市の 小学校・放課後子ども総合プランの 判断に準じます。',
   '＞民間の学童は 日進市より 開所・閉所の判断は 各施設に 委ねられておりますが、 小学校・放課後子ども総合プランが 子どもの安全を 第一に 休止を決定した場合は、 弊所も その判断に準じて 休止とさせて頂きます。',
   '＞例/給食後下校＋ 放課後子ども総合プランも 休止の場合、 さむらい学童も 閉所とさせて頂きます。',
@@ -1359,26 +1378,30 @@ function showDisasterPage(){
     DS_NOTES.forEach(n => { const d = el('div', 'dnote'); words(d, n); body.appendChild(d); });
     // ③ 学童の災害時の決まり(避難場所と地図、通達など。ご案内ではなく、ここにまとめる)
     body.appendChild(el('div', 'dq', '③ 学童の 災害時の決まり'));
+    let cur = body; // いま、中身を入れている場所(見出しごとの、開閉の中)
     DS_TEXT.forEach(t => {
       const m = t.charAt(0);
       if(t === '＠PDF'){
         const pdf = el('button', 'dpdf', '市の資料(PDF)を 開く'); pdf.type = 'button';
         pdf.onclick = () => openFile(new URL('nissin_keihou_taiou_20260529.pdf', location.href).href);
-        body.appendChild(pdf);
+        cur.appendChild(pdf);
       }else if(t === '＠地図'){
         const f = el('div', 'dmap');
         const img = el('img'); img.src = new URL('map_hinan.jpg', location.href).href; img.alt = '避難場所の地図(さむらい学童・梅森公民館・日進西中学校)'; img.loading = 'lazy';
         img.onclick = () => { const lb = document.getElementById('infoLightbox'); lb.querySelector('img').src = img.src; lb.style.display = 'flex'; };
         f.appendChild(img);
         const cap = el('div', 'dnote'); words(cap, '※印の位置は、 おおよそです。 (出典: 国土地理院)'); f.appendChild(cap);
-        body.appendChild(f);
-      }else if(m === '■'){
-        const h = el('div', 'dgroup'); words(h, t.slice(1)); body.appendChild(h);
+        cur.appendChild(f);
+      }else if(m === '■'){ // 見出し: 見出しだけを出して、押すと開く
+        const det = el('details', 'dsec');
+        const sum = el('summary', 'dsum'); const st = el('span'); words(st, t.slice(1)); sum.appendChild(st);
+        cur = el('div', 'dsecbody');
+        det.appendChild(sum); det.appendChild(cur); body.appendChild(det);
       }else if(m === '＞' || m === '※'){
-        const d = el('div', 'dnote'); words(d, m === '＞' ? t.slice(1) : t); body.appendChild(d);
+        const d = el('div', 'dnote'); words(d, m === '＞' ? t.slice(1) : t); cur.appendChild(d);
       }else{
         const d = el('div', 'dtext'); d.appendChild(el('span', 'dm', '・'));
-        const tx = el('div', 'dtx'); words(tx, t); d.appendChild(tx); body.appendChild(d);
+        const tx = el('div', 'dtx'); words(tx, t); d.appendChild(tx); cur.appendChild(d);
       }
     });
     window.scrollTo(0, 0);
@@ -1426,7 +1449,14 @@ async function showGuidePage(){
   const el = (tag, cls, text) => { const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; };
   const openPage = url => { try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; } };
   const lines = (box, arr, cls) => (arr || []).forEach((parts, i) => { const d = el('div', 'gline' + (cls ? ' ' + (i ? cls.split(' ').filter(x => x !== 'mt').join(' ') : cls) : '')); [].concat(parts).forEach(t => d.appendChild(el('span', '', t))); box.appendChild(d); }); // 'mt'(上の余白)は、まとまりの最初の行だけ
-  const card = title => { const c = el('div', 'gcard'); c.appendChild(el('div', 'gtitle', title)); body.appendChild(c); return c; };
+  // 項目は、見出しだけを出して、押すと開く(2026-11-17)。中身を入れる場所(gbody)を返す
+  const card = title => {
+    const det = el('details', 'gcard');
+    const sum = el('summary', 'gtitle'); sum.appendChild(el('span', '', title));
+    const c = el('div', 'gbody');
+    det.appendChild(sum); det.appendChild(c); body.appendChild(det);
+    return c;
+  };
   const btn = (box, label, ghost, fn) => { const b = el('button', 'gbtn' + (ghost ? ' ghost' : ''), label); b.type = 'button'; b.onclick = fn; box.appendChild(b); return b; };
   const pad = n => String(n).padStart(2, '0');
   const jstDate = () => { const d = new Date(Date.now() + (new Date().getTimezoneOffset() + 540) * 60000); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
