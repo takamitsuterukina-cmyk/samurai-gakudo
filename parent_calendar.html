@@ -160,7 +160,7 @@
   #lunchBox .lt button.on .ls{color:#fff;}
   #lunchBox .lnote{margin-top:10px;font-size:16px;line-height:1.7;color:var(--ink-soft);}
   #lunchBox .lnote p{margin:0 0 4px;}
-  #lunchBox .lnote span{display:inline-block;margin-right:.3em;}
+  #lunchBox .lnote span{display:inline-block;}
   #lunchBox .lmiss{font-size:16px;font-weight:700;color:#c53030;margin-top:6px;}
   #submitGuide .sh{font-size:22.2px;font-weight:700;color:var(--ink);line-height:1.5;}
   #submitGuide .sh .sn{display:inline-block;margin-right:6px;color:var(--accent);}
@@ -307,12 +307,12 @@
   #infoPane .ititle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
   #infoPane .iwho{display:inline-block;font-size:18.5px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-radius:6px;padding:2px 10px;margin:0 6px 8px 0;white-space:nowrap;}
   #infoPane .iline{font-size:19.7px;line-height:1.7;color:var(--ink);}
-  #infoPane .iline span{display:inline-block;margin-right:.45em;} /* 言葉のまとまりの途中では、折り返さない。まとまりの間には、小さなすき間 */
+  #infoPane .iline span{display:inline-block;} /* 言葉のまとまりの途中では、折り返さない(まとまりの間に、すき間はあけない。2026-11-17) */
   #infoPane #infoClose{padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:22.2px;font-weight:700;}
   #infoPane .irows{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:14px;row-gap:6px;font-size:19.7px;line-height:1.7;}
   #infoPane .ilabel{white-space:nowrap;font-weight:700;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
   #infoPane .ival{color:var(--ink);}
-  #infoPane .ival span{display:inline-block;margin-right:.45em;}
+  #infoPane .ival span{display:inline-block;}
   #infoPane .iline + .irows{margin-top:8px;}
   /* 項目ごとに「・」を付け、折り返した行は、文字の頭にそろえる。項目の間には、うすい区切り線 */
   #infoPane .ibul{display:flex;align-items:flex-start;gap:.3em;}
@@ -332,7 +332,7 @@
   #infoPane .iphoto.wide{grid-column:1 / -1;}
   #infoPane .iphoto img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:var(--paper);}
   #infoPane .icap{font-size:17.5px;line-height:1.6;margin-top:6px;font-weight:700;}
-  #infoPane .icap span{display:inline-block;margin-right:.3em;}
+  #infoPane .icap span{display:inline-block;}
   #infoPane .icap.ok{color:var(--accent);}
   #infoPane .icap.ng{color:#B8541F;}
   #infoLightbox{position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:12px;}
@@ -345,7 +345,7 @@
   #guidePane .gcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
   #guidePane .gtitle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
   #guidePane .gline{font-size:19.7px;line-height:1.7;color:var(--ink);}
-  #guidePane .gline span{display:inline-block;margin-right:.45em;}
+  #guidePane .gline span{display:inline-block;}
   #guidePane .gline.soft{color:var(--ink-soft);}
   #guidePane .gline.mt{margin-top:10px;}
   #guidePane .gline.bold{font-weight:700;}
@@ -360,7 +360,7 @@
   #disasterPane{padding-bottom:40px;}
   #disasterPane .dcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
   #disasterPane .dintro{font-size:17.5px;line-height:1.7;color:var(--ink-soft);margin:0 16px 12px;}
-  #disasterPane .dintro span,#disasterPane .dline span,#disasterPane .dhead span,#disasterPane .dgo span,#disasterPane .dnum span,#disasterPane .dbul span,#disasterPane .dsub span{display:inline-block;margin-right:.3em;}
+  #disasterPane .dintro span,#disasterPane .dline span,#disasterPane .dhead span,#disasterPane .dgo span,#disasterPane .dnum span,#disasterPane .dbul span,#disasterPane .dsub span{display:inline-block;}
   #disasterPane .dq{font-size:20px;font-weight:700;margin:0 16px 8px;}
   #disasterPane .dplaces{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px;}
   #disasterPane .dplace{padding:12px 6px;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:18px;font-weight:700;font-family:inherit;line-height:1.35;}
@@ -369,7 +369,7 @@
   #disasterPane .dgroup{font-size:19px;font-weight:700;color:var(--accent);margin:18px 16px 8px;}
   #disasterPane .ditem{display:block;width:calc(100% - 32px);margin:0 16px 8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:left;font-family:inherit;color:var(--ink);}
   #disasterPane .ditem .dt{font-size:20px;font-weight:700;line-height:1.45;}
-  #disasterPane .ditem .dt span,#disasterPane .ditem .ds span,#disasterPane .dtitle span{display:inline-block;margin-right:.1em;}
+  #disasterPane .ditem .dt span,#disasterPane .ditem .ds span,#disasterPane .dtitle span{display:inline-block;}
   #disasterPane .ditem .ds{font-size:16px;color:var(--ink-soft);line-height:1.5;margin-top:2px;}
   #disasterPane .dback{display:block;width:calc(100% - 32px);margin:0 16px 12px;padding:12px 0;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:19px;font-weight:700;font-family:inherit;}
   #disasterPane .dtitle{font-size:24px;font-weight:700;line-height:1.4;margin:0 16px 2px;}
@@ -384,7 +384,7 @@
   #disasterPane .dnum{margin-top:2px;}
   #disasterPane .dlead{font-size:18px;line-height:1.7;margin-top:6px;}
   #disasterPane .dnote{font-size:17px;color:var(--ink-soft);line-height:1.65;margin:0 16px 10px;}
-  #disasterPane .dnote span{display:inline-block;margin-right:.3em;}
+  #disasterPane .dnote span{display:inline-block;}
   #disasterPane .dpdf{display:block;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
   #disasterPane .dclose{display:none;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:20px;font-weight:700;font-family:inherit;}
   #infoPane .ibtn{display:block;width:100%;margin:8px 0 4px;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
@@ -452,8 +452,8 @@
   <div id="regManual">
   <div class="box" id="regInviteHint" style="background:var(--accent-soft);border:1px solid var(--accent);">
     <h3 style="margin:0 0 6px;">施設から、リンクやQRが届いている方へ</h3>
-    <div style="font-size:19.7px;line-height:1.7;"><span style="display:inline-block;">この画面を閉じて、</span> <span style="display:inline-block;">届いたリンクを、</span> <span style="display:inline-block;">もう一度押してください。</span><br><span style="display:inline-block;">お名前を入れなくても、</span> <span style="display:inline-block;">登録できます。</span></div>
-    <div style="font-size:18.5px;line-height:1.7;color:var(--ink-soft);margin-top:8px;"><span style="display:inline-block;">届いていない方は、</span> <span style="display:inline-block;">下から、そのまま</span> <span style="display:inline-block;">登録できます。</span></div>
+    <div style="font-size:19.7px;line-height:1.7;"><span style="display:inline-block;">この画面を閉じて、</span><span style="display:inline-block;">届いたリンクを、</span><span style="display:inline-block;">もう一度押してください。</span><br><span style="display:inline-block;">お名前を入れなくても、</span><span style="display:inline-block;">登録できます。</span></div>
+    <div style="font-size:18.5px;line-height:1.7;color:var(--ink-soft);margin-top:8px;"><span style="display:inline-block;">届いていない方は、</span><span style="display:inline-block;">下から、そのまま</span><span style="display:inline-block;">登録できます。</span></div>
   </div>
   <div class="lead">最初の1回だけ、お願いします。<br>お名前だけで登録できます。<br>お迎えの設定や時刻は、<br>このあと、予定の登録画面で<br>決められます。</div>
   <div class="box">
@@ -537,7 +537,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-p</div>
+    <div id="verlabel">画面の版: 11/17-q</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -548,7 +548,7 @@
     <h2>この内容で送ります。よろしいですか？</h2>
     <div class="sub" id="reviewSub"></div>
     <div id="reviewBody"></div>
-    <div class="btns"><button id="reviewBack">戻って直す</button><button class="go" id="reviewGo"><span style="display:inline-block;">この内容で</span> <span style="display:inline-block;">送信する</span></button></div>
+    <div class="btns"><button id="reviewBack">戻って直す</button><button class="go" id="reviewGo"><span style="display:inline-block;">この内容で</span><span style="display:inline-block;">送信する</span></button></div>
   </div></div>
 
   <div id="done"><div class="sheet">
