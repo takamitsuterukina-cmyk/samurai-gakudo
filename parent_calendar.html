@@ -337,6 +337,15 @@
   #infoPane .icap.ng{color:#B8541F;}
   #infoLightbox{position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:12px;}
   #infoLightbox img{max-width:100%;max-height:100%;border-radius:8px;}
+  /* ご案内ページの項目: 見出しだけを出して、押すと開く。見出しは、ボタン(緑のべた塗り)と区別して、薄い緑の帯+左の太い線+右の矢印 */
+  #infoPane .icard{padding:0;overflow:hidden;}
+  #infoPane .ibody{padding:6px 16px 14px;}
+  #infoPane summary.ititle{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:16px 16px 16px 14px;font-size:23px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-left:8px solid var(--accent);line-height:1.35;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  #infoPane summary.ititle::-webkit-details-marker{display:none;}
+  #infoPane summary.ititle::after{content:'';flex:none;width:11px;height:11px;border-right:4px solid var(--accent);border-bottom:4px solid var(--accent);transform:rotate(45deg);margin:-6px 4px 0 0;}
+  #infoPane details[open] > summary.ititle::after{transform:rotate(-135deg);margin-top:5px;}
+  #infoPane details[open] > summary.ititle{border-bottom:1px solid var(--line);}
+  #infoPane .ibody > .isub:first-child{margin-top:2px;padding-top:0;border-top:none;}
   #infoPane .inone{text-align:center;font-size:19.7px;color:var(--ink-soft);padding:30px 16px;line-height:1.7;}
   #infoPreview{margin:0 16px 12px;padding:10px 14px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#8a5a00;font-size:18.5px;font-weight:700;line-height:1.5;}
 
@@ -544,7 +553,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-zb</div>
+    <div id="verlabel">画面の版: 11/17-zd</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1135,8 +1144,13 @@ async function showInfoPage(){
     }
     body.innerHTML = '';
     (d.sections || []).forEach(s => {
-      const c = document.createElement('div'); c.className = 'icard';
-      const t = document.createElement('div'); t.className = 'ititle'; t.textContent = s.title; c.appendChild(t);
+      // 項目は、見出しだけを出して、押すと開く(ずっと長くならないように)。項目が1つだけの時は、最初から開く
+      const det = document.createElement('details'); det.className = 'icard';
+      if((d.sections || []).length === 1) det.open = true;
+      const sum = document.createElement('summary'); sum.className = 'ititle';
+      const st = document.createElement('span'); String(s.title).split(' ').filter(x => x).forEach(w => { const sp = document.createElement('span'); sp.style.display = 'inline-block'; sp.textContent = w; st.appendChild(sp); }); sum.appendChild(st); // 見出しの途中で折り返さない(空白=折り返してよい場所)
+      const c = document.createElement('div'); c.className = 'ibody';
+      det.appendChild(sum); det.appendChild(c);
       (s.who || []).forEach(n => { const w = document.createElement('span'); w.className = 'iwho'; w.textContent = n + ' さん'; c.appendChild(w); });
       // ボタン(災害・警報の早見表・PDFなど)は、見出しのすぐ下に
       (s.buttons || []).forEach(bt => {
@@ -1174,7 +1188,7 @@ async function showInfoPage(){
         mkRows(c, s.rows);
         mkImages();
       }
-      body.appendChild(c);
+      body.appendChild(det);
     });
     if(d.unknownNote && d.unknownNote.length){
       const c = document.createElement('div'); c.className = 'icard';
