@@ -404,7 +404,7 @@
 
 <div id="infoLightbox" onclick="this.style.display='none'"><img alt=""></div>
 <div id="infoPane" style="display:none">
-  <header><h1>学童からのご案内</h1></header>
+  <header><h1>冬休みのご案内</h1></header>
   <div id="infoPreview" style="display:none"></div>
   <div id="infoBody"></div>
   <button class="go" id="infoClose" style="display:none;margin:8px 16px 0;width:calc(100% - 32px);">この画面を閉じる</button>
@@ -544,7 +544,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-t</div>
+    <div id="verlabel">画面の版: 11/17-u</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1435,7 +1435,7 @@ async function showGuidePage(){
   body.innerHTML = '';
 
   if(hasInfo){
-    const c = card('学童からのご案内');
+    const c = card('冬休みのご案内');
     lines(c, [['持ち物や料金などの'], ['ご案内です。']]);
     btn(c, 'ご案内を見る', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=info'));
   }
