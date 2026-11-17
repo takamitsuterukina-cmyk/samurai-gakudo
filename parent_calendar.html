@@ -386,6 +386,13 @@
   #disasterPane .dnote{font-size:17px;color:var(--ink-soft);line-height:1.65;margin:0 16px 10px;}
   #disasterPane .dnote span{display:inline-block;}
   #disasterPane .dpdf{display:block;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
+  #disasterPane .dtext{display:flex;align-items:flex-start;gap:.2em;margin:0 16px 8px;font-size:18px;line-height:1.7;}
+  #disasterPane .dtext .dm{flex:none;font-weight:700;color:var(--accent);}
+  #disasterPane .dtx{min-width:0;flex:1;}
+  #disasterPane .dtx span{display:inline-block;}
+  #disasterPane .dmap{margin:6px 16px 8px;}
+  #disasterPane .dmap img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:var(--paper);}
+  #disasterPane .dmap .dnote{margin:6px 0 0;}
   #disasterPane .dclose{display:none;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:20px;font-weight:700;font-family:inherit;}
   #infoPane .ibtn{display:block;width:100%;margin:8px 0 4px;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
   #infoPane .ibtn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent);}
@@ -405,7 +412,7 @@
 
 
 <div id="disasterPane" style="display:none">
-  <header><h1>災害・警報の早見表</h1></header>
+  <header><h1>災害時対応</h1></header>
   <div id="disasterBody"></div>
   <button class="dclose" id="disasterClose">この画面を閉じる</button>
 </div>
@@ -537,7 +544,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-s</div>
+    <div id="verlabel">画面の版: 11/17-t</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1260,6 +1267,34 @@ const DS_NOTES = [
   '※日進市は、 「愛知県全域」「愛知県西部」「尾張東部」が 該当します。',
 ];
 
+// 災害時対応のページに出す、学童の決まり(「■」=見出し / 「＞」=前の項目の続き / 「※」=補足 / 「＠PDF」「＠地図」=その場所に、ボタン・地図を出す / それ以外=「・」つきの項目。空白=折り返してよい場所)
+const DS_TEXT = [
+  '■各種警報・災害発生時等の対応について',
+  'さむらい学童の 開所・閉所の判断は、 日進市の 小学校・放課後子ども総合プランの 判断に準じます。',
+  '＞民間の学童は 日進市より 開所・閉所の判断は 各施設に 委ねられておりますが、 小学校・放課後子ども総合プランが 子どもの安全を 第一に 休止を決定した場合は、 弊所も その判断に準じて 休止とさせて頂きます。',
+  '＞例/本日のような、 給食後下校＋ 放課後子ども総合プランも 休止の場合、 さむらい学童も 閉所とさせて頂きます。',
+  '＞保護者の方には ご負担を おかけしてしまいますが、 ご理解と ご協力の程、 宜しくお願い申し上げます。',
+  '■災害発生時の対応の目安',
+  '各種警報・災害発生時等の 対応は、 上の「早見表」で ご確認いただけます。 市の原本(PDF)も、 下のボタンから ご覧になれます。',
+  '※「学童にいる場合」は PDF内の 「学校にいる場合」と 同様の対応と させて頂きます。',
+  '＠PDF',
+  '■その他学童の災害時対応項目',
+  '開所・閉所の判断は、 日進市の 小学校・放課後子ども総合プランの 判断に準じます。',
+  '学童開始後の 災害発生時は、 保護者への 引き渡しによる 帰宅となります。',
+  '＞その際は 保護者への連絡を 密にして お迎えが あるまでは 学童で 保護・待機します。',
+  '避難場所に 避難をするような 災害が 発生した場合は、 指定避難場所での 引き渡しとなります。',
+  '＞子どもたちの安全を 確認しながら、 指定避難場所にて 家族の方の お迎えを お待ちしています。',
+  '地震警戒宣言発令時は 原則として 学童内に 留まりますが、 状況によって 避難場所に 移動します。',
+  '火災が発生した場合も、 避難場所に 移動します。',
+  '避難する際には、 玄関など 目立つ場所に 「避難先を書いたボード」を 下げておきます。',
+  '■避難場所',
+  '第一避難場所： 梅森公民館 日進市梅森台1丁目151',
+  '第二避難場所： 日進西中学校 日進市梅森町向江1597',
+  '＠地図',
+  '■通達',
+  '上記運用に関して、 各種警報・災害発生時等、 またはその予測に基づく 決定が あり次第、 通達事項を LINE公式アカウント・ 電話・コドモン・メール等で 連絡をさせて頂きます。',
+];
+
 function showDisasterPage(){
   const status = document.getElementById('status');
   const pane = document.getElementById('disasterPane');
@@ -1309,9 +1344,30 @@ function showDisasterPage(){
       });
     });
     DS_NOTES.forEach(n => { const d = el('div', 'dnote'); words(d, n); body.appendChild(d); });
-    const pdf = el('button', 'dpdf', '市の資料(PDF)を 開く'); pdf.type = 'button';
-    pdf.onclick = () => openFile(new URL('nissin_keihou_taiou_20260529.pdf', location.href).href);
-    body.appendChild(pdf);
+    // ③ 学童の災害時の決まり(避難場所と地図、通達など。ご案内ではなく、ここにまとめる)
+    body.appendChild(el('div', 'dq', '③ 学童の 災害時の決まり'));
+    DS_TEXT.forEach(t => {
+      const m = t.charAt(0);
+      if(t === '＠PDF'){
+        const pdf = el('button', 'dpdf', '市の資料(PDF)を 開く'); pdf.type = 'button';
+        pdf.onclick = () => openFile(new URL('nissin_keihou_taiou_20260529.pdf', location.href).href);
+        body.appendChild(pdf);
+      }else if(t === '＠地図'){
+        const f = el('div', 'dmap');
+        const img = el('img'); img.src = new URL('map_hinan.jpg', location.href).href; img.alt = '避難場所の地図(さむらい学童・梅森公民館・日進西中学校)'; img.loading = 'lazy';
+        img.onclick = () => { const lb = document.getElementById('infoLightbox'); lb.querySelector('img').src = img.src; lb.style.display = 'flex'; };
+        f.appendChild(img);
+        const cap = el('div', 'dnote'); words(cap, '※印の位置は、 おおよそです。 (出典: 国土地理院)'); f.appendChild(cap);
+        body.appendChild(f);
+      }else if(m === '■'){
+        const h = el('div', 'dgroup'); words(h, t.slice(1)); body.appendChild(h);
+      }else if(m === '＞' || m === '※'){
+        const d = el('div', 'dnote'); words(d, m === '＞' ? t.slice(1) : t); body.appendChild(d);
+      }else{
+        const d = el('div', 'dtext'); d.appendChild(el('span', 'dm', '・'));
+        const tx = el('div', 'dtx'); words(tx, t); d.appendChild(tx); body.appendChild(d);
+      }
+    });
     window.scrollTo(0, 0);
   }
   function detailView(it){
@@ -1474,9 +1530,9 @@ async function showGuidePage(){
     btn(c, 'お電話・メールはこちら', false, () => openPage(here('contact')));
   }
   {
-    const c = card('災害・警報の早見表');
-    lines(c, [['こんな時 どうすれば？'], ['警報・地震などで、'], ['すぐ確認できます。']]);
-    btn(c, '早見表を開く', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=disaster'));
+    const c = card('災害時対応');
+    lines(c, [['警報・地震などの', 'ときの対応と、'], ['避難場所を', 'まとめています。']]);
+    btn(c, '災害時対応を開く', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=disaster'));
   }
   const cl = document.getElementById('guideClose');
   if(liff.isInClient && liff.isInClient()){ cl.style.display = 'block'; cl.onclick = () => liff.closeWindow(); }
