@@ -486,7 +486,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-c</div>
+    <div id="verlabel">画面の版: 11/17-d</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1168,8 +1168,8 @@ async function showGuidePage(){
         }
         lines(g, [['まちがえて押した時は、'], ['このトークで'], ['ご連絡下さい。']], 'mt soft');
       }else{
-        g.appendChild(el('div', 'gdone', kind === 'date' ? 'この画面は、前の日のものです' : kind === 'noplan' ? '本日の予定が、ありません' : 'お休みの連絡を、送れませんでした'));
-        lines(g, kind === 'date' ? [['画面を閉じて、'], ['もう一度、開いてください。']] : kind === 'noplan' ? [['予定のない日は、'], ['お休みの連絡はいりません。']] : [['通信を確かめて、'], ['もう一度、お試しください。']], 'mt');
+        g.appendChild(el('div', 'gdone', kind === 'date' ? 'この画面は、前の日のものです' : kind === 'noplan' ? '本日の予定が、登録されていません。' : 'お休みの連絡を、送れませんでした'));
+        lines(g, kind === 'date' ? [['画面を閉じて、'], ['もう一度、開いてください。']] : kind === 'noplan' ? [] : [['通信を確かめて、'], ['もう一度、お試しください。']], 'mt');
       }
       btn(g, kind === 'ok' ? 'もどる' : 'もう一度', true, reset);
     }
@@ -1212,7 +1212,7 @@ async function showGuidePage(){
       if(!planKids.length){ // 本日の予定がない時は、押せない(予定のない日の連絡は、受け付けない)
         const b = btn(box, '本日お休みいたします。', false, () => {});
         b.disabled = true;
-        lines(box, [['本日の予定が、'], ['登録されていません。'], ['予定のない日は、'], ['お休みの連絡はいりません。']], 'mt soft');
+        lines(box, [['本日の予定が、'], ['登録されていません。']], 'mt soft');
         return;
       }
       btn(box, '本日お休みいたします。', false, () => { if(planKids.length === 1) confirmView(planKids.slice(), false); else pickView(); });
