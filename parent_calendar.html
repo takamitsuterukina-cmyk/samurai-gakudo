@@ -486,7 +486,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-b</div>
+    <div id="verlabel">画面の版: 11/17-c</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1116,13 +1116,13 @@ async function showGuidePage(){
   const mdOf = k => { const a = k.split('-').map(Number); return a[1] + '/' + a[2] + '(' + '日月火水木金土'[new Date(a[0], a[1] - 1, a[2]).getDay()] + ')'; };
   const here = n => new URL(n, location.href).href; // この画面と同じ場所の、ほかのページ
 
-  let registered = false, children = [], hasInfo = false, loadFailed = false;
+  let registered = false, children = [], planKids = [], hasInfo = false, loadFailed = false; // planKids: 本日の予定が登録されているお子さん(お休みの連絡は、その子だけ)
   try{
     const [r1, r2] = await Promise.all([
-      fetch(GAS_DIRECT_URL + '?action=childInfo&userId=' + encodeURIComponent(userId)).then(r => r.json()).catch(() => null),
+      fetch(GAS_DIRECT_URL + '?action=childInfo&today=1&userId=' + encodeURIComponent(userId)).then(r => r.json()).catch(() => null),
       fetch(GAS_DIRECT_URL + '?action=info&userId=' + encodeURIComponent(userId)).then(r => r.json()).catch(() => null),
     ]);
-    if(r1){ registered = !!r1.registered; children = r1.children || []; } else loadFailed = true;
+    if(r1){ registered = !!r1.registered; children = r1.children || []; planKids = (r1.todayPlans || []).filter(n => children.indexOf(n) >= 0); } else loadFailed = true;
     hasInfo = !!(r2 && r2.ok && (r2.sections || []).length);
   }catch(e){ loadFailed = true; }
 
@@ -1168,8 +1168,8 @@ async function showGuidePage(){
         }
         lines(g, [['まちがえて押した時は、'], ['このトークで'], ['ご連絡下さい。']], 'mt soft');
       }else{
-        g.appendChild(el('div', 'gdone', kind === 'date' ? 'この画面は、前の日のものです' : 'お休みの連絡を、送れませんでした'));
-        lines(g, kind === 'date' ? [['画面を閉じて、'], ['もう一度、開いてください。']] : [['通信を確かめて、'], ['もう一度、お試しください。']], 'mt');
+        g.appendChild(el('div', 'gdone', kind === 'date' ? 'この画面は、前の日のものです' : kind === 'noplan' ? '本日の予定が、ありません' : 'お休みの連絡を、送れませんでした'));
+        lines(g, kind === 'date' ? [['画面を閉じて、'], ['もう一度、開いてください。']] : kind === 'noplan' ? [['予定のない日は、'], ['お休みの連絡はいりません。']] : [['通信を確かめて、'], ['もう一度、お試しください。']], 'mt');
       }
       btn(g, kind === 'ok' ? 'もどる' : 'もう一度', true, reset);
     }
@@ -1186,7 +1186,7 @@ async function showGuidePage(){
         try{
           const res = await fetch(GAS_DIRECT_URL, { method: 'POST', body: JSON.stringify({ action: 'todayOff', userId, date: jstDate(), all: !!all, children: list }) });
           const d = await res.json();
-          if(d && d.ok) result('ok', d); else result(d && d.error === 'date' ? 'date' : 'ng', d);
+          if(d && d.ok) result('ok', d); else result(d && d.error === 'date' ? 'date' : d && d.error === 'noplan' ? 'noplan' : 'ng', d);
         }catch(e){ result('ng', null); }
       });
       const no = btn(g, 'やめる', true, reset);
@@ -1196,8 +1196,10 @@ async function showGuidePage(){
       const g = el('div', 'gbox');
       box.appendChild(g);
       g.appendChild(el('div', 'gdone', 'どなたが、お休みですか？'));
-      children.forEach(n => btn(g, n + 'さん', true, () => confirmView([n], false)));
-      btn(g, '全員', true, () => confirmView(children.slice(), true));
+      planKids.forEach(n => btn(g, n + 'さん', true, () => confirmView([n], false)));
+      btn(g, '全員', true, () => confirmView(planKids.slice(), false));
+      const none = children.filter(n => planKids.indexOf(n) < 0);
+      if(none.length) lines(g, [['本日の予定がない'], ['お子さんは、出ません。']], 'mt soft');
       btn(g, 'やめる', true, reset);
     }
     function start(){
@@ -1207,7 +1209,13 @@ async function showGuidePage(){
         lines(g, loadFailed ? [['読み込めませんでした。'], ['画面を閉じて、'], ['もう一度、開いてください。']] : [['先に、お子さんの'], ['登録をお願いします。']]);
         return;
       }
-      btn(box, '本日お休みいたします。', false, () => { if(children.length === 1) confirmView(children.slice(), false); else pickView(); });
+      if(!planKids.length){ // 本日の予定がない時は、押せない(予定のない日の連絡は、受け付けない)
+        const b = btn(box, '本日お休みいたします。', false, () => {});
+        b.disabled = true;
+        lines(box, [['本日の予定が、'], ['登録されていません。'], ['予定のない日は、'], ['お休みの連絡はいりません。']], 'mt soft');
+        return;
+      }
+      btn(box, '本日お休みいたします。', false, () => { if(planKids.length === 1) confirmView(planKids.slice(), false); else pickView(); });
     }
     start();
   }
