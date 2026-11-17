@@ -544,7 +544,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-za</div>
+    <div id="verlabel">画面の版: 11/17-zb</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1525,9 +1525,9 @@ async function showGuidePage(){
   {
     const c = card('トークについて');
     lines(c, [['トークは、', 'ご連絡事項の', '受付用です。']]);
-    lines(c, [['簡単なご質問・', 'ご依頼は、', '承ります。', 'お返事まで', 'お時間を', 'いただくことが', 'あります。']], 'mt');
-    lines(c, [['複数回の', 'やり取りが必要な', 'ご相談は、', 'メール・', '対面・', 'お電話で', 'お願いいたします。']], 'mt');
-    lines(c, [['（活動中は、', 'チャットのような、', 'その場での', '対応は難しいため、', 'ご理解のほど、', 'よろしく', 'お願いいたします。）']], 'mt');
+    lines(c, [['簡単なご質問・', 'ご依頼も', 'お受けしますが、', 'お返事まで', 'お時間を', 'いただくことが', 'あります。']], 'mt');
+    lines(c, [['何度もやり取りが', '必要なご相談は、', 'メール・', 'お電話・', '対面で', 'お願いいたします。']], 'mt');
+    lines(c, [['（活動中は、', 'チャットのような', '対応は難しく、', 'ご理解を', 'お願いいたします。）']], 'mt');
     btn(c, 'お電話・メールはこちら', false, () => openPage(here('contact')));
   }
   {
