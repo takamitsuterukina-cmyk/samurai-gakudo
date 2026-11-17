@@ -215,6 +215,8 @@
   details.usual .wd{display:flex;gap:6px;margin:6px 0 10px;}
   details.usual .wd button{flex:1;padding:12px 0;border-radius:8px;border:1px solid var(--accent);background:#fff;font-size:19.7px;color:var(--ink);font-family:inherit;}
   details.usual .wd button.on{background:var(--accent);color:#fff;font-weight:700;}
+  details.usual .wbase{font-size:16px;color:var(--ink-soft);margin:-4px 0 10px;}
+  details.usual .wmsg{white-space:pre-line;}
   details.usual .wname{font-size:18.5px;font-weight:700;margin-top:8px;}
   details.usual .wmsg{font-size:18.5px;line-height:1.6;color:var(--accent);font-weight:700;padding:0 0 12px;}
   details.usual .wmsg.err{color:#B8541F;}
@@ -548,7 +550,7 @@
       <summary><span class="uicon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/><path d="M9 15l2 2 4-4"/></svg></span><span class="ut"><span style="display:inline-block;">便利機能　</span><span style="display:inline-block;">毎週の曜日を登録</span></span></summary>
       <div class="uexp"><span style="display:inline-block;">決まった曜日を登録すると、</span><span style="display:inline-block;">毎月、来月の予定が</span><span style="display:inline-block;">自動で入ります。</span><br><span style="display:inline-block;">お休みの日は、</span><span style="display:inline-block;">その日の予定を</span><span style="display:inline-block;">取り消してください。</span></div>
       <div id="weeklyRows"></div>
-      <div class="unote" id="weeklyNote"><span style="display:inline-block;">お迎え・時刻は、</span><span style="display:inline-block;">「いつもの時間」の設定が</span><span style="display:inline-block;">入ります。</span><br><span style="display:inline-block;">休園日・祝日・長期休みの日は、</span><span style="display:inline-block;">自動では入りません。</span></div>
+      <div class="unote" id="weeklyNote"><span style="display:inline-block;">お迎え・時刻は、</span><span style="display:inline-block;">「いつもの時間」の設定が</span><span style="display:inline-block;">入ります。</span><br><span style="display:inline-block;">休園日・祝日・長期休みの日は、</span><span style="display:inline-block;">自動では入りません。</span><br><span style="display:inline-block;">曜日は、変えられます。</span><span style="display:inline-block;">自動で入るのは、</span><span style="display:inline-block;">月の契約の回数までです。</span></div>
       <button type="button" class="uclose" id="weeklySave">この曜日で 保存する</button>
       <div class="wmsg" id="weeklyMsg"></div>
     </details>
@@ -586,7 +588,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-zf</div>
+    <div id="verlabel">画面の版: 11/17-zg</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1098,7 +1100,8 @@ function weeklyRender(){
   const rows = document.getElementById('weeklyRows'); rows.innerHTML = '';
   const names = ['日','月','火','水','木','金','土'];
   list.forEach(c => {
-    if(!weeklyDraft[c]) weeklyDraft[c] = ((weeklySaved[c] && weeklySaved[c].days) || []).slice();
+    if(!weeklyDraft[c]) weeklyDraft[c] = ((weeklySaved[c] && weeklySaved[c].days) || []).slice(); // 保存前は、契約曜日が選ばれた状態
+    const base = (weeklySaved[c] && weeklySaved[c].base) || [];
     if(list.length > 1){ const n = document.createElement('div'); n.className = 'wname'; n.textContent = c + ' さん'; rows.appendChild(n); }
     const wd = document.createElement('div'); wd.className = 'wd';
     [1,2,3,4,5,6].forEach(d => {
@@ -1114,6 +1117,7 @@ function weeklyRender(){
       wd.appendChild(b);
     });
     rows.appendChild(wd);
+    if(base.length){ const bn = document.createElement('div'); bn.className = 'wbase'; bn.textContent = '契約の曜日： ' + base.map(d => names[d]).join('・'); rows.appendChild(bn); }
   });
 }
 async function weeklySubmit(){
@@ -1133,9 +1137,9 @@ async function weeklySubmit(){
     weeklySaved = j.weekly || {}; weeklyDraft = {};
     try{ await refreshFromServer(); }catch(e){}
     weeklyRender();
-    const any = Object.keys(weeklySaved).some(c => (weeklySaved[c].days || []).length);
+    const any = Object.keys(weeklySaved).some(c => weeklySaved[c].saved);
     msg.textContent = !any ? '解除しました。すでに入った予定は、そのまま残ります。'
-      : (j.added ? '保存しました。' + j.added + '日分を、予定に入れました。' : '保存しました。新しく入れる日は、ありませんでした。');
+      : (j.added ? '保存しました。' + j.added + '日分を、予定に入れました。' : '保存しました。新しく入れる日は、ありませんでした。') + (j.capped ? '\n契約の回数をこえる ' + j.capped + '日分は、入れていません。' : '');
   }catch(e){
     msg.className = 'wmsg err'; msg.textContent = 'うまく保存できませんでした。もう一度お試しください。';
   }
