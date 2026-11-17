@@ -329,6 +329,22 @@
   #infoPane .inote{font-size:17.5px;color:var(--ink-soft);padding-left:1.3em;line-height:1.6;margin-top:4px;}
   #infoPane .inone{text-align:center;font-size:19.7px;color:var(--ink-soft);padding:30px 16px;line-height:1.7;}
   #infoPreview{margin:0 16px 12px;padding:10px 14px;border-radius:10px;background:#FFF4E0;border:1px solid #E9C98B;color:#8a5a00;font-size:18.5px;font-weight:700;line-height:1.5;}
+
+  /* ご案内の画面(メニューの「ご案内」)。トークにカードを出さず、この画面で開く */
+  #guidePane{padding-bottom:40px;}
+  #guidePane .gcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
+  #guidePane .gtitle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
+  #guidePane .gline{font-size:19.7px;line-height:1.7;color:var(--ink);}
+  #guidePane .gline span{display:inline-block;margin-right:.45em;}
+  #guidePane .gline.soft{color:var(--ink-soft);}
+  #guidePane .gline.mt{margin-top:10px;}
+  #guidePane .gline.bold{font-weight:700;}
+  #guidePane .gname{font-size:22.2px;font-weight:700;line-height:1.6;}
+  #guidePane .gdone{font-size:22.2px;font-weight:700;color:var(--accent);line-height:1.5;}
+  #guidePane .gbtn{display:block;width:100%;margin-top:12px;padding:14px 0;border:2px solid var(--accent);border-radius:10px;background:var(--accent);color:#fff;font-size:22.2px;font-weight:700;font-family:inherit;}
+  #guidePane .gbtn.ghost{background:#fff;color:var(--accent);}
+  #guidePane .gbtn:disabled{background:#B9C4B4;border-color:#B9C4B4;color:#fff;}
+  #guidePane .gbox{margin-top:12px;padding:12px 14px;border:2px solid var(--accent);border-radius:12px;background:#fff;}
 </style>
 </head>
 <body>
@@ -341,6 +357,13 @@
   <div id="infoBody"></div>
   <button class="go" id="infoClose" style="display:none;margin:8px 16px 0;width:calc(100% - 32px);">この画面を閉じる</button>
 </div>
+
+<div id="guidePane" style="display:none">
+  <header><h1>ご案内</h1></header>
+  <div id="guideBody"></div>
+  <button class="gbtn ghost" id="guideClose" style="display:none;margin:8px 16px 0;width:calc(100% - 32px);">この画面を閉じる</button>
+</div>
+
 
 <div id="regPane">
   <h2>お子さんの登録</h2>
@@ -463,7 +486,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-a</div>
+    <div id="verlabel">画面の版: 11/17-b</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1077,6 +1100,127 @@ async function showInfoPage(){
   }
 }
 
+/* ご案内の画面(メニューの「ご案内」): 予定の登録のしかた・予定変更・当日のお休み・トークについて。
+   トークにカードを出さず、この画面で開く。当日のお休みは、ここで確認(お休みする/やめる)を済ませてから、はじめて送る。 */
+async function showGuidePage(){
+  const status = document.getElementById('status');
+  const pane = document.getElementById('guidePane');
+  const body = document.getElementById('guideBody');
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; };
+  const openPage = url => { try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; } };
+  const lines = (box, arr, cls) => (arr || []).forEach((parts, i) => { const d = el('div', 'gline' + (cls ? ' ' + (i ? cls.split(' ').filter(x => x !== 'mt').join(' ') : cls) : '')); [].concat(parts).forEach(t => d.appendChild(el('span', '', t))); box.appendChild(d); }); // 'mt'(上の余白)は、まとまりの最初の行だけ
+  const card = title => { const c = el('div', 'gcard'); c.appendChild(el('div', 'gtitle', title)); body.appendChild(c); return c; };
+  const btn = (box, label, ghost, fn) => { const b = el('button', 'gbtn' + (ghost ? ' ghost' : ''), label); b.type = 'button'; b.onclick = fn; box.appendChild(b); return b; };
+  const pad = n => String(n).padStart(2, '0');
+  const jstDate = () => { const d = new Date(Date.now() + (new Date().getTimezoneOffset() + 540) * 60000); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  const mdOf = k => { const a = k.split('-').map(Number); return a[1] + '/' + a[2] + '(' + '日月火水木金土'[new Date(a[0], a[1] - 1, a[2]).getDay()] + ')'; };
+  const here = n => new URL(n, location.href).href; // この画面と同じ場所の、ほかのページ
+
+  let registered = false, children = [], hasInfo = false, loadFailed = false;
+  try{
+    const [r1, r2] = await Promise.all([
+      fetch(GAS_DIRECT_URL + '?action=childInfo&userId=' + encodeURIComponent(userId)).then(r => r.json()).catch(() => null),
+      fetch(GAS_DIRECT_URL + '?action=info&userId=' + encodeURIComponent(userId)).then(r => r.json()).catch(() => null),
+    ]);
+    if(r1){ registered = !!r1.registered; children = r1.children || []; } else loadFailed = true;
+    hasInfo = !!(r2 && r2.ok && (r2.sections || []).length);
+  }catch(e){ loadFailed = true; }
+
+  status.style.display = 'none';
+  pane.style.display = 'block';
+  body.innerHTML = '';
+
+  if(hasInfo){
+    const c = card('学童からのご案内');
+    lines(c, [['持ち物や料金などの'], ['ご案内です。']]);
+    btn(c, 'ご案内を見る', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=info'));
+  }
+  {
+    const c = card('予定の登録のしかた');
+    lines(c, [['操作をお忘れのときは、'], ['こちらで確認できます。']]);
+    btn(c, '予定の登録のしかたを見る', false, () => openPage(here('howto')));
+  }
+  {
+    const c = card('予定変更の場合');
+    lines(c, [['予定の変更・キャンセルは'], ['3日前までにお願いします。'], ['「利用予定を登録する」から'], ['登録しなおして下さい。']]);
+    lines(c, [['3日以内の変更は、'], ['トークでご連絡下さい。'], ['確認いたします']], 'mt');
+  }
+  {
+    const c = card('当日キャンセルの場合');
+    lines(c, [['当日お休みの連絡は'], ['こちらから']]);
+    const box = el('div');
+    c.appendChild(box);
+    const reset = () => { box.innerHTML = ''; start(); };
+    function result(kind, data){ // 送った後・うまくいかなかった時
+      box.innerHTML = '';
+      const g = el('div', 'gbox');
+      box.appendChild(g);
+      if(kind === 'ok'){
+        if(data.fresh && data.fresh.length){
+          g.appendChild(el('div', 'gdone', '✓ 受け付けました'));
+          lines(g, [['本日 ' + data.md + ' は、'], ['お休みの連絡です。']], 'mt');
+          data.fresh.forEach(n => g.appendChild(el('div', 'gname', n + 'さん')));
+          lines(g, [['スタッフに送りました。']], 'mt');
+        }
+        if(data.already && data.already.length){
+          g.appendChild(el('div', 'gdone', 'すでに受け付けています'));
+          data.already.forEach(n => g.appendChild(el('div', 'gname', n + 'さん')));
+        }
+        lines(g, [['まちがえて押した時は、'], ['このトークで'], ['ご連絡下さい。']], 'mt soft');
+      }else{
+        g.appendChild(el('div', 'gdone', kind === 'date' ? 'この画面は、前の日のものです' : 'お休みの連絡を、送れませんでした'));
+        lines(g, kind === 'date' ? [['画面を閉じて、'], ['もう一度、開いてください。']] : [['通信を確かめて、'], ['もう一度、お試しください。']], 'mt');
+      }
+      btn(g, kind === 'ok' ? 'もどる' : 'もう一度', true, reset);
+    }
+    function confirmView(list, all){ // 確認: 「お休みする」を押すまで、送らない
+      box.innerHTML = '';
+      const g = el('div', 'gbox');
+      box.appendChild(g);
+      lines(g, [['本日お休みの連絡を'], ['送りますか？']], 'bold');
+      lines(g, [['本日 ' + mdOf(jstDate())]], 'mt soft');
+      list.forEach(n => g.appendChild(el('div', 'gname', n + 'さん')));
+      lines(g, [['「お休みする」を押すと、'], ['スタッフに送られます。']], 'mt');
+      const go = btn(g, 'お休みする', false, async () => {
+        go.disabled = true; no.disabled = true; go.textContent = '送っています…';
+        try{
+          const res = await fetch(GAS_DIRECT_URL, { method: 'POST', body: JSON.stringify({ action: 'todayOff', userId, date: jstDate(), all: !!all, children: list }) });
+          const d = await res.json();
+          if(d && d.ok) result('ok', d); else result(d && d.error === 'date' ? 'date' : 'ng', d);
+        }catch(e){ result('ng', null); }
+      });
+      const no = btn(g, 'やめる', true, reset);
+    }
+    function pickView(){ // お子さんが複数の時: だれのお休みか
+      box.innerHTML = '';
+      const g = el('div', 'gbox');
+      box.appendChild(g);
+      g.appendChild(el('div', 'gdone', 'どなたが、お休みですか？'));
+      children.forEach(n => btn(g, n + 'さん', true, () => confirmView([n], false)));
+      btn(g, '全員', true, () => confirmView(children.slice(), true));
+      btn(g, 'やめる', true, reset);
+    }
+    function start(){
+      if(loadFailed || !registered || !children.length){
+        const g = el('div', 'gbox');
+        box.appendChild(g);
+        lines(g, loadFailed ? [['読み込めませんでした。'], ['画面を閉じて、'], ['もう一度、開いてください。']] : [['先に、お子さんの'], ['登録をお願いします。']]);
+        return;
+      }
+      btn(box, '本日お休みいたします。', false, () => { if(children.length === 1) confirmView(children.slice(), false); else pickView(); });
+    }
+    start();
+  }
+  {
+    const c = card('トークについて');
+    lines(c, [['トークは、スケジュールに'], ['関する連絡事項に'], ['限らせて頂きます。']]);
+    lines(c, [['ご相談・ご質問は、'], ['メール・対面・お電話で'], ['お願いします。'], ['ご返信まで、お時間を'], ['いただく場合があります。'], ['（このLINEでは、'], ['お答えしておりません）']], 'mt');
+    btn(c, 'お電話・メールはこちら', false, () => openPage(here('contact')));
+  }
+  const cl = document.getElementById('guideClose');
+  if(liff.isInClient && liff.isInClient()){ cl.style.display = 'block'; cl.onclick = () => liff.closeWindow(); }
+}
+
 async function boot(){
   try{
     rememberInvite();
@@ -1086,6 +1230,7 @@ async function boot(){
     const idToken = liff.getDecodedIDToken();
     userId = idToken.sub;
     if(new URLSearchParams(location.search).get('mode') === 'info'){ await showInfoPage(); return; } // 「ご案内を見る」から開いた時
+    if(new URLSearchParams(location.search).get('mode') === 'guide'){ await showGuidePage(); return; } // メニューの「ご案内」から開いた時
     // 開くのを速く見せるため、前回の内容を先に表示し、最新の内容は裏で読み込んで、あとから入れ替える。
     // (最新を読み終えるまでは、送信できないようにして、古い内容のまま送ってしまうのを防ぐ)
     const cacheKey = 'samuraiInitCache_' + userId;
