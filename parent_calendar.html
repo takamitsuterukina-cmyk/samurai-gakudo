@@ -306,10 +306,10 @@
   #infoPane .icard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
   #infoPane .ititle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
   #infoPane .iwho{display:inline-block;font-size:18.5px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-radius:6px;padding:2px 10px;margin:0 6px 8px 0;white-space:nowrap;}
-  #infoPane .iline{font-size:19.7px;line-height:1.7;color:var(--ink);}
+  #infoPane .iline{font-size:19.7px;line-height:1.45;color:var(--ink);}
   #infoPane .iline span{display:inline-block;} /* 言葉のまとまりの途中では、折り返さない(まとまりの間に、すき間はあけない。2026-11-17) */
   #infoPane #infoClose{padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:22.2px;font-weight:700;}
-  #infoPane .irows{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:14px;row-gap:6px;font-size:19.7px;line-height:1.7;}
+  #infoPane .irows{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:14px;row-gap:6px;font-size:19.7px;line-height:1.45;}
   #infoPane .ilabel{white-space:nowrap;font-weight:700;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
   #infoPane .ival{color:var(--ink);}
   #infoPane .ival span{display:inline-block;}
@@ -326,12 +326,12 @@
   #infoPane .idish .ibm{flex:none;margin-right:0;font-weight:700;color:var(--accent);}
   #infoPane .idish .itext{min-width:0;flex:1;}
   #infoPane .ialg{font-size:18px;font-weight:700;color:var(--ink);background:var(--accent-soft);border-radius:6px;padding:2px 10px;margin-top:8px;display:inline-block;line-height:1.6;}
-  #infoPane .inote{font-size:17.5px;color:var(--ink-soft);padding-left:1.3em;line-height:1.6;margin-top:4px;}
+  #infoPane .inote{font-size:17.5px;color:var(--ink-soft);padding-left:1.3em;line-height:1.45;margin-top:4px;}
   #infoPane .iphotos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
   #infoPane .iphoto{min-width:0;}
   #infoPane .iphoto.wide{grid-column:1 / -1;}
   #infoPane .iphoto img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:var(--paper);}
-  #infoPane .icap{font-size:17.5px;line-height:1.6;margin-top:6px;font-weight:700;}
+  #infoPane .icap{font-size:17.5px;line-height:1.45;margin-top:6px;font-weight:700;}
   #infoPane .icap span{display:inline-block;}
   #infoPane .icap.ok{color:var(--accent);}
   #infoPane .icap.ng{color:#B8541F;}
@@ -344,7 +344,7 @@
   #guidePane{padding-bottom:40px;}
   #guidePane .gcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
   #guidePane .gtitle{font-size:22.2px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.4;}
-  #guidePane .gline{font-size:19.7px;line-height:1.7;color:var(--ink);}
+  #guidePane .gline{font-size:19.7px;line-height:1.45;color:var(--ink);}
   #guidePane .gline span{display:inline-block;}
   #guidePane .gline.soft{color:var(--ink-soft);}
   #guidePane .gline.mt{margin-top:10px;}
@@ -359,7 +359,7 @@
   /* 災害・警報の早見表(?mode=disaster) */
   #disasterPane{padding-bottom:40px;}
   #disasterPane .dcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
-  #disasterPane .dintro{font-size:17.5px;line-height:1.7;color:var(--ink-soft);margin:0 16px 12px;}
+  #disasterPane .dintro{font-size:17.5px;line-height:1.45;color:var(--ink-soft);margin:0 16px 12px;}
   #disasterPane .dintro span,#disasterPane .dline span,#disasterPane .dhead span,#disasterPane .dgo span,#disasterPane .dnum span,#disasterPane .dbul span,#disasterPane .dsub span{display:inline-block;}
   #disasterPane .dq{font-size:20px;font-weight:700;margin:0 16px 8px;}
   #disasterPane .dplaces{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px;}
@@ -379,14 +379,14 @@
   #disasterPane .dcard.now .dplace-h{color:var(--accent);font-size:18px;}
   #disasterPane .dhead{font-size:21px;font-weight:700;line-height:1.55;}
   #disasterPane .dgo{font-size:19px;font-weight:700;line-height:1.6;color:#B8541F;margin-top:6px;}
-  #disasterPane .dline{font-size:18px;line-height:1.7;}
-  #disasterPane .dnum,#disasterPane .dbul{font-size:18px;line-height:1.65;padding-left:.2em;}
+  #disasterPane .dline{font-size:18px;line-height:1.45;}
+  #disasterPane .dnum,#disasterPane .dbul{font-size:18px;line-height:1.45;padding-left:.2em;}
   #disasterPane .dnum{margin-top:2px;}
-  #disasterPane .dlead{font-size:18px;line-height:1.7;margin-top:6px;}
-  #disasterPane .dnote{font-size:17px;color:var(--ink-soft);line-height:1.65;margin:0 16px 10px;}
+  #disasterPane .dlead{font-size:18px;line-height:1.45;margin-top:6px;}
+  #disasterPane .dnote{font-size:17px;color:var(--ink-soft);line-height:1.45;margin:0 16px 10px;}
   #disasterPane .dnote span{display:inline-block;}
   #disasterPane .dpdf{display:block;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
-  #disasterPane .dtext{display:flex;align-items:flex-start;gap:.2em;margin:0 16px 8px;font-size:18px;line-height:1.7;}
+  #disasterPane .dtext{display:flex;align-items:flex-start;gap:.2em;margin:0 16px 8px;font-size:18px;line-height:1.45;}
   #disasterPane .dtext .dm{flex:none;font-weight:700;color:var(--accent);}
   #disasterPane .dtx{min-width:0;flex:1;}
   #disasterPane .dtx span{display:inline-block;}
@@ -544,7 +544,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-w</div>
+    <div id="verlabel">画面の版: 11/17-x</div>
   </div>
 
   <div id="viewPane" style="display:none">
