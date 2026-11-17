@@ -497,7 +497,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-f</div>
+    <div id="verlabel">画面の版: 11/17-g</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1045,9 +1045,10 @@ async function showInfoPage(){
     (lines || []).forEach(parts => {
       const d = document.createElement('div');
       const first = (parts[0] || '').charAt(0);
-      const isNote = !plain && (first === '※' || first === '(' || first === '（');
+      const isCont = !plain && first === '＞'; // 前の項目の続きの文(「・」なし。補足と同じ見た目)
+      const isNote = !plain && (first === '※' || first === '(' || first === '（' || isCont);
       const kind = !plain && first === '■' ? 'isub' : (!plain && first === '・' ? 'idish' : (!plain && first === '◆' ? 'ialg' : ''));
-      if(kind){ parts = parts.slice(); parts[0] = parts[0].slice(1); if(!parts[0]) parts.shift(); }
+      if(kind || isCont){ parts = parts.slice(); parts[0] = parts[0].slice(1); if(!parts[0]) parts.shift(); }
       let host = d;
       if(plain){ d.className = 'iline'; }
       else if(kind === 'isub' || kind === 'ialg'){ d.className = 'iline ' + kind; }
