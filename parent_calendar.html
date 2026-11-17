@@ -537,7 +537,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-r</div>
+    <div id="verlabel">画面の版: 11/17-s</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1140,9 +1140,8 @@ async function showInfoPage(){
         };
         c.appendChild(b);
       });
-      mkLines(c, s.lines);
-      mkRows(c, s.rows);
       // 写真(横に並べる)と、その下の説明。写真を押すと、大きく見られる
+      const mkImages = () => {
       if(s.images && s.images.length){
         const g = document.createElement('div'); g.className = 'iphotos';
         s.images.forEach(im => {
@@ -1156,6 +1155,17 @@ async function showInfoPage(){
           g.appendChild(f);
         });
         c.appendChild(g);
+      }
+      };
+      if(typeof s.imagesAfter === 'number' && s.images && s.images.length){ // 指定の行のあとに、画像を出す(例: 避難場所の行のすぐ下に地図)
+        mkLines(c, (s.lines || []).slice(0, s.imagesAfter));
+        mkImages();
+        mkLines(c, (s.lines || []).slice(s.imagesAfter));
+        mkRows(c, s.rows);
+      }else{
+        mkLines(c, s.lines);
+        mkRows(c, s.rows);
+        mkImages();
       }
       body.appendChild(c);
     });
