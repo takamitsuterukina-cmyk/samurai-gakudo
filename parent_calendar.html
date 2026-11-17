@@ -355,6 +355,39 @@
   #guidePane .gbtn.ghost{background:#fff;color:var(--accent);}
   #guidePane .gbtn:disabled{background:#B9C4B4;border-color:#B9C4B4;color:#fff;}
   #guidePane .gbox{margin-top:12px;padding:12px 14px;border:2px solid var(--accent);border-radius:12px;background:#fff;}
+
+  /* 災害・警報の早見表(?mode=disaster) */
+  #disasterPane{padding-bottom:40px;}
+  #disasterPane .dcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 16px 12px;}
+  #disasterPane .dintro{font-size:17.5px;line-height:1.7;color:var(--ink-soft);margin:0 16px 12px;}
+  #disasterPane .dintro span,#disasterPane .dline span,#disasterPane .dhead span,#disasterPane .dgo span,#disasterPane .dnum span,#disasterPane .dbul span,#disasterPane .dsub span{display:inline-block;margin-right:.3em;}
+  #disasterPane .dq{font-size:20px;font-weight:700;margin:0 16px 8px;}
+  #disasterPane .dplaces{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px;}
+  #disasterPane .dplace{padding:12px 6px;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:18px;font-weight:700;font-family:inherit;line-height:1.35;}
+  #disasterPane .dplace.on{background:var(--accent);color:#fff;}
+  #disasterPane .dgroup{font-size:19px;font-weight:700;color:var(--accent);margin:18px 16px 8px;}
+  #disasterPane .ditem{display:block;width:calc(100% - 32px);margin:0 16px 8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:left;font-family:inherit;color:var(--ink);}
+  #disasterPane .ditem .dt{font-size:20px;font-weight:700;line-height:1.45;}
+  #disasterPane .ditem .dt span,#disasterPane .ditem .ds span,#disasterPane .dtitle span{display:inline-block;margin-right:.1em;}
+  #disasterPane .ditem .ds{font-size:16px;color:var(--ink-soft);line-height:1.5;margin-top:2px;}
+  #disasterPane .dback{display:block;width:calc(100% - 32px);margin:0 16px 12px;padding:12px 0;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:19px;font-weight:700;font-family:inherit;}
+  #disasterPane .dtitle{font-size:24px;font-weight:700;line-height:1.4;margin:0 16px 2px;}
+  #disasterPane .dsub{font-size:17px;color:var(--ink-soft);line-height:1.5;margin:0 16px 12px;}
+  #disasterPane .dplace-h{font-size:17px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+  #disasterPane .dcard.now{border:3px solid var(--accent);}
+  #disasterPane .dcard.now .dplace-h{color:var(--accent);font-size:18px;}
+  #disasterPane .dhead{font-size:21px;font-weight:700;line-height:1.55;}
+  #disasterPane .dgo{font-size:19px;font-weight:700;line-height:1.6;color:#B8541F;margin-top:6px;}
+  #disasterPane .dline{font-size:18px;line-height:1.7;}
+  #disasterPane .dnum,#disasterPane .dbul{font-size:18px;line-height:1.65;padding-left:.2em;}
+  #disasterPane .dnum{margin-top:2px;}
+  #disasterPane .dlead{font-size:18px;line-height:1.7;margin-top:6px;}
+  #disasterPane .dnote{font-size:17px;color:var(--ink-soft);line-height:1.65;margin:0 16px 10px;}
+  #disasterPane .dnote span{display:inline-block;margin-right:.3em;}
+  #disasterPane .dpdf{display:block;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
+  #disasterPane .dclose{display:none;width:calc(100% - 32px);margin:8px 16px 0;padding:14px 0;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent);font-size:20px;font-weight:700;font-family:inherit;}
+  #infoPane .ibtn{display:block;width:100%;margin:8px 0 4px;padding:14px 0;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:20px;font-weight:700;font-family:inherit;}
+  #infoPane .ibtn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent);}
 </style>
 </head>
 <body>
@@ -369,6 +402,12 @@
   <button class="go" id="infoClose" style="display:none;margin:8px 16px 0;width:calc(100% - 32px);">この画面を閉じる</button>
 </div>
 
+
+<div id="disasterPane" style="display:none">
+  <header><h1>災害・警報の早見表</h1></header>
+  <div id="disasterBody"></div>
+  <button class="dclose" id="disasterClose">この画面を閉じる</button>
+</div>
 <div id="guidePane" style="display:none">
   <header><h1>ご案内</h1></header>
   <div id="guideBody"></div>
@@ -497,7 +536,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-g</div>
+    <div id="verlabel">画面の版: 11/17-h</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1091,6 +1130,15 @@ async function showInfoPage(){
       const c = document.createElement('div'); c.className = 'icard';
       const t = document.createElement('div'); t.className = 'ititle'; t.textContent = s.title; c.appendChild(t);
       (s.who || []).forEach(n => { const w = document.createElement('span'); w.className = 'iwho'; w.textContent = n + ' さん'; c.appendChild(w); });
+      // ボタン(災害・警報の早見表・PDFなど)は、見出しのすぐ下に
+      (s.buttons || []).forEach(bt => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'ibtn' + (bt.file ? ' ghost' : ''); b.textContent = bt.label;
+        b.onclick = () => {
+          const url = bt.page === 'disaster' ? 'https://liff.line.me/' + LIFF_ID + '?mode=disaster' : new URL(bt.file, location.href).href;
+          try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; }
+        };
+        c.appendChild(b);
+      });
       mkLines(c, s.lines);
       mkRows(c, s.rows);
       // 写真(横に並べる)と、その下の説明。写真を押すと、大きく見られる
@@ -1127,6 +1175,169 @@ async function showInfoPage(){
   }
 }
 
+/* 災害・警報の早見表(?mode=disaster): 日進市の「各種警報・災害発生時等の対応について」(令和8年5月29日適用)を、学童向けに、スマホで見やすくまとめ直したもの。
+   「学校にいる場合」=「学童にいる場合」(市の表と同じ対応)。開所・閉所は、日進市の小学校・放課後子ども総合プランの判断に準じる。
+   行の頭の記号: 「*」=太字の見出し / 「→」=目立たせる行(閉所など) / 「①〜④」=番号の項目 / 「・」=項目 / それ以外=ふつうの文。空白=折り返してよい場所。 */
+const DS_PLACES = [
+  { id: 'home',  label: '自宅', long: '自宅にいる場合' },
+  { id: 'going', label: '学童へ向かう途中', long: '学童へ向かっている途中' },
+  { id: 'at',    label: '学童にいる', long: '学童にいる場合' },
+  { id: 'back',  label: '帰り道', long: '学童からの帰り道' },
+];
+const DS_CLOSED = '→当日の学校は 授業中止。 さむらい学童も、 市の判断に準じて 閉所(お休み)です。';
+const DS_SAFE = ['*安全な場所に 避難 または 直ちに帰宅'];
+const DS_AT3 = ['*学童の安全な場所に 避難', '帰りは、 下記①〜③を 学童が判断します。', '①安全を確認したうえで 帰宅', '②保護者の お迎えで 帰宅', '③学童内で 待機'];
+const DS_DATA = [
+  { group: '気象の警報・注意報', items: [
+    { id: 'tokubetsu', title: '特別警報', sub: '暴風・大雪・暴風雪・波浪', cells: {
+      home: ['*自宅待機', '(直ちに命を守る 最善行動)'], going: DS_SAFE, at: ['*学童の活動を 即刻中止し、 学童内で 待機'], back: DS_SAFE } },
+    { id: 'bofu', title: '暴風警報', sub: '', cells: {
+      home: ['*午前6時を過ぎても 特別警報・暴風警報が 解除されないとき', DS_CLOSED],
+      going: DS_SAFE,
+      at: ['*学童の活動を 中止', '帰りは、 下記①〜③を 学童が判断します。', '①安全を確認したうえで 帰宅', '②保護者の お迎えで 帰宅', '③学童内で 待機。 警報が解除された後に、 安全を確認したうえで 帰宅'],
+      back: DS_SAFE } },
+    { id: 'keiho', title: '大雪・暴風雪・波浪の警報', sub: '', cells: {
+      home: ['*平常どおり 登所', '(危険な場合は 自宅待機)'], going: ['*危険な場合は 帰宅'],
+      at: ['*平常どおり', '帰りは、 下記①〜④を 学童が判断します。', '①通常どおり 帰宅', '②安全を確認したうえで 帰宅', '③保護者の お迎えで 帰宅', '④学童内で 待機。 安全を確認したうえで 帰宅'],
+      back: ['*直ちに帰宅'] } },
+    { id: 'chui', title: '注意報', sub: '大雪・強風・その他', cells: {
+      home: ['*平常どおり 登所', '(危険な場合は 自宅待機)'], going: ['*危険な場合は 帰宅'],
+      at: ['*平常どおり', '帰りは、 下記①〜④を 学童が判断します。', '①通常どおり 帰宅', '②安全を確認したうえで 帰宅', '③保護者の お迎えで 帰宅', '④学童内で 待機。 安全を確認したうえで 帰宅'],
+      back: ['*直ちに帰宅'] } },
+  ] },
+  { group: '大雨・洪水・土砂災害・高潮', items: [
+    { id: 'lv5', title: 'レベル5 特別警報', sub: '大雨・氾濫・土砂災害・高潮', cells: {
+      home: ['*自宅待機', '(直ちに命を守る 最善行動)'], going: DS_SAFE, at: ['*学童の活動を 即刻中止し、 学童内で 待機'], back: DS_SAFE } },
+    { id: 'lv4', title: 'レベル4 危険警報', sub: '大雨・氾濫・土砂災害・高潮', cells: {
+      home: ['*自宅待機', '(早めの避難を 考慮する)'], going: DS_SAFE,
+      at: ['*学童の活動を 中止', '帰りは、 下記①〜③を 学童が判断します。', '①学童内で 待機', '②学童の外の 避難所へ 移動', '③保護者の お迎えで 帰宅'],
+      back: DS_SAFE } },
+    { id: 'lv32', title: 'レベル3 警報・レベル2 注意報', sub: '大雨・氾濫・土砂災害・高潮', cells: {
+      home: ['*平常どおり 登所'], going: ['*危険な場合は 帰宅'], at: ['*通常どおり'], back: ['*直ちに帰宅'] } },
+  ] },
+  { group: '日進市の避難情報', items: [
+    { id: 'hinan', title: '警戒レベル4以上の避難情報', sub: '日進市が発表(気象庁の「災害発生の危険度」)', cells: {
+      home: ['*自宅待機', '・午前6時までに 解除 → 平常どおり', '*午前6時を過ぎても 解除されないとき', DS_CLOSED],
+      going: DS_SAFE,
+      at: ['*学童内で 待機', '・学童の外の 避難場所へ 移動', '・保護者へ お引き渡し 等'],
+      back: DS_SAFE } },
+  ] },
+  { group: '地震', items: [
+    { id: 'nankai1', title: '南海トラフ地震臨時情報(調査中)', sub: '', cells: {
+      home: ['*自宅待機', '*午前6時を過ぎても 調査終了にならないとき', DS_CLOSED],
+      going: ['*直ちに帰宅'], at: DS_AT3, back: ['*直ちに帰宅'] } },
+    { id: 'nankai2', title: '巨大地震警戒・巨大地震注意', sub: '南海トラフ地震臨時情報', cells: {
+      home: ['*自宅待機', '*午前6時を過ぎても 調査終了にならないとき', DS_CLOSED],
+      going: DS_SAFE,
+      at: ['*学童の活動を 原則中止', '学童の安全な場所に 避難', '帰りは、 下記①〜③を 学童が判断します。', '①安全を確認したうえで 帰宅', '②保護者の お迎えで 帰宅', '③学童内で 待機'],
+      back: ['*直ちに帰宅'] },
+      notes: ['※学童施設の安全を 確認したうえで、 その後の対応を LINE公式アカウント等で 連絡します。'] },
+    { id: 'nankai3', title: '調査終了', sub: '南海トラフ地震臨時情報', all: ['*午前6時までに 調査終了 → 平常どおり'] },
+  ] },
+  { group: 'ミサイル(Jアラート)', items: [
+    { id: 'jalert1', title: 'Jアラートの緊急情報', sub: '情報発令・日本の領土・領域内へ落下', cells: {
+      home: ['*自宅待機', '領土・領域内へ 落下した場合の その後の対応は、 LINE公式アカウント等で 連絡します。'],
+      going: ['*安全な場所(建物)に 避難'], at: DS_AT3, back: ['*安全な場所(建物)に 避難'] },
+      notes: ['Jアラート: 日進市では、 市内6か所の 防災サイレンを 吹鳴して お知らせします。 サイレンは、 14秒の吹鳴と 休止を 3回繰り返します。'] },
+    { id: 'jalert2', title: 'ミサイルが 領域外へ', sub: '日本の上空を通過し、 領域外に出た・落下した', cells: {
+      home: ['*自宅待機を 解除', '速やかに 登所'], going: ['*通常どおり 登所'], at: ['*通常どおり'], back: ['*そのまま 帰宅'] } },
+  ] },
+  { group: 'そのほか', items: [
+    { id: 'jiko', title: '災害・事件・事故が 発生したとき', sub: '', cells: {
+      home: ['*状況により 自宅待機'], going: ['*危険な場合は 帰宅'], at: DS_AT3, back: DS_SAFE } },
+    { id: 'necchu', title: '熱中症特別警戒情報(アラート)', sub: '午後2時に 愛知県に 発表された場合', all: [
+      '*翌日、 学校の授業は 終日中止です。', '(学校の部活動なども 中止)', '・発表日の 午後2時以降の 帰りは、 通常どおり',
+      '→放課後子ども教室・児童クラブは 通常どおり 利用できます。 さむらい学童も、 これに準じて 通常どおり 開所します。', '夏季休業期間外は、 通常の下校時刻からの ご利用です。'] },
+  ] },
+];
+const DS_NOTES = [
+  '※この早見表は、 日進市の「各種警報・災害発生時等の 対応について」(令和8年5月29日 適用)を、 学童向けに まとめたものです。 「学童にいる場合」は、 市の「学校にいる場合」と 同じ対応です。',
+  '※さむらい学童の 開所・閉所は、 日進市の 小学校・放課後子ども総合プランの 判断に準じます。',
+  '※平常どおりの場合でも、 災害の状況や 気象・通学路の状況等を ふまえて、 お休みや 活動の中止を 決めることがあります。',
+  '※お住まいの地域の 災害の状況や 気象・通学路の状況等で、 安全に登所できないと 保護者の方が判断して お休みする場合は、 LINEで ご連絡ください。',
+  '※日進市は、 「愛知県全域」「愛知県西部」「尾張東部」が 該当します。',
+];
+
+function showDisasterPage(){
+  const status = document.getElementById('status');
+  const pane = document.getElementById('disasterPane');
+  const body = document.getElementById('disasterBody');
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; };
+  const words = (box, str) => String(str).split(/ +/).filter(x => x).forEach(w => box.appendChild(el('span', '', w)));
+  let place = 'home';
+  try{ const v = localStorage.getItem('samuraiDisasterPlace'); if(DS_PLACES.some(p => p.id === v)) place = v; }catch(e){}
+  const cellEl = lines => {
+    const box = el('div');
+    lines.forEach(t => {
+      const mark = t.charAt(0);
+      let cls = 'dline', s = t;
+      if(mark === '*'){ cls = 'dhead'; s = t.slice(1); }
+      else if(mark === '→'){ cls = 'dgo'; s = t.slice(1); }
+      else if('①②③④'.indexOf(mark) >= 0){ cls = 'dnum'; }
+      else if(mark === '・'){ cls = 'dbul'; }
+      const d = el('div', cls); words(d, s); box.appendChild(d);
+    });
+    return box;
+  };
+  const openFile = url => { try{ liff.openWindow({ url, external: false }); }catch(e){ location.href = url; } };
+
+  function listView(){
+    body.innerHTML = '';
+    const intro = el('div', 'dintro');
+    words(intro, 'こんな時 どうすればいいか、 すぐ確認できます。');
+    body.appendChild(intro);
+    body.appendChild(el('div', 'dq', '① いま、 どこにいますか？'));
+    const pl = el('div', 'dplaces'); body.appendChild(pl);
+    DS_PLACES.forEach(p => {
+      const b = el('button', 'dplace' + (p.id === place ? ' on' : ''), p.label); b.type = 'button';
+      b.onclick = () => { place = p.id; try{ localStorage.setItem('samuraiDisasterPlace', place); }catch(e){} [...pl.children].forEach((c, i) => c.classList.toggle('on', DS_PLACES[i].id === place)); };
+      pl.appendChild(b);
+    });
+    body.appendChild(el('div', 'dq', '② 出ているものを 選んでください'));
+    DS_DATA.forEach(g => {
+      body.appendChild(el('div', 'dgroup', g.group));
+      g.items.forEach(it => {
+        const b = el('button', 'ditem'); b.type = 'button';
+        const dt = el('div', 'dt'); words(dt, it.title); b.appendChild(dt);
+        if(it.sub){ const ds = el('div', 'ds'); words(ds, it.sub); b.appendChild(ds); }
+        b.onclick = () => detailView(it);
+        body.appendChild(b);
+      });
+    });
+    DS_NOTES.forEach(n => { const d = el('div', 'dnote'); words(d, n); body.appendChild(d); });
+    const pdf = el('button', 'dpdf', '市の資料(PDF)を 開く'); pdf.type = 'button';
+    pdf.onclick = () => openFile(new URL('nissin_keihou_taiou_20260529.pdf', location.href).href);
+    body.appendChild(pdf);
+    window.scrollTo(0, 0);
+  }
+  function detailView(it){
+    body.innerHTML = '';
+    const back = el('button', 'dback', '← 一覧に もどる'); back.type = 'button'; back.onclick = listView; body.appendChild(back);
+    const tt = el('div', 'dtitle'); words(tt, it.title); body.appendChild(tt);
+    if(it.sub){ const ss = el('div', 'dsub'); words(ss, it.sub); body.appendChild(ss); }
+    if(it.all){
+      const c = el('div', 'dcard now'); c.appendChild(cellEl(it.all)); body.appendChild(c);
+    }else{
+      const order = [place].concat(DS_PLACES.map(p => p.id).filter(i => i !== place));
+      order.forEach((pid, idx) => {
+        const p = DS_PLACES.find(x => x.id === pid);
+        const c = el('div', 'dcard' + (idx === 0 ? ' now' : ''));
+        c.appendChild(el('div', 'dplace-h', (idx === 0 ? 'いまの場所: ' : '') + p.long));
+        c.appendChild(cellEl(it.cells[pid] || []));
+        body.appendChild(c);
+      });
+    }
+    (it.notes || []).forEach(n => { const d = el('div', 'dnote'); words(d, n); body.appendChild(d); });
+    const back2 = el('button', 'dback', '← 一覧に もどる'); back2.type = 'button'; back2.onclick = listView; body.appendChild(back2);
+    window.scrollTo(0, 0);
+  }
+  status.style.display = 'none';
+  pane.style.display = 'block';
+  listView();
+  const cl = document.getElementById('disasterClose');
+  if(liff.isInClient && liff.isInClient()){ cl.style.display = 'block'; cl.onclick = () => liff.closeWindow(); }
+}
+
 /* ご案内の画面(メニューの「ご案内」): 予定の登録のしかた・予定変更・当日のお休み・トークについて。
    トークにカードを出さず、この画面で開く。当日のお休みは、ここで確認(お休みする/やめる)を済ませてから、はじめて送る。 */
 async function showGuidePage(){
@@ -1161,6 +1372,11 @@ async function showGuidePage(){
     const c = card('学童からのご案内');
     lines(c, [['持ち物や料金などの'], ['ご案内です。']]);
     btn(c, 'ご案内を見る', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=info'));
+  }
+  {
+    const c = card('災害・警報の早見表');
+    lines(c, [['こんな時 どうすれば？'], ['警報・地震などで、'], ['すぐ確認できます。']]);
+    btn(c, '早見表を開く', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=disaster'));
   }
   {
     const c = card('予定の登録のしかた');
@@ -1266,6 +1482,7 @@ async function boot(){
     userId = idToken.sub;
     if(new URLSearchParams(location.search).get('mode') === 'info'){ await showInfoPage(); return; } // 「ご案内を見る」から開いた時
     if(new URLSearchParams(location.search).get('mode') === 'guide'){ await showGuidePage(); return; } // メニューの「ご案内」から開いた時
+    if(new URLSearchParams(location.search).get('mode') === 'disaster'){ showDisasterPage(); return; } // 災害・警報の早見表
     // 開くのを速く見せるため、前回の内容を先に表示し、最新の内容は裏で読み込んで、あとから入れ替える。
     // (最新を読み終えるまでは、送信できないようにして、古い内容のまま送ってしまうのを防ぐ)
     const cacheKey = 'samuraiInitCache_' + userId;
