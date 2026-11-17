@@ -329,6 +329,7 @@
   #infoPane .inote{font-size:17.5px;color:var(--ink-soft);padding-left:1.3em;line-height:1.6;margin-top:4px;}
   #infoPane .iphotos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
   #infoPane .iphoto{min-width:0;}
+  #infoPane .iphoto.wide{grid-column:1 / -1;}
   #infoPane .iphoto img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--line);background:var(--paper);}
   #infoPane .icap{font-size:17.5px;line-height:1.6;margin-top:6px;font-weight:700;}
   #infoPane .icap span{display:inline-block;margin-right:.3em;}
@@ -496,7 +497,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-e</div>
+    <div id="verlabel">画面の版: 11/17-f</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1095,7 +1096,7 @@ async function showInfoPage(){
       if(s.images && s.images.length){
         const g = document.createElement('div'); g.className = 'iphotos';
         s.images.forEach(im => {
-          const f = document.createElement('div'); f.className = 'iphoto';
+          const f = document.createElement('div'); f.className = 'iphoto' + (im.wide ? ' wide' : '');
           const img = document.createElement('img'); img.src = new URL(im.src, location.href).href; img.alt = im.alt || ''; img.loading = 'lazy';
           img.onclick = () => { const lb = document.getElementById('infoLightbox'); lb.querySelector('img').src = img.src; lb.style.display = 'flex'; };
           f.appendChild(img);
