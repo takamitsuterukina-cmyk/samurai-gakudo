@@ -537,7 +537,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-q</div>
+    <div id="verlabel">画面の版: 11/17-r</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1374,11 +1374,6 @@ async function showGuidePage(){
     btn(c, 'ご案内を見る', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=info'));
   }
   {
-    const c = card('災害・警報の早見表');
-    lines(c, [['こんな時 どうすれば？'], ['警報・地震などで、'], ['すぐ確認できます。']]);
-    btn(c, '早見表を開く', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=disaster'));
-  }
-  {
     const c = card('予定の登録のしかた');
     lines(c, [['操作をお忘れのときは、'], ['こちらで確認できます。']]);
     btn(c, '予定の登録のしかたを見る', false, () => openPage(here('howto')));
@@ -1467,6 +1462,11 @@ async function showGuidePage(){
     lines(c, [['トークは、スケジュールに'], ['関する連絡事項に'], ['限らせて頂きます。']]);
     lines(c, [['ご相談・ご質問は、'], ['メール・対面・お電話で'], ['お願いします。'], ['ご返信まで、お時間を'], ['いただく場合があります。'], ['（このLINEでは、'], ['お答えしておりません）']], 'mt');
     btn(c, 'お電話・メールはこちら', false, () => openPage(here('contact')));
+  }
+  {
+    const c = card('災害・警報の早見表');
+    lines(c, [['こんな時 どうすれば？'], ['警報・地震などで、'], ['すぐ確認できます。']]);
+    btn(c, '早見表を開く', false, () => openPage('https://liff.line.me/' + LIFF_ID + '?mode=disaster'));
   }
   const cl = document.getElementById('guideClose');
   if(liff.isInClient && liff.isInClient()){ cl.style.display = 'block'; cl.onclick = () => liff.closeWindow(); }
