@@ -537,7 +537,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-o</div>
+    <div id="verlabel">画面の版: 11/17-p</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -1216,15 +1216,15 @@ const DS_DATA = [
       home: ['*自宅待機', '・午前6時までに 解除 → 平常どおり', '*午前6時を過ぎても 解除されないとき', '→当日の学校は 授業中止。 さむらい学童も、 市の判断に準じて 閉所(お休み)です。'],
       at: ['*学童の活動を 中止', '帰りは、 下記①〜③を 学童が判断します。', '①学童内で 待機', '②学童の外の 避難所へ 移動', '③保護者の お迎えで 帰宅'] } },
   ] },
-  { group: '地震', items: [
-    { id: 'nankai1', title: '南海トラフ地震臨時情報(調査中)', sub: '', cells: {
+  { group: '地震', note: '大きな地震が 起きると、 30分ほどで 「調査中」が 出ます。 そのあと、 調べた結果として、 「巨大地震警戒」「巨大地震注意」「調査終了」の どれかが 出ます。', items: [
+    { id: 'nankai1', title: '南海トラフ地震臨時情報(調査中)', sub: '大きな地震のあと、 気象庁が 調べ始めた段階', desc: ['南海トラフ地震臨時情報の、 いちばん 最初に 出る 情報です。', '南海トラフの周辺で 大きな地震などが あり、 気象庁が 「巨大地震につながるか」を 調べ始めた 段階です。', '調べた結果が わかるまで、 「調査中」です。'], cells: {
       home: ['*自宅待機', '*午前6時を過ぎても 調査終了にならないとき', '→当日の学校は 授業中止。 さむらい学童も、 市の判断に準じて 閉所(お休み)です。'],
       at: ['*学童の活動を 中止', '帰りは、 下記①〜③を 学童が判断します。', '①学童内で 待機', '②学童の外の 避難所へ 移動', '③保護者の お迎えで 帰宅'] } },
-    { id: 'nankai2', title: '巨大地震警戒・巨大地震注意', sub: '南海トラフ地震臨時情報', cells: {
+    { id: 'nankai2', title: '巨大地震警戒・巨大地震注意', sub: '大きな地震が 起きて、 次の地震に 警戒・注意が 必要', desc: ['南海トラフ地震臨時情報の、 調査の結果です。', '・巨大地震警戒: マグニチュード8以上の 地震が 起きた。 次の巨大地震に 特に 警戒が 必要です。', '・巨大地震注意: マグニチュード7以上8未満の 地震などが 起きた。 次の地震に 注意が 必要です。'], cells: {
       home: ['*自宅待機', '*午前6時を過ぎても 調査終了にならないとき', '→当日の学校は 授業中止。 さむらい学童も、 市の判断に準じて 閉所(お休み)です。'],
       at: ['*学童の活動を 中止', '帰りは、 下記①〜③を 学童が判断します。', '①学童内で 待機', '②学童の外の 避難所へ 移動', '③保護者の お迎えで 帰宅'] },
       notes: ['※学童施設の安全を 確認したうえで、 その後の対応を LINE公式アカウント等で 連絡します。'] },
-    { id: 'nankai3', title: '調査終了', sub: '南海トラフ地震臨時情報', all: ['*午前6時までに 調査終了 → 平常どおり'] },
+    { id: 'nankai3', title: '調査終了', sub: '調べた結果、 警戒・注意に 当たらなかった', desc: ['南海トラフ地震臨時情報の、 調査の結果です。', '調べた結果、 警戒にも 注意にも 当たりませんでした。 平常に 戻ります。'], all: ['*午前6時までに 調査終了 → 平常どおり'] },
   ] },
   { group: 'ミサイル(Jアラート)', items: [
     { id: 'jalert1', title: 'Jアラートの緊急情報', sub: '情報発令・日本の領土・領域内へ落下', cells: {
@@ -1289,6 +1289,7 @@ function showDisasterPage(){
     body.appendChild(el('div', 'dq', '② 出ているものを 選んでください'));
     DS_DATA.forEach(g => {
       body.appendChild(el('div', 'dgroup', g.group));
+      if(g.note){ const gn = el('div', 'dnote'); words(gn, g.note); body.appendChild(gn); }
       g.items.forEach(it => {
         const b = el('button', 'ditem'); b.type = 'button';
         const dt = el('div', 'dt'); words(dt, it.title); b.appendChild(dt);
@@ -1308,6 +1309,12 @@ function showDisasterPage(){
     const back = el('button', 'dback', '← 一覧に もどる'); back.type = 'button'; back.onclick = listView; body.appendChild(back);
     const tt = el('div', 'dtitle'); words(tt, it.title); body.appendChild(tt);
     if(it.sub){ const ss = el('div', 'dsub'); words(ss, it.sub); body.appendChild(ss); }
+    if(it.desc){
+      const dc = el('div', 'dcard');
+      dc.appendChild(el('div', 'dplace-h', 'どんな状況？'));
+      dc.appendChild(cellEl(it.desc));
+      body.appendChild(dc);
+    }
     if(it.all){
       const c = el('div', 'dcard now'); c.appendChild(cellEl(it.all)); body.appendChild(c);
     }else{
