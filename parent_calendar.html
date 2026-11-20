@@ -143,6 +143,8 @@
 
   .detail-row.end{margin-top:8px;}
   .hint{font-size:16px;color:var(--ink-soft);margin:4px 0 0 120px;line-height:1.4;}
+  .earlybox{font-size:16px;line-height:1.5;background:#FFF4E0;border-radius:8px;padding:8px 10px;margin:6px 0 0;color:var(--ink);}
+  .earlybox span{display:inline-block;}
 
   /* 長期休みの給食の「必要/不要」(1日利用の日があるお子さんだけに出す) */
   #lunchBox{display:none;margin:14px 16px 0;}
@@ -567,6 +569,7 @@
       <div class="urow" id="u-pk-row">
         <div class="utitle">お迎えが必要な日の時刻</div>
         <div class="uline"><label>下校の時刻</label><span class="tp" id="u-pk-s"></span></div>
+        <div id="u-pk-note" class="earlybox" style="display:none;"></div>
         <div class="uline"><label>帰りの時刻</label><span class="tp" id="u-pk-e"></span></div>
       </div>
       <div class="urow" id="u-np-row">
@@ -589,7 +592,7 @@
     <div id="list"></div>
     <div id="lunchBox"></div>
     <div id="submitGuide"><div class="sh"><span class="sn">③</span><span style="display:inline-block;">登録内容を確認する</span><span style="display:inline-block;">ボタンを押す</span></div><div class="snote" id="submitNote"></div></div>
-    <div id="verlabel">画面の版: 11/17-zi</div>
+    <div id="verlabel">画面の版: 11/20-a</div>
   </div>
 
   <div id="viewPane" style="display:none">
@@ -799,6 +802,7 @@ function loadUsualT(){
   fillTimeSelectEl(document.getElementById('u-bk-s'), usualT.brk.start); fillTimeSelectEl(document.getElementById('u-bk-e'), usualT.brk.end);
   fillTimeSelectEl(document.getElementById('u-sp-s'), usualT.sp.start); fillTimeSelectEl(document.getElementById('u-sp-e'), usualT.sp.end);
   usualBasis = snapUsual();
+  usualEarlySync();
 }
 let usualFirstVisit = false;
 // 「いつもの時間」を変えた時に、日ごとに自分で変えた時刻を上書きしないための記録。
@@ -860,6 +864,12 @@ function anyPickupService(){
 // そのカードの内容に、お迎えの項目が要るか(c: まとめては空、その子だけ別内容の時は、お子さんの番号)
 function cardHasPickup(c){ return c === '' ? selectedChildren.some(hasPickupService) : hasPickupService(selectedChildren[Number(c)]); }
 function effectiveLoc(){ return usualT.loc || (childInfo && childInfo.defaultLocation) || 'genkan'; }
+function usualEarlySync(){
+  const n = document.getElementById('u-pk-note'); if(!n) return;
+  if(!n.innerHTML) n.innerHTML = EARLY_NOTE;
+  const v = document.getElementById('u-pk-s').value;
+  n.style.display = isEarlyTime(v) ? 'block' : 'none';
+}
 function saveUsualT(){
   usualT.pk.start = document.getElementById('u-pk-s').value; usualT.pk.end = document.getElementById('u-pk-e').value;
   usualT.np.start = document.getElementById('u-np-s').value; usualT.np.end = document.getElementById('u-np-e').value;
@@ -867,6 +877,7 @@ function saveUsualT(){
   usualT.sp.start = document.getElementById('u-sp-s').value; usualT.sp.end = document.getElementById('u-sp-e').value;
   try{ localStorage.setItem(usualKey(), JSON.stringify(usualT)); }catch(e){}
   syncUsualButtons();
+  usualEarlySync();
 }
 // スマホでは、時刻を選んだだけ(入力欄から離れていない)だと、「変更」の合図が出ないことがある。
 // 選んでいる途中の値も拾い、日にちを選ぶ直前にも、入力欄の今の値を読み直す。
@@ -2468,7 +2479,7 @@ function renderList(){
   const refreshSubmit = () => { document.getElementById('submitBtn').disabled = !isDirty() || !freshLoaded; updateSendSummary(); };
   updateSendSummary();
   list.querySelectorAll('.time').forEach(inp => {
-    const upd = () => { itemAt(inp).startTime = inp.value; syncLinked(inp, '.time'); refreshSubmit(); };
+    const upd = () => { itemAt(inp).startTime = inp.value; syncLinked(inp, '.time'); earlyNoteUpdate(inp); refreshSubmit(); };
     inp.addEventListener('input', upd); inp.addEventListener('change', upd);
   });
   list.querySelectorAll('.etime').forEach(inp => {
@@ -2484,6 +2495,19 @@ function renderList(){
 }
 
 // 1日分の入力欄(お迎えの要否・場所・時刻)。c は、まとめての時は空、その子だけ別内容の時は、お子さんの番号。
+/* お迎えありで、下校が14:00より前(早下校)の時の案内。お迎えに行けるのは、いつも14:00以降。それまでは、子ども教室で待機する。
+   保護者が、時刻を14:00に丸めてよいのか、13:30と入れてよいのか迷わないよう、「このままで大丈夫」と伝える(長期休みは、お迎えがないので出さない) */
+const EARLY_NOTE = '<span>14:00より前の下校です。</span><span>お迎えは14:00以降となります。</span> <span>それまで、お子さんは</span><span>子ども教室での待機となります。</span> <span>下校の時刻は、</span><span>このままで大丈夫です。</span>';
+function isEarlyTime(t){ return !!t && t < '14:00'; }
+function earlyNoteHtml(item, key, at){
+  if (!item || !item.pickup || isBreakDay(key)) return '';
+  return '<div class="earlybox earlynote"' + at + ' style="display:' + (isEarlyTime(item.startTime) ? 'block' : 'none') + ';">' + EARLY_NOTE + '</div>';
+}
+function earlyNoteUpdate(inp){
+  const box = inp.closest('.card, .kidblock');
+  const n = box && box.querySelector('.earlynote[data-key="' + inp.dataset.key + '"][data-c="' + inp.dataset.c + '"]');
+  if (n) n.style.display = isEarlyTime(inp.value) ? 'block' : 'none';
+}
 function fieldsHtml(key, item, c){
   const at = ' data-key="' + key + '" data-c="' + c + '"';
   const svc = cardHasPickup(c);
@@ -2505,6 +2529,7 @@ function fieldsHtml(key, item, c){
         <label>${item.pickup ? '下校の時刻' : '来所の時刻'}</label>
         <span class="tp time"${at}></span>
       </div>
+      ${earlyNoteHtml(item, key, at)}
       ${isBreakDay(key) && cardIsMonthly(c) ? '<div class="hint">午後利用は14:00からです。</div>' : ''}
       ${isBreakDay(key) && !item.startTime && (c === '' ? selectedChildren.some(n => kindOfChild(n) === 'monthly') : kindOfChild(selectedChildren[Number(c)]) === 'monthly') ? '<div class="hint slotwarn">来所の時刻を選んでください。</div>' : ''}
       <div class="detail-row end">
